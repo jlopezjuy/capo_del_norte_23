@@ -22,9 +22,19 @@
         pass: false,
         lob: false,
         shoot: false,
-        switchPlayer: false
+        switchPlayer: false,
+        dribble: false
       };
       this.prevTouchButtons = { ...this.touchButtons };
+
+      // Free camera manual orbit state
+      this.freeYaw = 0;
+      this.freePitch = 0.42;
+      this.freeDistance = 30;
+      this._freeDragging = false;
+      this._freeLastX = 0;
+      this._freeLastY = 0;
+      this.freeUserControlled = false;
 
       // Gamepad previous button states for edge detection
       this.prevPadButtons = {};
@@ -86,7 +96,36 @@
         this.keys.clear();
         this.isChargingShoot = false;
         this.shootCharge = 0;
+        this._freeDragging = false;
       });
+
+      // Mouse drag & wheel for interactive Free 360 camera
+      global.addEventListener('pointerdown', (e) => {
+        if (e.target && e.target.tagName === 'CANVAS') {
+          this._freeDragging = true;
+          this._freeLastX = e.clientX;
+          this._freeLastY = e.clientY;
+        }
+      });
+      global.addEventListener('pointermove', (e) => {
+        if (!this._freeDragging) return;
+        const dx = e.clientX - this._freeLastX;
+        const dy = e.clientY - this._freeLastY;
+        this._freeLastX = e.clientX;
+        this._freeLastY = e.clientY;
+        this.freeYaw -= dx * 0.008;
+        this.freePitch = Math.max(0.18, Math.min(1.15, this.freePitch + dy * 0.006));
+        this.freeUserControlled = true;
+      });
+      global.addEventListener('pointerup', () => {
+        this._freeDragging = false;
+      });
+      global.addEventListener('wheel', (e) => {
+        if (e.target && e.target.tagName === 'CANVAS') {
+          this.freeDistance = Math.max(12, Math.min(62, this.freeDistance + Math.sign(e.deltaY) * 2.5));
+          this.freeUserControlled = true;
+        }
+      }, { passive: true });
     }
 
     setTouchStick(nx, nz) {
@@ -177,7 +216,7 @@
       //   Screen RIGHT (rawX > 0) -> East (+X)
       let moveX = rawX;
       let moveZ = rawZ;
-      if (cameraMode === 'broadcast') {
+      if (cameraMode === 'broadcast' || cameraMode === 'tactical') {
         moveX = -rawZ;
         moveZ = rawX;
       }
@@ -193,6 +232,7 @@
       const touchPassEdge = this.touchButtons.pass && !this.prevTouchButtons.pass;
       const touchLobEdge = this.touchButtons.lob && !this.prevTouchButtons.lob;
       const touchSwitchEdge = this.touchButtons.switchPlayer && !this.prevTouchButtons.switchPlayer;
+      const touchDribbleEdge = this.touchButtons.dribble && !this.prevTouchButtons.dribble;
       const touchShootRelease = !this.touchButtons.shoot && this.prevTouchButtons.shoot;
 
       const passPressed =
@@ -201,6 +241,10 @@
           : (this.justPressed.has('Space') || this.justPressed.has('KeyJ'))) ||
         touchPassEdge ||
         (pad ? pad.passPressed : false);
+
+      const throughPassPressed =
+        hasBall &&
+        ((isPes && this.justPressed.has('KeyW')) || (passPressed && sprint));
 
       const lobPressed =
         (isPes
@@ -217,7 +261,9 @@
         touchSwitchEdge ||
         (pad ? pad.switchPressed : false));
 
-      const dribblePressed = hasBall && (isPes ? (this.justPressed.has('KeyQ') || this.justPressed.has('KeyW')) : this.justPressed.has('KeyE'));
+      const dribblePressed =
+        hasBall &&
+        ((isPes ? this.justPressed.has('KeyQ') : this.justPressed.has('KeyE')) || touchDribbleEdge);
 
       // Shoot / Tackle (PES: D; WASD: L or F)
       const shootKeyHeld =
@@ -269,6 +315,7 @@
         moveZ,
         sprint,
         passPressed,
+        throughPassPressed,
         lobPressed,
         switchPressed,
         dribblePressed,

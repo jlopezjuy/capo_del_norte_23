@@ -23,10 +23,14 @@
         onOut: (info) => this._handleOutOfBounds(info),
         onPostHit: () => {
           this.audio.playPostHit();
+          this.audio.playCrowdOoh();
+          this.crowdFrustrationTimer = 1.6;
           this._triggerMicroShake(0.42);
+          const shooter = this.matchState.players.find((pl) => pl.id === this.matchState.lastTouchPlayerId);
+          if (shooter) shooter.frustratedTimer = 1.45;
         },
         onKick: (power, isShot) => {
-          this.audio.playKick(power);
+          this.audio.playKick(power, isShot);
           if (isShot && power > 0.72) this._triggerMicroShake(0.18);
         }
       });
@@ -36,20 +40,31 @@
 
       this.graphicsQuality = 'auto';
       this.reduceMotion = false;
+      this.noFlash = false;
+      this.showPerfHud = false;
       this.isTraining = false;
       this.microShakeTimer = 0;
       this.microShakeAmp = 0;
       this.lastCelebrationResult = { done: true, timeScale: 1, shakeOffset: { x: 0, y: 0 }, wave: false };
       this.fpsCounter = { frames: 0, lastTime: performance.now(), fps: 60 };
+      this.contextLost = false;
+
+      // 2.5s circular replay buffer (150 physics frames @ 60Hz)
+      this.replayBuffer = [];
+      this.activeReplayFrames = [];
+      this.celebrationScorerId = null;
+      this.celebrationTeammateIds = [];
+      this.celebrationTarget = { x: 0, z: -48 };
 
       this.currentFixture = null;
       this.kitInfo = null;
-      this.cameraMode = 'broadcast'; // 'broadcast' | 'pro' | 'tribuna'
+      this.cameraMode = 'broadcast'; // 'broadcast' | 'tactical' | 'pro' | 'free' | 'tribuna'
       this.tribunaSectorIndex = 0;
-      this.tribunaKeys = ['popular_norte', 'platea_baja', 'platea_alta', 'preferencial', 'palcos_vip', 'popular_sur', 'campo_juego', 'vista_aerea'];
+      this.tribunaKeys = ['popular_norte', 'platea_baja', 'platea_alta', 'preferencial', 'palcos_vip', 'popular_sur', 'codo_noroeste', 'drone_aereo'];
       this.starterNumber = 9;
       this.hitStopTimer = 0;
       this.crowdFrustrationTimer = 0;
+      this._refState = { x: 6, z: 0, vx: 0, vz: 0, rotY: 0, animPhase: 0 };
 
       this.camPos = new THREE.Vector3(-52, 21.5, 0);
       this.camLook = new THREE.Vector3(0, 1.0, 0);
@@ -115,15 +130,31 @@
       this.renderer.setSize(w, h);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       this.renderer.shadowMap.enabled = false;
+      if (THREE.ACESFilmicToneMapping !== undefined) {
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.toneMappingExposure = 1.02;
+      }
       container.appendChild(this.renderer.domElement);
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.26);
+      // WebGL context loss & restoration resilience
+      this.renderer.domElement.addEventListener('webglcontextlost', (e) => {
+        e.preventDefault();
+        this.contextLost = true;
+        this._setCommentary('Contexto WebGL pausado — restaurando gráficos...');
+      }, false);
+      this.renderer.domElement.addEventListener('webglcontextrestored', () => {
+        this.contextLost = false;
+        this.applyGraphicsQuality(this.graphicsQuality);
+        this._setCommentary('Gráficos WebGL restaurados correctamente.');
+      }, false);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.16);
       this.scene.add(ambientLight);
 
-      this.hemiLight = new THREE.HemisphereLight(0xf472b6, 0x1f2937, 0.52);
+      this.hemiLight = new THREE.HemisphereLight(0xfda4af, 0x1e293b, 0.48);
       this.scene.add(this.hemiLight);
 
-      this.sunLight = new THREE.DirectionalLight(0xfb923c, 0.78);
+      this.sunLight = new THREE.DirectionalLight(0xfb923c, 0.88);
       this.sunLight.position.set(-120, 46, -35);
       this.scene.add(this.sunLight);
 
@@ -132,10 +163,16 @@
         hemiLight: this.hemiLight,
         sunLight: this.sunLight
       });
+      if (global.StadiumBuilder && global.StadiumBuilder.setSkyMode) {
+        global.StadiumBuilder.setSkyMode('sunset');
+      }
 
       if (this.crowdSystem) {
         this.crowdSystem.registerInstancedCrowd(this.stadiumRefs.bowlCrowdMesh);
         this.crowdSystem.registerInstancedCrowd(this.stadiumRefs.plateaCrowdMesh);
+        if (this.stadiumRefs.crowdFlags) {
+          this.crowdSystem.setAwayFlags(this.stadiumRefs.crowdFlags.filter((f) => f.isAway));
+        }
         if (this.stadiumRefs.wolfMascot) {
           this.crowdSystem.setMascot(this.stadiumRefs.wolfMascot);
         }
@@ -145,6 +182,9 @@
         this.physics.onNetHit = (goalZ, ix, iy, strength) => {
           if (global.StadiumBuilder && global.StadiumBuilder.deformGoalNet) {
             global.StadiumBuilder.deformGoalNet(goalZ, ix, iy, strength);
+          }
+          if (this.audio && this.audio.playNetSwish) {
+            this.audio.playNetSwish(strength);
           }
         };
       }
@@ -251,15 +291,26 @@
     }
 
     _buildPlayersForFixture(fixture) {
-      // Clear previous player meshes
-      this.playerMeshes.forEach((pm) => this.matchGroup.remove(pm.group));
+      // Clear and dispose previous player meshes cleanly (zero GPU material leaks)
+      this.playerMeshes.forEach((pm) => {
+        this.matchGroup.remove(pm.group);
+        if (global.PlayerRenderer && global.PlayerRenderer.disposePlayerFigure) {
+          global.PlayerRenderer.disposePlayerFigure(pm);
+        }
+      });
       this.playerMeshes = [];
       if (this.refMesh) {
         this.matchGroup.remove(this.refMesh.group);
+        if (global.PlayerRenderer && global.PlayerRenderer.disposePlayerFigure) {
+          global.PlayerRenderer.disposePlayerFigure(this.refMesh);
+        }
         this.refMesh = null;
       }
 
       this.kitInfo = global.AFA_DATA.resolveKitColors(fixture.opponent);
+      if (this.crowdSystem && this.crowdSystem.setAwayColors) {
+        this.crowdSystem.setAwayColors(this.kitInfo.shirt, this.kitInfo.secondary);
+      }
       this.matchState.players = [];
       let idCounter = 0;
 
@@ -451,6 +502,12 @@
       if (this.celebrationDirector) this.celebrationDirector.noFlash = this.noFlash;
     }
 
+    setShowPerfHud(val) {
+      this.showPerfHud = !!val;
+      const el = document.getElementById('hud-perf-badge');
+      if (el) el.classList.toggle('hidden', !this.showPerfHud);
+    }
+
     triggerInteractiveCelebration(keyNum) {
       if (this.matchState.phase !== 'GOAL_CELEBRATION' || !this.celebrationDirector) return;
       const cel = this.celebrationDirector.triggerInteractive(keyNum);
@@ -545,14 +602,16 @@
       this.matchState.lastGoalTeam = scoringTeam;
       this.matchState.ownerPlayerId = null;
 
+      // Freeze 2.5s replay buffer snapshot for slow-mo replay celebrations
+      this.activeReplayFrames = this.replayBuffer.slice(-135);
+
       const prevHome = this.matchState.scoreHome;
       const prevAway = this.matchState.scoreAway;
 
       const brand = global.BrandRegistry ? global.BrandRegistry.getActiveBrand() : null;
-      const homeName = brand ? brand.homeClub.name : 'Atlético Los Cerros';
+      const homeName = brand ? brand.homeClub.name : 'San Salvador Celeste';
       if (scoringTeam === 'home') {
         this.matchState.scoreHome += 1;
-        this.audio.playGoalRoar();
         this.audio.playWhistle('short');
         this._setCommentary(`¡GOOOOL DE ${homeName.toUpperCase()}! Explota la Popular Norte (${this.matchState.scoreHome} - ${this.matchState.scoreAway}).`);
       } else {
@@ -567,6 +626,23 @@
         || this.matchState.players.find((p) => p.team === scoringTeam && p.role === 'FW')
         || this.matchState.players[9];
       this.matchState.lastScorerName = scorer ? scorer.name : 'Jugador';
+      this.celebrationScorerId = scorer ? scorer.id : null;
+
+      // Pick 3 nearest teammates to sprint & celebrate with the scorer
+      if (scorer) {
+        const mates = this.matchState.players
+          .filter((p) => p.team === scoringTeam && p.id !== scorer.id && p.role !== 'GK')
+          .map((p) => ({ id: p.id, d: Math.hypot(p.x - scorer.x, p.z - scorer.z) }))
+          .sort((a, b) => a.d - b.d)
+          .slice(0, 3);
+        this.celebrationTeammateIds = mates.map((m) => m.id);
+        this.celebrationTarget = {
+          x: scorer.x >= 0 ? 32.5 : -32.5,
+          z: scoringTeam === 'home' ? -49.5 : 49.5
+        };
+      } else {
+        this.celebrationTeammateIds = [];
+      }
 
       // Tag players for celebration vs frustration poses
       this.matchState.players.forEach((p) => { p.celebratingTeam = scoringTeam; });
@@ -579,7 +655,7 @@
         const isDecisive = Math.abs(this.matchState.scoreHome - this.matchState.scoreAway) <= 1;
         const cel = this.celebrationDirector.start({
           isHomeGoal: scoringTeam === 'home',
-          teamName: scoringTeam === 'home' ? (global.BrandRegistry ? global.BrandRegistry.getActiveBrand().homeClub.name : 'Atlético Los Cerros') : this.currentFixture.opponent.name,
+          teamName: scoringTeam === 'home' ? homeName : this.currentFixture.opponent.name,
           awayId: this.currentFixture.opponent.id,
           awayShort: this.currentFixture.opponent.shortName,
           awayHex: this.kitInfo ? this.kitInfo.hex : '#facc15',
@@ -597,8 +673,10 @@
         });
         this.matchState.celebrationTimer = cel.duration;
         this.matchState.celebrationStyle = cel.style;
+        this.audio.playGoalRoar(scoringTeam === 'home', cel.audioCue || 'stadium');
       } else {
         this.matchState.celebrationTimer = 4.2;
+        this.audio.playGoalRoar(scoringTeam === 'home', 'stadium');
       }
 
       this._updateScoreboard(true);
@@ -626,7 +704,16 @@
             type = 'GOAL_KICK';
             rx = info.x >= 0 ? 5.5 : -5.5;
             rz = -47.5;
-            this._setCommentary('Saque de arco.');
+            // Near-miss home shot -> striker frustration + crowd gasp!
+            if (Math.abs(info.x) < 9.5) {
+              this.audio.playCrowdOoh();
+              this.crowdFrustrationTimer = 1.5;
+              const shooter = this.matchState.players.find((pl) => pl.id === this.matchState.lastTouchPlayerId);
+              if (shooter) shooter.frustratedTimer = 1.35;
+              this._setCommentary('¡Uuuuh! Pasó muy cerca del palo. Saque de arco.');
+            } else {
+              this._setCommentary('Saque de arco.');
+            }
           }
         } else {
           // South endline (home defends South)
@@ -725,8 +812,10 @@
 
       if (ms.phase === 'GOAL_CELEBRATION') {
         this.physics.stepBall(ms, dt);
+        this._stepCelebrationChoreography(dt);
         ms.celebrationTimer -= dt;
         if (ms.celebrationTimer <= 0) {
+          if (this.celebrationDirector) this.celebrationDirector.stop();
           const nextKickoff = ms.lastGoalTeam === 'home' ? 'away' : 'home';
           this._setupKickoff(nextKickoff);
           this._updateScoreboard(false);
@@ -758,6 +847,9 @@
       const distToAnyGoal = Math.min(Math.abs(ms.ball.z + 52.5), Math.abs(ms.ball.z - 52.5));
       const danger = Math.max(0, 1 - distToAnyGoal / 32);
       this.audio.setCrowdDanger(danger);
+      if (ms.ball.z < -18 && this.audio.playCrowdChantPulse) {
+        this.audio.playCrowdChantPulse(Math.max(0, 1 - Math.abs(ms.ball.z + 52.5) / 34));
+      }
 
       // Process human input
       this._stepHumanPlayer(dt);
@@ -771,6 +863,122 @@
 
       // Ball pickup / steal / GK save check
       this._resolveBallOwnership();
+
+      // Record frame into 2.5s circular replay buffer
+      this.replayBuffer.push({
+        ball: { x: ms.ball.x, y: ms.ball.y, z: ms.ball.z },
+        players: ms.players.map((pl) => ({
+          x: pl.x,
+          z: pl.z,
+          rotY: pl.rotY,
+          vx: pl.vx,
+          vz: pl.vz,
+          diveTimer: pl.diveTimer || 0,
+          diveDir: pl.diveDir || 0,
+          kickAnimTimer: pl.kickAnimTimer || 0
+        }))
+      });
+      if (this.replayBuffer.length > 150) this.replayBuffer.shift();
+    }
+
+    _stepCelebrationChoreography(dt) {
+      const ms = this.matchState;
+      const res = this.lastCelebrationResult || {};
+      if (res.replayActive) return;
+
+      const scorer = ms.players.find((p) => p.id === this.celebrationScorerId);
+      if (!scorer) return;
+      const style = res.scorerStyle || ms.celebrationStyle || 'grito';
+      const mateBehavior = res.teammateBehavior || 'huddle';
+
+      // Scorer dynamic choreography movement
+      if (style === 'corner' || mateBehavior === 'corner_rush') {
+        const tx = this.celebrationTarget.x;
+        const tz = this.celebrationTarget.z;
+        const dx = tx - scorer.x;
+        const dz = tz - scorer.z;
+        const d = Math.hypot(dx, dz);
+        if (d > 1.8) {
+          scorer.vx = (dx / d) * 7.8;
+          scorer.vz = (dz / d) * 7.8;
+          scorer.x += scorer.vx * dt;
+          scorer.z += scorer.vz * dt;
+          scorer.rotY = Math.atan2(dx, dz);
+        } else {
+          scorer.vx = 0;
+          scorer.vz = 0;
+          scorer.rotY = Math.atan2(-scorer.x, -scorer.z);
+        }
+      } else if (style === 'bench' || mateBehavior === 'bench_rush') {
+        const tx = -34.2;
+        const tz = 12.0;
+        const dx = tx - scorer.x;
+        const dz = tz - scorer.z;
+        const d = Math.hypot(dx, dz);
+        if (d > 2.2) {
+          scorer.vx = (dx / d) * 8.2;
+          scorer.vz = (dz / d) * 8.2;
+          scorer.x += scorer.vx * dt;
+          scorer.z += scorer.vz * dt;
+          scorer.rotY = Math.atan2(dx, dz);
+        } else {
+          scorer.vx = 0;
+          scorer.vz = 0;
+          scorer.rotY = -Math.PI / 2;
+        }
+      } else if (style === 'knee_slide') {
+        const dirX = Math.sin(scorer.rotY);
+        const dirZ = Math.cos(scorer.rotY);
+        const slideSpeed = Math.max(0, 6.2 - (res.elapsedInCel || 0) * 3.1);
+        scorer.vx = dirX * slideSpeed;
+        scorer.vz = dirZ * slideSpeed;
+        scorer.x = Math.max(-32, Math.min(32, scorer.x + scorer.vx * dt));
+        scorer.z = Math.max(-50, Math.min(50, scorer.z + scorer.vz * dt));
+      } else if (style === 'airplane') {
+        const ang = (res.elapsedInCel || 0) * 1.65;
+        scorer.vx = Math.cos(ang) * 5.8;
+        scorer.vz = Math.sin(ang) * 4.2;
+        scorer.x = Math.max(-31, Math.min(31, scorer.x + scorer.vx * dt));
+        scorer.z = Math.max(-49, Math.min(49, scorer.z + scorer.vz * dt));
+        scorer.rotY = Math.atan2(scorer.vx, scorer.vz);
+      } else {
+        scorer.vx *= 0.85;
+        scorer.vz *= 0.85;
+        // Face toward North stands / camera for charismatic close-up
+        scorer.rotY = Math.atan2(-scorer.x * 0.2, 1);
+      }
+
+      // Teammates run to join the scorer in huddle / dance line / corner rush!
+      this.celebrationTeammateIds.forEach((id, slotIdx) => {
+        const mate = ms.players.find((p) => p.id === id);
+        if (!mate) return;
+        let tx = scorer.x;
+        let tz = scorer.z;
+        if (mateBehavior === 'dance_line') {
+          const offset = (slotIdx === 0 ? -1.8 : slotIdx === 1 ? 1.8 : 3.4);
+          tx = Math.max(-32, Math.min(32, scorer.x + offset));
+          tz = Math.max(-49, Math.min(49, scorer.z + 0.6));
+        } else {
+          const a = (slotIdx / 3) * Math.PI * 2 + 0.6;
+          tx = Math.max(-32, Math.min(32, scorer.x + Math.cos(a) * 1.9));
+          tz = Math.max(-49, Math.min(49, scorer.z + Math.sin(a) * 1.9));
+        }
+        const dx = tx - mate.x;
+        const dz = tz - mate.z;
+        const d = Math.hypot(dx, dz);
+        if (d > 0.65) {
+          const spd = Math.min(8.4, 3.2 + d * 0.9);
+          mate.vx = (dx / d) * spd;
+          mate.vz = (dz / d) * spd;
+          mate.x += mate.vx * dt;
+          mate.z += mate.vz * dt;
+          mate.rotY = Math.atan2(dx, dz);
+        } else {
+          mate.vx = 0;
+          mate.vz = 0;
+          mate.rotY = scorer.rotY;
+        }
+      });
     }
 
     _stepHumanPlayer(dt) {
@@ -781,6 +989,9 @@
       if (p.pickupCooldown > 0) p.pickupCooldown -= dt;
       if (p.tackleCooldown > 0) p.tackleCooldown -= dt;
       if (p.stealCooldown > 0) p.stealCooldown -= dt;
+      if (p.headerTimer > 0) p.headerTimer = Math.max(0, p.headerTimer - dt);
+      if (p.dribbleTimer > 0) p.dribbleTimer = Math.max(0, p.dribbleTimer - dt);
+      if (p.diveTimer > 0) p.diveTimer = Math.max(0, p.diveTimer - dt);
 
       const hasBall = ms.ownerPlayerId === p.id;
       const frame = this.input.sample(dt, this.cameraMode, ms.possessionTeam === 'home');
@@ -836,29 +1047,37 @@
         const dirX = moveMag > 0.1 ? frame.moveX / moveMag : Math.sin(p.rotY);
         const dirZ = moveMag > 0.1 ? frame.moveZ / moveMag : Math.cos(p.rotY);
 
-        if (frame.passPressed) {
+        if (frame.throughPassPressed) {
+          if (this.playerMeshes[ms.activeHomeIndex]) this.playerMeshes[ms.activeHomeIndex].kickTimer = 0.28;
+          const target = this.ai.findPassTarget(p, ms.players, dirX, dirZ);
+          this.ai.executePass(ms, p, target, false, true);
+          if (target && target.team === 'home') {
+            ms.activeHomeIndex = ms.players.indexOf(target);
+          }
+        } else if (frame.passPressed) {
           if (this.playerMeshes[ms.activeHomeIndex]) this.playerMeshes[ms.activeHomeIndex].kickTimer = 0.25;
           const target = this.ai.findPassTarget(p, ms.players, dirX, dirZ);
-          this.ai.executePass(ms, p, target, false);
+          this.ai.executePass(ms, p, target, false, false);
           if (target && target.team === 'home') {
             ms.activeHomeIndex = ms.players.indexOf(target);
           }
         } else if (frame.lobPressed) {
           if (this.playerMeshes[ms.activeHomeIndex]) this.playerMeshes[ms.activeHomeIndex].kickTimer = 0.28;
           const target = this.ai.findPassTarget(p, ms.players, dirX, dirZ);
-          this.ai.executePass(ms, p, target, true);
+          this.ai.executePass(ms, p, target, true, false);
           if (target && target.team === 'home') {
             ms.activeHomeIndex = ms.players.indexOf(target);
           }
         } else if (frame.shootTriggered) {
           if (this.playerMeshes[ms.activeHomeIndex]) this.playerMeshes[ms.activeHomeIndex].kickTimer = 0.34;
+          p.kickPower = frame.shootPower;
           const aimX = Math.max(-3.2, Math.min(3.2, dirX * 3.1));
           const dx = aimX - ms.ball.x;
           const dz = -52.5 - ms.ball.z;
           const dist = Math.max(1, Math.hypot(dx, dz));
           const speed = 19.5 + frame.shootPower * 15.5;
           const vy = 1.6 + frame.shootPower * 5.2;
-          ms.ball.spinY = dirX * frame.shootPower * 1.35;
+          ms.ball.spinY = dirX * frame.shootPower * 1.45;
           this.physics.kickBall(ms, p, (dx / dist) * speed, vy, (dz / dist) * speed, true);
           if (frame.shootPower > 0.72 && !this.reduceMotion) {
             this.hitStopTimer = 0.036;
@@ -866,14 +1085,44 @@
           }
           ms.stats.homeShots += 1;
           if (Math.abs(aimX) < 3.66) ms.stats.homeShotsOnTarget += 1;
-        } else if (frame.dribblePressed && p.stamina > 0.12) {
-          p.vx = dirX * p.speed * 1.55;
-          p.vz = dirZ * p.speed * 1.55;
-          p.x += p.vx * dt * 2.2;
-          p.z += p.vz * dt * 2.2;
-          p.stamina = Math.max(0, p.stamina - 0.1);
+        } else if (frame.dribblePressed && p.stamina > 0.12 && p.dribbleTimer <= 0) {
+          p.dribbleTimer = 0.34;
+          const sideSign = ((Math.floor(performance.now() / 300) % 2) === 0 ? 1 : -1);
+          const feintX = dirX * 0.88 - dirZ * 0.42 * sideSign;
+          const feintZ = dirZ * 0.88 + dirX * 0.42 * sideSign;
+          const fMag = Math.max(0.01, Math.hypot(feintX, feintZ));
+          p.vx = (feintX / fMag) * p.speed * 1.48;
+          p.vz = (feintZ / fMag) * p.speed * 1.48;
+          p.x += p.vx * dt * 1.65;
+          p.z += p.vz * dt * 1.65;
+          p.stealCooldown = Math.max(p.stealCooldown || 0, 0.42);
+          p.stamina = Math.max(0, p.stamina - 0.09);
+          if (this.audio && this.audio.playDribbleWhoosh) this.audio.playDribbleWhoosh();
+          // Briefly ankle-break closest opponent within 2.6m
+          ms.players.forEach((opp) => {
+            if (opp.team !== p.team && Math.hypot(opp.x - p.x, opp.z - p.z) < 2.6) {
+              opp.aiDecisionTimer = Math.max(opp.aiDecisionTimer || 0, 0.45);
+              opp.pickupCooldown = Math.max(opp.pickupCooldown || 0, 0.38);
+            }
+          });
         }
       } else {
+        // Jumping Header / Volley when loose ball is airborne near active player!
+        const distToAirBall = Math.hypot(ms.ball.x - p.x, ms.ball.z - p.z);
+        if (ms.ownerPlayerId === null && ms.ball.y >= 0.95 && ms.ball.y <= 2.55 && distToAirBall < 2.6 && (frame.shootTriggered || frame.tacklePressed || frame.passPressed)) {
+          p.headerTimer = 0.40;
+          const aimX = Math.max(-3.1, Math.min(3.1, (moveMag > 0.1 ? frame.moveX : 0) * 3.0));
+          const dx = aimX - ms.ball.x;
+          const dz = -52.5 - ms.ball.z;
+          const dist = Math.max(1, Math.hypot(dx, dz));
+          p.rotY = Math.atan2(dx, dz);
+          this.physics.kickBall(ms, p, (dx / dist) * 23.5, 1.4, (dz / dist) * 23.5, true);
+          ms.stats.homeShots += 1;
+          if (Math.abs(aimX) < 3.66) ms.stats.homeShotsOnTarget += 1;
+          if (!this.reduceMotion) this._triggerMicroShake(0.20);
+          return;
+        }
+
         // Defensive actions
         if (frame.passPressed) {
           const distToBall = Math.hypot(ms.ball.x - p.x, ms.ball.z - p.z);
@@ -910,7 +1159,7 @@
     _resolveBallOwnership() {
       const ms = this.matchState;
       const b = ms.ball;
-      if (b.y > 1.35) return; // Ball too high in the air
+      if (b.y > 2.55) return; // Ball above even GK diving reach
 
       const currentOwner = ms.ownerPlayerId !== null
         ? ms.players.find((p) => p.id === ms.ownerPlayerId)
@@ -920,8 +1169,10 @@
         const p = ms.players[i];
         if (p.pickupCooldown > 0) continue;
         if (currentOwner && currentOwner.id === p.id) continue;
+        // Outfielders cannot trap balls above 1.45m; GKs can leap/dive up to 2.55m!
+        if (p.role !== 'GK' && b.y > 1.45) continue;
 
-        const reach = p.role === 'GK' ? 1.45 : (p.tackleTimer > 0 ? 1.55 : 1.05);
+        const reach = p.role === 'GK' ? (p.diveTimer > 0 ? 1.85 : 1.55) : (p.tackleTimer > 0 ? 1.55 : 1.05);
         const dist = Math.hypot(p.x - b.x, p.z - b.z);
         if (dist < reach) {
           // Steal if opponent owns it (respect stealCooldown unless slide tackling)
@@ -1159,7 +1410,8 @@
           if (clinchedEarly || suddenDeathWin) {
             ms.phase = 'FULLTIME';
             document.getElementById('penalty-hud').classList.add('hidden');
-            this._showOverlayModal('fulltime', pen.homeScore > pen.awayScore ? '¡GANÓ GIMNASIA POR PENALES!' : `Ganó ${this.currentFixture.opponent.name} por penales`);
+            const homeName = global.BrandRegistry ? global.BrandRegistry.getActiveBrand().homeClub.name.toUpperCase() : 'SAN SALVADOR CELESTE';
+            this._showOverlayModal('fulltime', pen.homeScore > pen.awayScore ? `¡GANÓ ${homeName} POR PENALES!` : `Ganó ${this.currentFixture.opponent.name} por penales`);
             return;
           }
 
@@ -1189,6 +1441,7 @@
     _startLoop() {
       const tick = (now) => {
         requestAnimationFrame(tick);
+        if (this.contextLost) return;
         const rawDt = Math.min(0.05, (now - this.lastFrameTime) / 1000);
         this.lastFrameTime = now;
         const elapsed = now * 0.001;
@@ -1199,14 +1452,36 @@
           this.fpsCounter.fps = this.fpsCounter.frames;
           this.fpsCounter.frames = 0;
           this.fpsCounter.lastTime = now;
+          if (this.showPerfHud) {
+            const perfEl = document.getElementById('hud-perf-badge');
+            if (perfEl) {
+              const s = this.getPerfStats();
+              perfEl.textContent = `${s.fps} FPS • ${s.calls} DC • ${Math.round(s.triangles / 1000)}k tri (${s.quality})`;
+            }
+          }
         }
 
-        // Celebration Director slow-motion & wave
+        // Celebration Director slow-motion, choreography & VFX
         if (this.matchState.phase === 'GOAL_CELEBRATION' && this.celebrationDirector) {
-          const scorer = this.matchState.players.find((p) => p.id === this.matchState.lastTouchPlayerId) || this.matchState.players[9];
-          this.lastCelebrationResult = this.celebrationDirector.update(rawDt, elapsed, scorer);
+          const scorer = this.matchState.players.find((p) => p.id === this.celebrationScorerId)
+            || this.matchState.players.find((p) => p.id === this.matchState.lastTouchPlayerId)
+            || this.matchState.players[9];
+          const goalPos = { x: 0, y: 1.2, z: this.matchState.lastGoalTeam === 'home' ? -52.5 : 52.5 };
+          this.lastCelebrationResult = this.celebrationDirector.update(rawDt, elapsed, scorer, goalPos);
         } else {
           this.lastCelebrationResult = { done: true, timeScale: 1, shakeOffset: { x: 0, y: 0 }, wave: false };
+        }
+
+        // Respectful non-strobing screen flash overlay
+        const flashEl = document.getElementById('goal-flash-overlay');
+        if (flashEl) {
+          const alpha = (this.lastCelebrationResult && this.lastCelebrationResult.flashAlpha) || 0;
+          flashEl.style.opacity = alpha > 0.005 ? alpha.toFixed(3) : '0';
+        }
+        const replayBadge = document.getElementById('goal-replay-badge');
+        if (replayBadge) {
+          const showRep = !!(this.lastCelebrationResult && this.lastCelebrationResult.replayActive && this.activeReplayFrames.length > 15);
+          replayBadge.classList.toggle('hidden', !showRep);
         }
 
         const simDt = rawDt * (this.lastCelebrationResult.timeScale || 1);
@@ -1236,32 +1511,37 @@
         this.stadiumRefs.ledBoardTexture.offset.x += dt * 0.08;
       }
 
-      // Crowd GPU shader update (excitement + Ola Celeste wave)
+      // Crowd GPU shader update (excitement + Ola Celeste wave + team-specific goal reaction)
       const isGoal = ms.phase === 'GOAL_CELEBRATION';
+      const isHomeGoal = isGoal && ms.lastGoalTeam === 'home';
+      const goalTeam = isGoal ? (ms.lastGoalTeam === 'home' ? 1 : -1) : 0;
       const distToAnyGoal = Math.min(Math.abs(ms.ball.z + 52.5), Math.abs(ms.ball.z - 52.5));
       const excitement = ms.phase === 'PLAYING' ? Math.max(0.1, 1 - distToAnyGoal / 36) : 0.15;
       if (this.crowdFrustrationTimer > 0) this.crowdFrustrationTimer = Math.max(0, this.crowdFrustrationTimer - dt);
       if (this.crowdSystem) {
-        this.crowdSystem.update(elapsed, excitement, isGoal, !!this.lastCelebrationResult.wave, this.crowdFrustrationTimer > 0 ? 1.0 : 0.0);
+        this.crowdSystem.update(elapsed, excitement, isGoal, isHomeGoal && !!this.lastCelebrationResult.wave, this.crowdFrustrationTimer > 0 ? 1.0 : 0.0, goalTeam);
       }
       if (global.StadiumBuilder && global.StadiumBuilder.relaxGoalNets) {
         global.StadiumBuilder.relaxGoalNets(dt);
       }
 
-      // Smoke & confetti
+      // Smoke & confetti (celeste burst only on home goals, scaled by celebration)
+      const smokeBoost = (this.lastCelebrationResult && this.lastCelebrationResult.smokeBoost) || 1.0;
       if (this.stadiumRefs.smokeSystem) {
         const sAttr = this.stadiumRefs.smokeSystem.geometry.attributes.position;
         for (let i = 0; i < sAttr.count; i++) {
-          let sy = sAttr.getY(i) + dt * (isGoal ? 3.5 : 1.1);
+          let sy = sAttr.getY(i) + dt * (isHomeGoal ? 3.5 * smokeBoost : 1.1);
           if (sy > 22) sy = 4;
           sAttr.setY(i, sy);
         }
         sAttr.needsUpdate = true;
-        this.stadiumRefs.smokeSystem.material.opacity = isGoal ? 0.38 : 0.16;
+        this.stadiumRefs.smokeSystem.material.opacity = isHomeGoal ? Math.min(0.65, 0.36 * smokeBoost) : 0.14;
       }
       if (this.stadiumRefs.confettiSystem) {
-        if (isGoal) {
-          this.stadiumRefs.confettiSystem.material.opacity = 0.92;
+        const confInt = (this.lastCelebrationResult && this.lastCelebrationResult.confettiIntensity !== undefined)
+          ? this.lastCelebrationResult.confettiIntensity : 0.7;
+        if (isHomeGoal && confInt > 0.05) {
+          this.stadiumRefs.confettiSystem.material.opacity = Math.min(0.95, 0.72 * confInt);
           this.stadiumRefs.confettiSystem.rotation.y += dt * 0.45;
           const posAttr = this.stadiumRefs.confettiSystem.geometry.attributes.position;
           for (let i = 0; i < posAttr.count; i++) {
@@ -1275,11 +1555,50 @@
         }
       }
 
-      // Flags & highway cars
+      // Flags, corner flags, bench players, assistant refs, photographers & highway cars
       const flagSpeed = isGoal ? 9.5 : 3.8;
       this.stadiumRefs.crowdFlags.forEach((f) => {
         f.pivot.rotation.z = Math.sin(elapsed * flagSpeed + f.phase) * 0.25;
       });
+      if (this.stadiumRefs.cornerFlags) {
+        this.stadiumRefs.cornerFlags.forEach((cf) => {
+          if (cf && cf.cloth) {
+            cf.cloth.rotation.y = Math.sin(elapsed * (isGoal ? 8.5 : 4.2) + cf.phase) * 0.34;
+          }
+        });
+      }
+      if (this.stadiumRefs.benchPlayers) {
+        const benchJump = isHomeGoal && !!(this.lastCelebrationResult && this.lastCelebrationResult.benchJump);
+        this.stadiumRefs.benchPlayers.forEach((bp) => {
+          if (!bp || !bp.group) return;
+          if (benchJump && bp.team === 'home') {
+            bp.group.position.y = bp.baseY + Math.abs(Math.sin(elapsed * 9.5 + bp.phase)) * 0.58;
+          } else if (isHomeGoal && bp.team === 'home') {
+            bp.group.position.y = bp.baseY + Math.abs(Math.sin(elapsed * 6.5 + bp.phase)) * 0.22;
+          } else {
+            bp.group.position.y += (bp.baseY - bp.group.position.y) * Math.min(1, dt * 8);
+          }
+        });
+      }
+      if (this.stadiumRefs.assistantRefs) {
+        this.stadiumRefs.assistantRefs.forEach((ar) => {
+          if (!ar || !ar.group) return;
+          const targetZ = ar.side < 0
+            ? Math.max(-50, Math.min(-2, ms.ball.z))
+            : Math.max(2, Math.min(50, ms.ball.z));
+          ar.group.position.z += (targetZ - ar.group.position.z) * Math.min(1, dt * 4.5);
+          if (ar.flagPivot) {
+            ar.flagPivot.rotation.x = isGoal ? -1.1 : Math.sin(elapsed * 3.0) * 0.15;
+          }
+        });
+      }
+      if (this.stadiumRefs.photographers) {
+        this.stadiumRefs.photographers.forEach((ph, idx) => {
+          if (!ph || !ph.flashMesh) return;
+          const showFlash = isHomeGoal && !this.noFlash && !this.reduceMotion && (Math.sin(elapsed * 14 + idx * 2.1) > 0.88);
+          ph.flashMesh.visible = showFlash;
+        });
+      }
       this.stadiumRefs.highwayCars.forEach((c) => {
         c.mesh.position.z += c.speed * dt;
         if (c.mesh.position.z > 155) c.mesh.position.z = -155;
@@ -1294,49 +1613,74 @@
         }
       }
 
+      // Check if we are actively playing back the slow-mo Goal Replay ring buffer!
+      const isReplaying = !!(isGoal && this.lastCelebrationResult && this.lastCelebrationResult.replayActive && this.activeReplayFrames.length > 15);
+      const replayFrame = isReplaying
+        ? this.activeReplayFrames[Math.min(this.activeReplayFrames.length - 1, Math.floor((this.lastCelebrationResult.replayProgress || 0) * (this.activeReplayFrames.length - 1)))]
+        : null;
+      const renderBall = replayFrame ? replayFrame.ball : ms.ball;
+
       // Ball & shadow & aerial drop indicator
-      this.ballMesh.position.set(ms.ball.x, ms.ball.y, ms.ball.z);
-      this.ballMesh.rotation.x += ms.ball.vz * dt * 1.4;
-      this.ballMesh.rotation.z -= ms.ball.vx * dt * 1.4;
-      this.ballShadowMesh.position.set(ms.ball.x, 0.04, ms.ball.z);
-      const shadowScale = Math.max(0.45, 1 - (ms.ball.y - 0.34) * 0.08);
+      this.ballMesh.position.set(renderBall.x, renderBall.y, renderBall.z);
+      this.ballMesh.rotation.x += (ms.ball.vz || 4) * dt * (isReplaying ? 0.5 : 1.4);
+      this.ballMesh.rotation.z -= (ms.ball.vx || 0) * dt * (isReplaying ? 0.5 : 1.4);
+      this.ballShadowMesh.position.set(renderBall.x, 0.04, renderBall.z);
+      const shadowScale = Math.max(0.45, 1 - (renderBall.y - 0.34) * 0.08);
       this.ballShadowMesh.scale.set(shadowScale, shadowScale, 1);
 
       const drop = this.physics.predictDropPoint(ms.ball);
-      this.dropRingMesh.visible = drop.visible;
-      if (drop.visible) {
+      this.dropRingMesh.visible = !isReplaying && drop.visible;
+      if (this.dropRingMesh.visible) {
         this.dropRingMesh.position.set(drop.x, 0.05, drop.z);
       }
 
-      // Ball trail VFX on fast shots
+      // Ball trail VFX on fast shots (also visible during replay!)
       const ballSpeed = Math.hypot(ms.ball.vx, ms.ball.vy, ms.ball.vz);
       if (this.ballTrailPoints) {
-        const showTrail = ballSpeed > 16.5 && !this.reduceMotion;
+        const showTrail = (ballSpeed > 16.5 || isReplaying) && !this.reduceMotion;
         this.ballTrailPoints.forEach((dot, idx) => {
           dot.visible = showTrail;
           if (showTrail) {
-            const backT = (idx + 1) * 0.022;
-            dot.position.set(
-              ms.ball.x - ms.ball.vx * backT,
-              Math.max(0.25, ms.ball.y - ms.ball.vy * backT),
-              ms.ball.z - ms.ball.vz * backT
-            );
+            if (isReplaying && replayFrame) {
+              const rIdx = Math.max(0, Math.floor((this.lastCelebrationResult.replayProgress || 0) * (this.activeReplayFrames.length - 1)) - (idx + 1) * 2);
+              const prevB = this.activeReplayFrames[rIdx].ball;
+              dot.position.set(prevB.x, Math.max(0.25, prevB.y), prevB.z);
+            } else {
+              const backT = (idx + 1) * 0.022;
+              dot.position.set(
+                ms.ball.x - ms.ball.vx * backT,
+                Math.max(0.25, ms.ball.y - ms.ball.vy * backT),
+                ms.ball.z - ms.ball.vz * backT
+              );
+            }
           }
         });
       }
 
       // Players & active cursor (PlayerRenderer animated poses with smooth blending)
-      const celStyle = (this.celebrationDirector && this.celebrationDirector.current && this.celebrationDirector.current.style) || 'dance';
+      const celStyle = (this.lastCelebrationResult && this.lastCelebrationResult.scorerStyle)
+        || (this.celebrationDirector && this.celebrationDirector.current && this.celebrationDirector.current.style)
+        || 'grito';
       ms.players.forEach((p, idx) => {
         const fig = this.playerMeshes[idx];
         if (!fig) return;
-        fig.group.position.set(p.x, 0, p.z);
-        fig.group.rotation.y = p.rotY;
-        global.PlayerRenderer.updatePose(fig, p, dt, elapsed, ms.phase, celStyle);
+        const rSnap = replayFrame && replayFrame.players[idx];
+        if (rSnap) {
+          fig.group.position.set(rSnap.x, 0, rSnap.z);
+          fig.group.rotation.y = rSnap.rotY;
+          global.PlayerRenderer.updatePose(fig, { ...p, ...rSnap }, dt, elapsed, 'PLAYING', celStyle);
+        } else {
+          fig.group.position.set(p.x, 0, p.z);
+          fig.group.rotation.y = p.rotY;
+          const isScorer = p.id === this.celebrationScorerId;
+          const pStyle = isScorer ? celStyle : (celStyle === 'dance' ? 'dance' : 'grito');
+          global.PlayerRenderer.updatePose(fig, p, dt, elapsed, ms.phase, pStyle);
+        }
 
         if (idx === ms.activeHomeIndex) {
           this.activeRingMesh.position.set(p.x, 0.05, p.z);
           this.activeRingMesh.rotation.y = p.rotY;
+          this.activeRingMesh.visible = ms.phase !== 'GOAL_CELEBRATION';
         }
 
         if (this.minimapDots[idx]) {
@@ -1349,9 +1693,19 @@
         }
       });
 
+      // Animate center referee jogging with the play
       if (this.refMesh) {
-        this.refMesh.group.position.set(ms.ball.x * 0.35 + 6, 0, ms.ball.z * 0.45);
+        const targetRX = ms.ball.x * 0.35 + 6;
+        const targetRZ = ms.ball.z * 0.45;
+        const dx = targetRX - this._refState.x;
+        const dz = targetRZ - this._refState.z;
+        this._refState.vx = dx * 2.5;
+        this._refState.vz = dz * 2.5;
+        this._refState.x += this._refState.vx * dt;
+        this._refState.z += this._refState.vz * dt;
+        this.refMesh.group.position.set(this._refState.x, 0, this._refState.z);
         this.refMesh.group.lookAt(ms.ball.x, 0.8, ms.ball.z);
+        global.PlayerRenderer.updatePose(this.refMesh, this._refState, dt, elapsed, 'PLAYING', 'grito');
       }
 
       const ballDot = document.getElementById('minimap-ball-dot');
@@ -1390,25 +1744,64 @@
         targetPos.set(0, 3.1, -33.8);
         targetLook.set(0, 1.35, -52.5);
       } else if (ms.phase === 'GOAL_CELEBRATION') {
-        const scorer = ms.players.find((p) => p.name === ms.lastScorerName)
+        const scorer = ms.players.find((p) => p.id === this.celebrationScorerId)
+          || ms.players.find((p) => p.name === ms.lastScorerName)
           || ms.players.find((p) => p.team === ms.lastGoalTeam && p.role === 'FW')
           || ms.players[9];
-        const celActive = this.celebrationDirector && this.celebrationDirector.active;
-        const inSlowReplay = celActive && this.celebrationDirector.slowMoTimer > 0;
-        if (inSlowReplay) {
-          // Low-angle dramatic goal-mouth replay framing ball & scorer
-          const goalZ = ms.lastGoalTeam === 'home' ? -52.5 : 52.5;
-          const dir = ms.lastGoalTeam === 'home' ? 1 : -1;
-          targetPos.set(ms.ball.x * 0.4 + 7.5, 2.6, goalZ + dir * 9.5);
-          targetLook.set(ms.ball.x * 0.5, 1.1, goalZ);
+        const res = this.lastCelebrationResult || {};
+        const camStyle = res.cameraStyle || 'hero_orbit';
+        const goalZ = ms.lastGoalTeam === 'home' ? -52.5 : 52.5;
+        const dir = ms.lastGoalTeam === 'home' ? 1 : -1;
+
+        if (res.replayActive && this.activeReplayFrames.length > 15) {
+          // Dramatic low-angle slow-mo replay tracking the actual recorded shot into the net
+          const rIdx = Math.min(this.activeReplayFrames.length - 1, Math.floor((res.replayProgress || 0) * (this.activeReplayFrames.length - 1)));
+          const rBall = this.activeReplayFrames[rIdx].ball;
+          targetPos.set(rBall.x * 0.35 + 8.5, 2.3, goalZ + dir * 10.5);
+          targetLook.set(rBall.x, Math.max(0.8, rBall.y), rBall.z);
+        } else if (camStyle === 'gk_incredulous' && (res.elapsedInCel || 0) < 1.85) {
+          // Cut to devastated rival goalkeeper on knees next to the ball in the net!
+          const rivalGK = ms.players.find((p) => p.team !== ms.lastGoalTeam && p.role === 'GK');
+          const gx = rivalGK ? rivalGK.x : 0;
+          const gz = rivalGK ? rivalGK.z : goalZ + dir * 1.5;
+          targetPos.set(gx + 3.6, 1.9, gz + dir * 4.2);
+          targetLook.set(gx, 0.9, gz);
+        } else if (camStyle === 'stadium_wave') {
+          // Sweeping panoramic camera showcasing La Ola Celeste across the stands
+          const sweep = (res.elapsedInCel || 0) * 0.45 - 0.6;
+          targetPos.set(Math.sin(sweep) * 26, 14.5, -18 + Math.cos(sweep) * 14);
+          targetLook.set(0, 6.5, -56);
+        } else if (camStyle === 'mascot_closeup') {
+          // Frame the leaping sculpted 3D Wolf Mascot & Wolf Hologram behind North goal
+          targetPos.set(9.5, 4.2, -41.0);
+          targetLook.set(0, 3.6, -55.5);
+        } else if (camStyle === 'bench_cam') {
+          // Swing toward the home dugout to show leaping substitutes & scorer
+          targetPos.set(-24.0, 3.2, 18.0);
+          targetLook.set(-36.0, 1.6, 11.0);
+        } else if (camStyle === 'corner_run' && scorer) {
+          // Track scorer & teammates swarming the corner flag
+          const cx = this.celebrationTarget.x;
+          const cz = this.celebrationTarget.z;
+          targetPos.set(cx - Math.sign(cx) * 7.2, 2.7, cz + 6.5);
+          targetLook.set(scorer.x, 1.25, scorer.z);
+        } else if (camStyle === 'low_dutch' && scorer) {
+          // Heroic low-angle framing scorer with the exploding stands behind!
+          const a = (res.elapsedInCel || 0) * 0.42;
+          targetPos.set(
+            Math.max(-32, Math.min(32, scorer.x + Math.sin(a) * 5.2)),
+            1.75,
+            Math.max(-49, Math.min(49, scorer.z + 5.6))
+          );
+          targetLook.set(scorer.x, 1.45, scorer.z - 2.0);
         } else if (scorer) {
-          // Close-up dynamic orbit around the celebrating goal scorer
-          const orbitAng = elapsed * 0.55;
-          const radius = 6.2;
+          // Close-up dynamic hero orbit around the celebrating goal scorer & teammates
+          const orbitAng = elapsed * 0.65;
+          const radius = 5.6;
           const clampedX = Math.max(-32, Math.min(32, scorer.x + Math.cos(orbitAng) * radius));
           const clampedZ = Math.max(-50, Math.min(50, scorer.z + Math.sin(orbitAng) * radius));
-          targetPos.set(clampedX, 2.5, clampedZ);
-          targetLook.set(scorer.x, 1.3, scorer.z);
+          targetPos.set(clampedX, 2.35, clampedZ);
+          targetLook.set(scorer.x, 1.25, scorer.z);
         } else {
           const celebSec = ms.lastGoalTeam === 'away'
             ? global.StadiumBuilder.STADIUM_SECTORS.popular_sur
@@ -1438,8 +1831,14 @@
         );
         targetLook.set(active.x * 0.7, 1.2, Math.max(-52.5, active.z - 20));
       } else if (this.cameraMode === 'free') {
-        const ang = elapsed * 0.22;
-        targetPos.set(ms.ball.x + Math.cos(ang) * 28, 16, ms.ball.z + Math.sin(ang) * 28);
+        const yaw = this.input && this.input.freeUserControlled ? this.input.freeYaw : elapsed * 0.22;
+        const pitch = this.input ? this.input.freePitch : 0.45;
+        const dist = this.input ? this.input.freeDistance : 28;
+        targetPos.set(
+          ms.ball.x + Math.cos(yaw) * Math.cos(pitch) * dist,
+          Math.max(2.5, Math.sin(pitch) * dist),
+          ms.ball.z + Math.sin(yaw) * Math.cos(pitch) * dist
+        );
         targetLook.set(ms.ball.x, 1.0, ms.ball.z);
       } else {
         // Tribuna spectator mode

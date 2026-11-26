@@ -165,21 +165,27 @@
 
       <!-- Controls summary & Start Button -->
       <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] flex-1">
-          <div class="rounded-lg bg-[#0d1626] border border-slate-800 px-3 py-2 space-y-1">
-            <div class="font-bold text-sky-400 uppercase text-[10px]">1. Moverse y Regate</div>
-            <div class="flex flex-wrap items-center gap-1 text-slate-200"><span class="kbd-key">W</span><span class="kbd-key">A</span><span class="kbd-key">S</span><span class="kbd-key">D</span><span class="text-slate-400 text-[10px]">+ <span class="kbd-key">Shift</span></span></div>
-            <div class="text-slate-300"><span class="kbd-key">E</span> Regate • <span class="kbd-key">C</span> Cámara</div>
+        <div class="flex-1 space-y-1.5">
+          <div class="flex items-center justify-between text-[10px]">
+            <span class="font-bold uppercase tracking-wider text-slate-400">Controles activos: <span id="lobby-scheme-label" class="text-sky-300">Clásico PES</span></span>
+            <button id="btn-lobby-toggle-scheme" class="btn-tactile px-2 py-0.5 rounded bg-[#142034] hover:bg-[#1b2a44] border border-slate-700 text-sky-300 font-bold">Cambiar a WASD</button>
           </div>
-          <div class="rounded-lg bg-[#0d1626] border border-slate-800 px-3 py-2 space-y-1">
-            <div class="font-bold text-emerald-400 uppercase text-[10px]">2. Con Pelota</div>
-            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-200"><span><span class="kbd-key">Espacio</span> Pase</span><span><span class="kbd-key">K</span> Centro</span></div>
-            <div class="text-slate-300"><span class="kbd-key">L</span>/<span class="kbd-key">F</span> Remate (mantener)</div>
-          </div>
-          <div class="rounded-lg bg-[#0d1626] border border-slate-800 px-3 py-2 space-y-1">
-            <div class="font-bold text-amber-300 uppercase text-[10px]">3. Sin Pelota</div>
-            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-200"><span><span class="kbd-key">Q</span> Cambiar</span><span><span class="kbd-key">Espacio</span> Quitar</span></div>
-            <div class="text-slate-300"><span class="kbd-key">L</span>/<span class="kbd-key">F</span> Barrida</div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
+            <div class="rounded-lg bg-[#0d1626] border border-slate-800 px-3 py-2 space-y-1">
+              <div class="font-bold text-sky-400 uppercase text-[10px]">1. Moverse y Regate</div>
+              <div id="lobby-ctrl-move" class="flex flex-wrap items-center gap-1 text-slate-200"><span class="kbd-key">Flechas</span><span class="text-slate-400 text-[10px]">+ <span class="kbd-key">E</span> Correr</span></div>
+              <div id="lobby-ctrl-dribble" class="text-slate-300"><span class="kbd-key">Q</span> Regate • <span class="kbd-key">C</span> Cámara</div>
+            </div>
+            <div class="rounded-lg bg-[#0d1626] border border-slate-800 px-3 py-2 space-y-1">
+              <div class="font-bold text-emerald-400 uppercase text-[10px]">2. Con Pelota</div>
+              <div id="lobby-ctrl-pass" class="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-200"><span><span class="kbd-key">S</span> Pase</span><span><span class="kbd-key">W</span> Al espacio</span><span><span class="kbd-key">A</span> Centro</span></div>
+              <div id="lobby-ctrl-shoot" class="text-slate-300"><span class="kbd-key">D</span> Remate (mantener)</div>
+            </div>
+            <div class="rounded-lg bg-[#0d1626] border border-slate-800 px-3 py-2 space-y-1">
+              <div class="font-bold text-amber-300 uppercase text-[10px]">3. Sin Pelota</div>
+              <div id="lobby-ctrl-def" class="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-200"><span><span class="kbd-key">Q</span> Cambiar</span><span><span class="kbd-key">S</span> Quitar</span></div>
+              <div id="lobby-ctrl-tackle" class="text-slate-300"><span class="kbd-key">D</span> Barrida / Cabezazo</div>
+            </div>
           </div>
         </div>
         <div class="flex flex-col gap-2 shrink-0">
@@ -231,7 +237,7 @@
               <span id="hud-score-away">0</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <span id="hud-away-short" class="font-display text-base sm:text-lg font-black text-white">MAD</span>
+              <span id="hud-away-short" class="font-display text-base sm:text-lg font-black text-white">GNF</span>
               <span id="hud-away-badge" class="inline-flex items-center"></span>
             </div>
             <div class="pl-2 border-l border-slate-700/80 flex items-center gap-1.5">
@@ -244,6 +250,8 @@
           <div class="hidden xl:flex hud-glass rounded-xl px-3 py-1.5 max-w-md min-w-0">
             <span id="hud-commentary" class="text-xs font-medium text-slate-200 truncate">Estadio de los Cerros • En vivo</span>
           </div>
+          <!-- Optional Live Performance Telemetry Pill -->
+          <div id="hud-perf-badge" class="hidden hud-glass rounded-lg px-2 py-1 font-mono-tech text-[10px] font-bold text-emerald-300">60 FPS</div>
         </div>
 
         <!-- Top Right Controls -->
@@ -337,10 +345,12 @@
       <div id="touch-stick-base" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-900/75 border-2 border-sky-400/50 relative pointer-events-auto flex items-center justify-center" style="touch-action: none;">
         <div id="touch-stick-knob" class="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-sky-400 shadow-lg pointer-events-none"></div>
       </div>
-      <div class="grid grid-cols-2 gap-1.5 sm:gap-2 pointer-events-auto" style="touch-action: none;">
+      <div class="grid grid-cols-3 gap-1.5 sm:gap-2 items-end pointer-events-auto" style="touch-action: none;">
+        <button data-touch-btn="dribble" class="w-11 h-11 sm:w-13 sm:h-13 rounded-full hud-glass text-[9px] font-bold text-emerald-300" style="touch-action: none;">REGATE</button>
         <button data-touch-btn="switchPlayer" class="w-12 h-12 sm:w-14 sm:h-14 rounded-full hud-glass text-[10px] font-bold text-slate-200" style="touch-action: none;">CAMBIAR</button>
         <button data-touch-btn="lob" class="w-12 h-12 sm:w-14 sm:h-14 rounded-full hud-glass text-[10px] font-bold text-amber-300" style="touch-action: none;">CENTRO</button>
-        <button id="touch-btn-pass" data-touch-btn="pass" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-sky-500 border-2 border-sky-300 text-[11px] font-extrabold text-slate-950 shadow-lg" style="touch-action: none;">PASE</button>
+        <div class="hidden sm:block"></div>
+        <button id="touch-btn-pass" data-touch-btn="pass" class="col-span-2 sm:col-span-1 w-14 h-14 sm:w-16 sm:h-16 justify-self-end rounded-full bg-sky-500 border-2 border-sky-300 text-[11px] font-extrabold text-slate-950 shadow-lg" style="touch-action: none;">PASE</button>
         <button id="touch-btn-shoot" data-touch-btn="shoot" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-rose-500 border-2 border-rose-300 text-[11px] font-extrabold text-white shadow-lg" style="touch-action: none;">REMATE</button>
       </div>
     </div>
@@ -371,16 +381,22 @@
     </div>
   </div>
 
+  <!-- Soft Non-Strobing Goal Glow Overlay (Respects No-Flash & Reduce-Motion) -->
+  <div id="goal-flash-overlay" class="fixed inset-0 z-30 pointer-events-none transition-opacity duration-150" style="opacity: 0; background: radial-gradient(circle at center, rgba(56,189,248,0.55) 0%, rgba(250,204,21,0.25) 45%, rgba(11,19,32,0) 80%);"></div>
+
   <!-- ======================================================================= -->
   <!-- GOAL CELEBRATION CINEMATIC BANNER (Non-blocking top/bottom strip)       -->
   <!-- ======================================================================= -->
   <div id="goal-banner-overlay" class="hidden fixed inset-x-0 top-24 sm:top-14 z-40 flex justify-center px-2.5 sm:px-3 pointer-events-none">
-    <div class="hud-glass hud-accent-top rounded-2xl px-3.5 py-2.5 sm:px-5 sm:py-3 text-center max-w-xl w-full pointer-events-auto">
+    <div class="hud-glass hud-accent-top rounded-2xl px-3.5 py-2.5 sm:px-5 sm:py-3 text-center max-w-2xl w-full pointer-events-auto">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
         <div class="flex items-center gap-2.5 min-w-0 flex-1">
           <div id="goal-banner-badge" class="shrink-0"></div>
           <div class="min-w-0 flex-1 text-left">
-            <div id="goal-banner-title" class="font-display text-2xl sm:text-4xl font-black uppercase text-sky-300 leading-tight tracking-wide break-words">EL GRITO DEL LOBO</div>
+            <div class="flex flex-wrap items-center gap-2">
+              <div id="goal-banner-title" class="font-display text-2xl sm:text-4xl font-black uppercase text-sky-300 leading-tight tracking-wide break-words">EL GRITO DE GOL</div>
+              <span id="goal-replay-badge" class="hidden px-2 py-0.5 rounded bg-rose-500/90 text-white font-mono-tech text-[10px] font-extrabold uppercase tracking-wider">REPLAY • CÁMARA LENTA</span>
+            </div>
             <div id="goal-banner-scorer" class="font-display text-base sm:text-lg font-bold uppercase text-white mt-0.5">#9 T. Cardozo • 23'</div>
           </div>
         </div>
@@ -416,10 +432,10 @@
   <!-- ======================================================================= -->
   <!-- SETTINGS MODAL                                                          -->
   <!-- ======================================================================= -->
-  <div id="modal-settings" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4">
+  <div id="modal-settings" role="dialog" aria-modal="true" aria-label="Configuración" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4">
     <div class="hud-glass hud-accent-top rounded-2xl p-6 w-full max-w-md">
       <h2 class="font-display text-3xl font-black uppercase text-white mb-4">Configuración</h2>
-      <div class="space-y-3.5 text-xs mb-5">
+      <div class="space-y-3 text-xs mb-5">
         <div>
           <label class="block font-bold uppercase text-slate-400 mb-1">Controles de Teclado</label>
           <select id="set-controls" class="w-full h-9 bg-[#0d1626] border border-slate-700 rounded-lg px-3 font-semibold text-white">
@@ -445,7 +461,7 @@
           <input id="set-vol-sfx" type="range" min="0" max="1" step="0.05" value="0.9" class="w-full accent-sky-400" />
         </div>
         <div>
-          <div class="flex justify-between font-bold uppercase text-slate-400 mb-1"><span>Volumen Ambiente / Fanfarria</span><span id="val-vol-music">70%</span></div>
+          <div class="flex justify-between font-bold uppercase text-slate-400 mb-1"><span>Volumen Música / Fanfarria</span><span id="val-vol-music">70%</span></div>
           <input id="set-vol-music" type="range" min="0" max="1" step="0.05" value="0.7" class="w-full accent-sky-400" />
         </div>
         <label class="flex items-center justify-between bg-[#0d1626] border border-slate-800 rounded-lg px-3 py-2 cursor-pointer">
@@ -456,6 +472,10 @@
           <span class="font-semibold text-slate-200">Sin flashes intensos en goles</span>
           <input id="set-no-flash" type="checkbox" class="w-4 h-4 accent-sky-400" />
         </label>
+        <label class="flex items-center justify-between bg-[#0d1626] border border-slate-800 rounded-lg px-3 py-2 cursor-pointer">
+          <span class="font-semibold text-slate-200">Mostrar telemetría FPS / Draw Calls</span>
+          <input id="set-show-perf" type="checkbox" class="w-4 h-4 accent-sky-400" />
+        </label>
       </div>
       <button id="btn-close-settings" class="btn-tactile w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 font-bold text-slate-950">Guardar y Cerrar</button>
     </div>
@@ -464,13 +484,14 @@
   <!-- ======================================================================= -->
   <!-- PAUSE MODAL                                                             -->
   <!-- ======================================================================= -->
-  <div id="modal-pause" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-slate-950/75 p-4">
+  <div id="modal-pause" role="dialog" aria-modal="true" aria-label="Partido en Pausa" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-slate-950/75 p-4">
     <div class="hud-glass hud-accent-top rounded-2xl p-6 w-full max-w-sm text-center">
       <h2 class="font-display text-3xl font-black uppercase text-white mb-4">Partido en Pausa</h2>
       <div class="flex flex-col gap-2.5">
         <button id="btn-resume-match" class="btn-tactile py-3 rounded-xl bg-sky-500 hover:bg-sky-400 font-bold text-slate-950">Reanudar Partido</button>
+        <button id="btn-pause-settings" class="btn-tactile py-2.5 rounded-xl bg-[#142034] hover:bg-[#1b2a44] border border-slate-700 font-semibold text-sky-200">Ajustes y Audio</button>
         <button id="btn-restart-match" class="btn-tactile py-3 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-slate-200">Reiniciar Partido</button>
-        <button id="btn-back-lobby" class="btn-tactile py-3 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/40 font-semibold text-rose-200">Volver al Lobby AFA</button>
+        <button id="btn-back-lobby" class="btn-tactile py-3 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/40 font-semibold text-rose-200">Volver al Lobby</button>
       </div>
     </div>
   </div>
@@ -651,20 +672,20 @@
   </div>
 
   <!-- Modular Game Scripts (compatible with both file:// and HTTP) -->
-  <script src="js/brand_registry.js?v=14"></script>
-  <script src="js/afa_fixture.js?v=14"></script>
-  <script src="js/club_badges.js?v=14"></script>
-  <script src="js/creator_config.js?v=14"></script>
-  <script src="js/audio_engine.js?v=14"></script>
-  <script src="js/match_state.js?v=14"></script>
-  <script src="js/input_controller.js?v=14"></script>
-  <script src="js/physics_engine.js?v=14"></script>
-  <script src="js/tactical_ai.js?v=14"></script>
-  <script src="js/player_renderer.js?v=14"></script>
-  <script src="js/crowd_system.js?v=14"></script>
-  <script src="js/goal_celebration_director.js?v=14"></script>
-  <script src="js/stadium_builder.js?v=14"></script>
-  <script src="js/game_engine.js?v=14"></script>
+  <script src="js/brand_registry.js?v=16"></script>
+  <script src="js/afa_fixture.js?v=16"></script>
+  <script src="js/club_badges.js?v=16"></script>
+  <script src="js/creator_config.js?v=16"></script>
+  <script src="js/audio_engine.js?v=16"></script>
+  <script src="js/match_state.js?v=16"></script>
+  <script src="js/input_controller.js?v=16"></script>
+  <script src="js/physics_engine.js?v=16"></script>
+  <script src="js/tactical_ai.js?v=16"></script>
+  <script src="js/player_renderer.js?v=16"></script>
+  <script src="js/crowd_system.js?v=16"></script>
+  <script src="js/goal_celebration_director.js?v=16"></script>
+  <script src="js/stadium_builder.js?v=16"></script>
+  <script src="js/game_engine.js?v=16"></script>
   <script>
     (function () {
       const game = new window.GameEngine();
@@ -742,6 +763,7 @@
       document.getElementById('btn-explore-next').addEventListener('click', () => game.nextExploreSector ? game.nextExploreSector() : game.cycleCameraMode());
       document.getElementById('btn-explore-back').addEventListener('click', () => game.exitExploreStadium());
       document.getElementById('btn-open-settings').addEventListener('click', () => document.getElementById('modal-settings').classList.remove('hidden'));
+      document.getElementById('btn-pause-settings')?.addEventListener('click', () => document.getElementById('modal-settings').classList.remove('hidden'));
       document.getElementById('btn-close-settings').addEventListener('click', () => document.getElementById('modal-settings').classList.add('hidden'));
 
       if (window.CreatorConfig) {
@@ -778,7 +800,78 @@
           document.getElementById('modal-settings')?.classList.add('hidden');
         }
       });
-      document.getElementById('set-quality').addEventListener('change', (e) => game.applyGraphicsQuality(e.target.value));
+      const SETTINGS_KEY = 'pasion_settings_v2';
+      const saveSettings = () => {
+        try {
+          localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+            quality: document.getElementById('set-quality').value,
+            volCrowd: Number(document.getElementById('set-vol-crowd').value),
+            volSfx: Number(document.getElementById('set-vol-sfx').value),
+            volMusic: Number(document.getElementById('set-vol-music').value),
+            reduceMotion: !!document.getElementById('set-reduce-motion').checked,
+            noFlash: !!document.getElementById('set-no-flash').checked,
+            showPerf: !!document.getElementById('set-show-perf')?.checked,
+            skyMode: document.getElementById('sel-sky').value
+          }));
+        } catch (_) {}
+      };
+
+      const loadSavedSettings = () => {
+        let saved = null;
+        try {
+          const raw = localStorage.getItem(SETTINGS_KEY);
+          if (raw) saved = JSON.parse(raw);
+        } catch (_) {}
+        const osReduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        const s = saved || {
+          quality: 'auto',
+          volCrowd: 0.8,
+          volSfx: 0.9,
+          volMusic: 0.7,
+          reduceMotion: osReduceMotion,
+          noFlash: osReduceMotion,
+          showPerf: false,
+          skyMode: 'sunset'
+        };
+        if (s.quality) {
+          document.getElementById('set-quality').value = s.quality;
+          game.applyGraphicsQuality(s.quality);
+        }
+        if (typeof s.volCrowd === 'number') {
+          document.getElementById('set-vol-crowd').value = String(s.volCrowd);
+          document.getElementById('val-vol-crowd').textContent = `${Math.round(s.volCrowd * 100)}%`;
+          game.audio.setCategoryVolume('crowd', s.volCrowd);
+        }
+        if (typeof s.volSfx === 'number') {
+          document.getElementById('set-vol-sfx').value = String(s.volSfx);
+          document.getElementById('val-vol-sfx').textContent = `${Math.round(s.volSfx * 100)}%`;
+          game.audio.setCategoryVolume('sfx', s.volSfx);
+        }
+        if (typeof s.volMusic === 'number') {
+          document.getElementById('set-vol-music').value = String(s.volMusic);
+          document.getElementById('val-vol-music').textContent = `${Math.round(s.volMusic * 100)}%`;
+          game.audio.setCategoryVolume('music', s.volMusic);
+        }
+        document.getElementById('set-reduce-motion').checked = !!s.reduceMotion;
+        game.setReduceMotion(!!s.reduceMotion);
+        document.getElementById('set-no-flash').checked = !!s.noFlash;
+        if (game.setNoFlash) game.setNoFlash(!!s.noFlash);
+        const perfChk = document.getElementById('set-show-perf');
+        if (perfChk) {
+          perfChk.checked = !!s.showPerf;
+          if (game.setShowPerfHud) game.setShowPerfHud(!!s.showPerf);
+        }
+        if (s.skyMode && ['day', 'sunset', 'night'].includes(s.skyMode)) {
+          document.getElementById('sel-sky').value = s.skyMode;
+          window.StadiumBuilder.setSkyMode(s.skyMode);
+        }
+      };
+
+      document.getElementById('sel-sky').addEventListener('change', saveSettings);
+      document.getElementById('set-quality').addEventListener('change', (e) => {
+        game.applyGraphicsQuality(e.target.value);
+        saveSettings();
+      });
 
       const setControlsEl = document.getElementById('set-controls');
       const syncControlSchemeUI = (scheme) => {
@@ -790,14 +883,24 @@
         if (hintShoot) hintShoot.textContent = isPes ? 'D' : 'L / F';
         const schemeBtn = document.getElementById('btn-toggle-scheme');
         if (schemeBtn) schemeBtn.textContent = isPes ? 'PES (→ WASD)' : 'WASD (→ PES)';
+        const lobbyLabel = document.getElementById('lobby-scheme-label');
+        if (lobbyLabel) lobbyLabel.textContent = isPes ? 'Clásico PES' : 'Moderno WASD';
+        const lobbyToggle = document.getElementById('btn-lobby-toggle-scheme');
+        if (lobbyToggle) lobbyToggle.textContent = isPes ? 'Cambiar a WASD' : 'Cambiar a PES';
 
         const setHtml = (id, html) => {
           const el = document.getElementById(id);
           if (el) el.innerHTML = html;
         };
         if (isPes) {
+          setHtml('lobby-ctrl-move', '<span class="kbd-key">Flechas</span><span class="text-slate-400 text-[10px]">+ <span class="kbd-key">E</span> Correr</span>');
+          setHtml('lobby-ctrl-dribble', '<span class="kbd-key">Q</span> Regate • <span class="kbd-key">C</span> Cámara');
+          setHtml('lobby-ctrl-pass', '<span><span class="kbd-key">S</span> Pase</span><span><span class="kbd-key">W</span> Al espacio</span><span><span class="kbd-key">A</span> Centro</span>');
+          setHtml('lobby-ctrl-shoot', '<span class="kbd-key">D</span> Remate (mantener)');
+          setHtml('lobby-ctrl-def', '<span><span class="kbd-key">Q</span> Cambiar</span><span><span class="kbd-key">S</span> Quitar</span>');
+          setHtml('lobby-ctrl-tackle', '<span class="kbd-key">D</span> Barrida / Cabezazo');
           setHtml('ctrl-atk-move', '<span class="kbd-key">Flechas</span> <span class="kbd-key">E</span>');
-          setHtml('ctrl-atk-pass', '<span class="kbd-key">S</span>');
+          setHtml('ctrl-atk-pass', '<span class="kbd-key">S</span> / <span class="kbd-key">W</span>');
           setHtml('ctrl-atk-lob', '<span class="kbd-key">A</span>');
           setHtml('ctrl-atk-shoot', '<span class="kbd-key">D</span>');
           setHtml('ctrl-atk-dribble', '<span class="kbd-key">Q</span>');
@@ -806,6 +909,12 @@
           setHtml('ctrl-def-pass', '<span class="kbd-key">S</span>');
           setHtml('ctrl-def-shoot', '<span class="kbd-key">D</span>');
         } else {
+          setHtml('lobby-ctrl-move', '<span class="kbd-key">W</span><span class="kbd-key">A</span><span class="kbd-key">S</span><span class="kbd-key">D</span><span class="text-slate-400 text-[10px]">+ <span class="kbd-key">Shift</span></span>');
+          setHtml('lobby-ctrl-dribble', '<span class="kbd-key">E</span> Regate • <span class="kbd-key">C</span> Cámara');
+          setHtml('lobby-ctrl-pass', '<span><span class="kbd-key">Espacio</span> Pase</span><span><span class="kbd-key">K</span> Centro</span>');
+          setHtml('lobby-ctrl-shoot', '<span class="kbd-key">L</span>/<span class="kbd-key">F</span> Remate (mantener)');
+          setHtml('lobby-ctrl-def', '<span><span class="kbd-key">Q</span> Cambiar</span><span><span class="kbd-key">Espacio</span> Quitar</span>');
+          setHtml('lobby-ctrl-tackle', '<span class="kbd-key">L</span>/<span class="kbd-key">F</span> Barrida / Cabezazo');
           setHtml('ctrl-atk-move', '<span class="kbd-key">WASD</span> <span class="kbd-key">Shift</span>');
           setHtml('ctrl-atk-pass', '<span class="kbd-key">Espacio</span> <span class="kbd-key">J</span>');
           setHtml('ctrl-atk-lob', '<span class="kbd-key">K</span> <span class="kbd-key">X</span>');
@@ -823,27 +932,41 @@
           syncControlSchemeUI(game.input.controlScheme);
         });
       }
-      document.getElementById('btn-toggle-scheme')?.addEventListener('click', () => {
+      const toggleSchemeAction = () => {
         const next = game.input.controlScheme === 'pes' ? 'wasd' : 'pes';
         game.input.setControlScheme(next);
         syncControlSchemeUI(next);
-      });
+      };
+      document.getElementById('btn-toggle-scheme')?.addEventListener('click', toggleSchemeAction);
+      document.getElementById('btn-lobby-toggle-scheme')?.addEventListener('click', toggleSchemeAction);
       syncControlSchemeUI(game.input.controlScheme);
+      loadSavedSettings();
       document.getElementById('set-vol-crowd').addEventListener('input', (e) => {
         game.audio.setCategoryVolume('crowd', e.target.value);
         document.getElementById('val-vol-crowd').textContent = `${Math.round(e.target.value * 100)}%`;
+        saveSettings();
       });
       document.getElementById('set-vol-sfx').addEventListener('input', (e) => {
         game.audio.setCategoryVolume('sfx', e.target.value);
         document.getElementById('val-vol-sfx').textContent = `${Math.round(e.target.value * 100)}%`;
+        saveSettings();
       });
       document.getElementById('set-vol-music').addEventListener('input', (e) => {
         game.audio.setCategoryVolume('music', e.target.value);
         document.getElementById('val-vol-music').textContent = `${Math.round(e.target.value * 100)}%`;
+        saveSettings();
       });
-      document.getElementById('set-reduce-motion').addEventListener('change', (e) => game.setReduceMotion(e.target.checked));
+      document.getElementById('set-reduce-motion').addEventListener('change', (e) => {
+        game.setReduceMotion(e.target.checked);
+        saveSettings();
+      });
       document.getElementById('set-no-flash').addEventListener('change', (e) => {
         if (game.setNoFlash) game.setNoFlash(e.target.checked);
+        saveSettings();
+      });
+      document.getElementById('set-show-perf')?.addEventListener('change', (e) => {
+        if (game.setShowPerfHud) game.setShowPerfHud(e.target.checked);
+        saveSettings();
       });
       document.getElementById('btn-skip-celebration').addEventListener('click', () => game.skipGoalCelebration());
       document.querySelectorAll('[data-celeb-key]').forEach((btn) => {

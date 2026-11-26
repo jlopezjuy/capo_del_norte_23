@@ -1,24 +1,39 @@
-# Comparación Visual y Funcional — Antes vs Después
+# Comparación Visual y Funcional — Antes (`before/`) vs Después (`after/v2-*`)
 
-**Capturas Antes:** `docs/design-audit/before/` (`04` a `09`)  
-**Capturas Después:** `docs/design-audit/after/` (`01-lobby-after-1366x768.png` a `05-mobile-hud-after-390x844.png`)
+**Fecha de verificación:** 2026-11-26  
+**Capturas Antes:** `docs/design-audit/before/12-baseline-lobby-1920x1080.png`, `13-baseline-gameplay-1366x768.png`, `14-baseline-pro-camera-1366x768.png` (y `01`–`11` históricos).  
+**Capturas Después (v2):** `docs/design-audit/after/v2-01-lobby-1920x1080.png` a `v2-11-mobile-celebration-390x844.png`.
 
 ---
 
-## 1. Qué Cambió y Qué Mejoró
+## 1. Comparativa Directa por Dimensión
 
-| Área | Antes (`before/`) | Después (`after/`) | Impacto |
+| Área | Antes (`before/`) | Después (`after/v2-*`) | Evidencia Real / Impacto |
 |---|---|---|---|
-| **Identidad & Lobby** | Tarjeta con blur y reloj genérico; sin selector de jugador. | Branding **El Lobo Jujeño • 23 de Agosto** con escudo de lobo SVG, selector de **Jugador Inicial** y tarjetas limpias sin blur excesivo. | Identidad propia desde el primer segundo. |
-| **Futbolistas 3D** | Cubos rígidos sin rostro, dorsal en pecho/costados y sin rodillas/codos. | Cabeza redondeada con rostro expresivo y 4 estilos de cabello, torso con dorsal solo atrás, codos/rodillas articulados y reacciones (`frustrated`, `callingPass`, `saveCelebrate`). | Lectura clara en Broadcast y expresividad en Pro. |
-| **Hinchada Viva** | 2.580 cubos saltando sincronizados. | Siluetas humanas instanciadas (torso + hombros + cabeza) con variación de escala, shader GPU desincronizado (`aPhase`, `aGroup`, `uFrustration`, `uWaveActive`) y **Mascota del Lobo 3D** detrás del arco Norte. | El estadio se siente vivo y reactivo al partido. |
-| **Celebraciones** | 8 presets; banner central grande tapando el área. | **16 celebraciones contextuales**, banner superior no invasivo con escudo SVG, botones interactivos (`1–4`), `Omitir (Espacio)`, `Reducir movimiento` y `Sin flashes`. | Cada gol sorprende sin interrumpir el ritmo. |
-| **Estadio & Game Feel** | Red rígida, llamadas duplicadas en `buildAll`, `volumes.sfx` roto. | Red con deformación elástica al impacto, banderines, fotógrafos, efecto Magnus en remates, hit-stop micro-frame, regate (`E`), 5 modos de cámara y audio por categorías corregido. | Mayor respuesta táctil y menos draw calls redundantes. |
+| **Iluminación, Tribunas y Césped** | `before/14-baseline-pro-camera-1366x768.png`: gradas y pared de platea totalmente quemadas (`#FFFFFF`), césped verde neón plano, humo en cuadrados duros. | `after/v2-03-gameplay-sunset-1366x768.png`, `v2-04-gameplay-night-1366x768.png`, `v2-05-gameplay-day-away-goal-1366x768.png`: cero whiteout gracias a `ACESFilmicToneMapping`, escalones arquitectónicos nítidos, césped esmeralda natural con desgaste en áreas, haces volumétricos LED en noche y humo radial suave. | **Salto visual radical** en los 3 horarios (`day`, `sunset`, `night`). |
+| **Futbolistas 3D y Expresividad** | `before/14`: cajas rígidas `BoxGeometry` con cabeza lisa, dorsal borroso y sin guantes ni gestos reales. | `after/v2-06-pro-players-dugout-1366x768.png`, `v2-07-celebration-sorpresa-1366x768.png`, `v2-11-mobile-celebration-390x844.png`: torso atlético `LatheGeometry`, juntas esféricas, dorsal nítido, brazalete de capitán, botines esculpidos, guantes de arquero, **sonrisa `joy` en goles, cara `shock` y manos a la cabeza en frustración** y 6 peinados. | Personajes inmediatamente carismáticos y reconocibles en primer plano. |
+| **Hinchada Viva y Mascota 3D** | Siluetas T sin brazos ni bufandas sobre blanco quemado; calidad baja recortaba al visitante. | `after/v2-07`, `v2-08`, `v2-05`: 4.200 hinchas GPU con **brazos y bufandas a bastones levantadas**, reacción separada local vs visitante (`v2-05`: solo el sector amarillo festeja), **Mascota del Lobo 3D esculpida** saltando detrás del arco y preservación proporcional del visitante en `low` (`312` de `892`). | El estadio transmite vida, color y pasión futbolera real. |
+| **16 Celebraciones de Gol** | `after/16` (previo): banner con texto pero jugador quieto solo y 3 conos flotando; `replay`/`flash`/`corner`/`banco` inactivos. | `after/v2-07-celebration-sorpresa-1366x768.png`, `v2-08-celebration-mascot-1366x768.png`, `v2-11-mobile-celebration-390x844.png`: **pelota holográfica orbitando con anillos, holograma 3D cristalino del Lobo, fuentes de chispas, cañón de 180 papelitos, spotlight, deslizamiento de rodillas (`knee_slide`), arquero rival de rodillas agarrándose la cabeza**, compañeros corriendo, banco saltando y replay real con ring buffer de 2.5s. | Cada gol es un evento emocionante, variado y siempre omitible. |
+| **Red de Arco, LED y Banda** | Wireframe cerrado tapando la boca del arco, LED congelado, 8 banderines duplicados, bancos vacíos. | Red abierta de 5 caras con deformación elástica (`v2-07`, `v2-08`), LED desplazándose, 4 banderines únicos, **12 suplentes + DT visibles en bancos (`v2-06`)**, 2 jueces de línea y 4 fotógrafos. | Mayor credibilidad deportiva en cada jugada cerca del arco. |
+| **UI, Lobby y Móvil** | Lobby mostraba WASD estando en PES; sin Ajustes en Pausa; sin persistencia; sin botón `REGATE` táctil; botones `1–4` visibles en gol visitante. | `after/v2-01`, `v2-02`, `v2-09`, `v2-10`, `v2-11`: Lobby sincronizado PES↔WASD, Ajustes accesibles desde Pausa (`v2-09`), persistencia `localStorage` + `prefers-reduced-motion`, `REGATE` móvil (`v2-10`) y ocultamiento limpio de teclas `1–4` en gol visitante (`v2-05`). | Menor fricción inicial y UX consistente en escritorio y móvil. |
+| **Rendimiento (Draw Calls)** | `989` DC (Lobby) / **`1.319` DC (Gameplay)** a `75 FPS`. | **`186` DC (Lobby) / `108–199` DC (Gameplay/Celebración) / `169` DC (Móvil)** a `75–76 FPS` (**-85% draw calls**). | Margen holgado de rendimiento incluso con 4.200 hinchas y VFX completos. |
 
 ---
 
-## 2. Problemas Detectados y Corregidos en QA
-- **Three.js r128 `InstancedMesh`:** Se detectó en consola `mesh.computeBoundingBox is not a function` al registrar la hinchada; se corrigió usando `mesh.geometry.computeBoundingSphere()` + `mesh.frustumCulled = false`, logrando **0 errores de consola** en la verificación final.
-- **Camiseta local y advertencias `THREE.Material` (2026-11-26):** `game_engine.js` pasaba `GYE_CLUB.primaryColor` (`undefined`) en lugar de `GYE_CLUB.shirtColor`, causando 23 advertencias de consola y camisetas blancas lisas. Corregido en `game_engine.js` y `player_renderer.js` (ahora muestra bastones celestes y blancos reales y **0 advertencias de Three.js**, ver `15-gameplay-striped-crowd-after-1366x768.png`).
-- **Cámara de celebración y toast inicial (2026-11-26):** Se reemplazó la cámara lejana desde la tribuna por una toma cinematográfica de replay en ángulo bajo seguida de órbita en primer plano sobre el goleador (`16-goal-celebration-closeup-after-1366x768.png`), se acortó el mensaje inicial para evitar truncado con `...`, se elevó la hinchada a **4.200 espectadores** y se instanciaron los edificios del entorno con textura de ventanas.
-- **Truncado menor:** En `04-goal-celebration-after-1366x768.png`, títulos largos como `"GOL DE OTRO PLANETA"` se abrevian con `...` en el banner compacto (`max-w-xl`) sin afectar la lectura del goleador ni el marcador.
+## 2. Problemas Detectados y Corregidos Durante QA v2
+
+1. **Teclas interactivas `1–4` visibles en gol visitante (detectado visualmente en captura intermedia):** En Tailwind CSS, `sm:flex` sobrescribía `.hidden` en `#goal-interactive-keys`. Corregido en `js/goal_celebration_director.js` con `style.display = ctx.isHomeGoal ? '' : 'none'` y verificado visualmente en `after/v2-05-gameplay-day-away-goal-1366x768.png`.
+2. **Fugas menores de texto pre-Escenario A:** Limpiados `"¡GANÓ GIMNASIA POR PENALES!"`, `"Volver al Lobby AFA"`, `"EL GRITO DEL LOBO"`, `"MAD"` y `"Copa América 2011"`. `node scripts/validate_compliance.mjs` devuelve `COMPLIANCE PASS` en los 17 archivos públicos.
+
+---
+
+## 3. Verificaciones Automatizadas Ejecutadas (Playwright Chromium — 2026-11-26)
+
+- **Errores de consola JS / WebGL:** `0` errores (`1` aviso esperado de `cdn.tailwindcss.com`).
+- **Sintaxis de 14 módulos JS (`node --check`):** `14/14 PASS`.
+- **Invariante de marcador único:** Doble llamada a `_handleGoal('home')` durante `GOAL_CELEBRATION` mantiene `scoreHome === 1`.
+- **Teclas interactivas `1–4` y `Omitir`:** Cambian entre `grito_gol`, `baile_colectivo`, `director_orquesta` y `celebracion_sorpresa` sin alterar marcador; `skipGoalCelebration()` pone timer en `0` y oculta todos los VFX 3D.
+- **Accesibilidad:** `Reducir movimiento` + `Sin flashes` verificados con `shakeOffset = (0,0)`, `flashAlpha = 0`, `timeScale = 1`.
+- **Calidad adaptativa:** `low` (`1.050` bowl, `312` visitantes), `medium` (`2.100`), `high` (`3.000`, `892` visitantes).
+- **Sectores de tribuna:** `8/8` claves de `tribunaKeys` válidas en `STADIUM_SECTORS`.
+- **Limitación honesta pendiente:** No se ejecutaron pruebas en navegadores Firefox, Edge ni Safari en esta máquina automatizada, ni sesiones de playtesting con personas externas (protocolo documentado en `docs/gameplay/game-feel.md`).

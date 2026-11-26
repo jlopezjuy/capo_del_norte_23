@@ -72,12 +72,15 @@
     }
 
     /**
-     * Executes a pass from `passer` to `target` (ground or lobbed).
+     * Executes a pass from `passer` to `target` (ground, lobbed, or through-ball into space).
      */
-    executePass(matchState, passer, target, isLob = false) {
+    executePass(matchState, passer, target, isLob = false, isThrough = false) {
       const b = matchState.ball;
-      let tx = target ? target.x + (target.vx || 0) * 0.28 : passer.x + Math.sin(passer.rotY) * 16;
-      let tz = target ? target.z + (target.vz || 0) * 0.28 : passer.z + Math.cos(passer.rotY) * 16;
+      const attackDirZ = passer.team === 'home' ? -1 : 1;
+      const leadTime = isThrough ? 0.56 : 0.28;
+      const spacePush = isThrough ? attackDirZ * 5.2 : 0;
+      let tx = target ? target.x + (target.vx || 0) * leadTime : passer.x + Math.sin(passer.rotY) * (isThrough ? 21 : 16);
+      let tz = target ? target.z + (target.vz || 0) * leadTime + spacePush : passer.z + Math.cos(passer.rotY) * (isThrough ? 21 : 16);
 
       if (passer.team === 'away') {
         const err = this.getTuning(matchState.difficulty).passError || 0;
@@ -98,14 +101,19 @@
       const nz = dz / dist;
 
       passer.rotY = Math.atan2(nx, nz);
+      passer.kickPower = isLob ? 0.65 : (isThrough ? 0.72 : 0.45);
+      passer.kickAnimTimer = 0.26;
 
       if (isLob) {
         const speed = Math.min(25, Math.max(12, dist * 0.68));
         const vy = Math.min(11.5, Math.max(5.5, dist * 0.22));
         this.physics.kickBall(matchState, passer, nx * speed, vy, nz * speed, false);
+      } else if (isThrough) {
+        const speed = Math.min(26, Math.max(13, dist * 0.92 + 6.5));
+        this.physics.kickBall(matchState, passer, nx * speed, 0.45, nz * speed, false);
       } else {
         const speed = Math.min(24, Math.max(11, dist * 0.85 + 5.5));
-        this.physics.kickBall(matchState, passer, nx * speed, 0.4, nz * speed, false);
+        this.physics.kickBall(matchState, passer, nx * speed, 0.35, nz * speed, false);
       }
 
       if (passer.team === 'home') matchState.stats.homePasses += 1;
@@ -124,8 +132,9 @@
         ? players.find((p) => p.id === matchState.ownerPlayerId)
         : null;
 
-      // Determine closest non-GK presser per team
-      const closestAway = this._findClosestFieldPlayer(players, 'away', b.x, b.z);
+      // Determine closest non-GK pressers per team (honoring tuning.pressCount!)
+      const awayPressers = this._findClosestFieldPlayers(players, 'away', b.x, b.z, tuning.pressCount || 1);
+      const awayPresserIds = new Set(awayPressers.map((p) => p.id));
       const closestHomeSupport = this._findClosestFieldPlayer(players, 'home', b.x, b.z, activeHome ? activeHome.id : -1);
       const ballIsLoose = matchState.ownerPlayerId === null;
 
@@ -141,6 +150,9 @@
         if (p.tackleCooldown > 0) p.tackleCooldown -= dt;
         if (p.stealCooldown > 0) p.stealCooldown -= dt;
         if (p.aiDecisionTimer > 0) p.aiDecisionTimer -= dt;
+        if (p.diveTimer > 0) p.diveTimer = Math.max(0, p.diveTimer - dt);
+        if (p.headerTimer > 0) p.headerTimer = Math.max(0, p.headerTimer - dt);
+        if (p.dribbleTimer > 0) p.dribbleTimer = Math.max(0, p.dribbleTimer - dt);
 
         // Handle active slide tackle slide
         if (p.tackleTimer > 0) {
@@ -187,10 +199,10 @@
             p.aiState = 'SUPPORT_ATTACK';
           }
         } else {
-          // Defending or loose ball phase: closest player on EACH team contests the ball!
+          // Defending or loose ball phase: closest pressers on EACH team contest the ball!
           const distToBall = Math.hypot(b.x - p.x, b.z - p.z);
           const isPrimaryPresser =
-            (!isHome && closestAway && closestAway.id === p.id) ||
+            (!isHome && awayPresserIds.has(p.id)) ||
             (isHome && closestHomeSupport && closestHomeSupport.id === p.id && ballIsLoose && distToBall < 18);
 
           if (isPrimaryPresser) {
@@ -277,10 +289,16 @@
         const t = Math.max(0.05, Math.abs((goalLineZ - b.z) / b.vz));
         const predX = Math.max(-3.6, Math.min(3.6, b.x + b.vx * t));
         const dx = predX - gk.x;
-        const step = Math.sign(dx) * Math.min(Math.abs(dx), tuning.gkDiveSpeed * dt);
+        const speedBoost = gk.diveTimer > 0 ? 1.28 : 1.0;
+        const step = Math.sign(dx) * Math.min(Math.abs(dx), tuning.gkDiveSpeed * speedBoost * dt);
         gk.x += step;
         gk.z += (goalLineZ - gk.z) * Math.min(1, dt * 6);
         gk.rotY = Math.atan2(b.x - gk.x, b.z - gk.z);
+        // Trigger visual open-play diving save animation when shot is close & angled!
+        if (gk.diveTimer <= 0 && distToGoal < 16 && Math.abs(b.vz) > 12.5 && Math.abs(dx) > 0.55) {
+          gk.diveTimer = 0.56;
+          gk.diveDir = dx < 0 ? (isHome ? 1 : -1) : (isHome ? -1 : 1);
+        }
         return;
       }
 
@@ -317,6 +335,16 @@
       p.x += p.vx * dt;
       p.z += p.vz * dt;
       p.rotY = Math.atan2(nx, nz);
+    }
+
+    _findClosestFieldPlayers(players, team, x, z, count = 1, excludeId = -1) {
+      const list = [];
+      for (const p of players) {
+        if (p.team !== team || p.role === 'GK' || p.id === excludeId) continue;
+        list.push({ p, d: Math.hypot(p.x - x, p.z - z) });
+      }
+      list.sort((a, b) => a.d - b.d);
+      return list.slice(0, Math.max(1, count)).map((item) => item.p);
     }
 
     _findClosestFieldPlayer(players, team, x, z, excludeId = -1) {
