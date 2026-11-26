@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /odd/
+Disallow: /scripts/
+Disallow: /docs/
+
+Sitemap: /sitemap.xml

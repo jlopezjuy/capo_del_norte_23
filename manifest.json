@@ -1,17 +1,44 @@
 {
-  "name": "Pasión de Tribuna 3D — Fútbol del Norte",
+  "id": "/?source=pwa",
+  "name": "Pasión de Tribuna 3D — Fútbol Arcade del Norte",
   "short_name": "Pasión 3D",
-  "description": "Videojuego arcade de fútbol 3D en el Estadio de los Cerros, inspirado en la cultura futbolera del norte argentino.",
-  "start_url": "/index.html",
+  "lang": "es-AR",
+  "dir": "ltr",
+  "description": "Jugá gratis a Pasión de Tribuna 3D en tu navegador: estadio lleno en el norte argentino, 4.200 hinchas vivos, 16 celebraciones de gol y partidos en PC o celular.",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "landscape",
   "background_color": "#0b1320",
   "theme_color": "#1ea7fd",
+  "categories": ["games", "sports"],
   "icons": [
     {
       "src": "/favicon.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Pasión de Tribuna 3D — Festejo de gol en el Estadio de los Cerros"
     }
   ]
 }
