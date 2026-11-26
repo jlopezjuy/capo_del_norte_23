@@ -287,12 +287,16 @@
       kneeR: legR.knee
     };
 
-    return root;
+    return { group: root, kickTimer: 0 };
   }
 
-  function updatePose(player, dt, clockTime, matchPhase, celebrationState) {
-    const parts = player.mesh && player.mesh.userData.animParts;
+  function updatePose(fig, player, dt, clockTime, matchPhase, celebrationStyle) {
+    const parts = fig && fig.group && fig.group.userData.animParts;
     if (!parts) return;
+
+    if (fig.kickTimer > 0) fig.kickTimer = Math.max(0, fig.kickTimer - dt);
+    const kickT = fig.kickTimer || player.kickAnimTimer || 0;
+    if (player.kickAnimTimer > 0) player.kickAnimTimer = Math.max(0, player.kickAnimTimer - dt);
 
     const blend = Math.min(1, dt * 15);
     const speed = Math.hypot(player.vx || 0, player.vz || 0);
@@ -312,9 +316,8 @@
     let targetElbowL = -0.15;
     let targetElbowR = -0.15;
 
-    if (player.kickAnimTimer > 0) {
-      player.kickAnimTimer = Math.max(0, player.kickAnimTimer - dt);
-      const p = Math.sin((player.kickAnimTimer / 0.25) * Math.PI);
+    if (kickT > 0) {
+      const p = Math.sin((Math.min(0.28, kickT) / 0.28) * Math.PI);
       targetLegR = -1.15 * p;
       targetKneeR = 0.55 * p;
       targetLegL = 0.38 * p;
@@ -337,11 +340,11 @@
       targetArmR = -2.6;
       targetArmLZ = 0.3;
       targetArmRZ = -0.3;
-    } else if (matchPhase === 'GOAL_CELEBRATION' && celebrationState) {
-      const isScoringTeam = player.team === celebrationState.team;
+    } else if (matchPhase === 'GOAL_CELEBRATION') {
+      const isScoringTeam = player.team === player.celebratingTeam;
       const t = clockTime * 8.5 + (player.number || 0) * 0.6;
       if (isScoringTeam) {
-        const style = celebrationState.style || 'grito';
+        const style = celebrationStyle || 'grito';
         if (style === 'dance') {
           targetBodyY = Math.abs(Math.sin(t * 1.1)) * 0.28;
           targetBodyRotZ = Math.sin(t * 0.7) * 0.22;

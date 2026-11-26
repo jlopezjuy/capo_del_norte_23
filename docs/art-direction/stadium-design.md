@@ -1,5 +1,6 @@
 # Diseño del Estadio 23 de Agosto (`js/stadium_builder.js`)
 
-- **Preservación arquitectónica:** Campo reglamentario 105×70m con franjas de corte, Platea Alta «G Y E J» y Baja «-19 31-» («Ing. Raúl Ulloa») con edificio de palcos/prensa de 4 niveles, Tribuna Preferencial «Hugo Fayek Llapur», Populares «Lobo Norte» (con tablero LED dinámico) y «Lobo Sur», 5 torres de iluminación, Av. El Éxodo y cerros jujeños.
-- **Horarios:** Tarde (`day`), Atardecer jujeño (`sunset`), Noche (`night`).
-- **Iluminación balanceada:** `AmbientLight(0.26)`, `HemisphereLight(0.52)`, `DirectionalLight(0.78)` en `sunset` para evitar sobreexposición en gradas claras.
+- **Arquitectura fiel:** Platea Oeste Ulloa con fachada y cabina de transmisión de 4 niveles, Popular Norte/Sur y Preferencial en óvalo celeste y blanco, cerros jujeños y autopista animada.
+- **Detalles de cancha:** Césped con franjas de corte contrastadas, banderines de córner celestes, fotógrafos detrás de los arcos, bancos de suplentes y **red de arco deformable dinámicamente** (`deformGoalNet` / `relaxGoalNets`).
+- **Iluminación:** 3 modos seleccionables (`day`, `sunset`, `night`) que ajustan cielo, niebla, luces hemisférica/direccional y torres LED.
+- **Integridad de escena:** Se eliminó la duplicación de arcos, cercos y bancos en `buildAll`.

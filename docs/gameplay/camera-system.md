@@ -1,6 +1,8 @@
-# Sistema de Cámaras (`js/game_engine.js`)
+# Sistema de Cámaras — El Lobo Jujeño (`js/game_engine.js`)
 
-- **TV Broadcast (por defecto):** `x = -51, y = 25.5, FOV = 58°`, por delante de la visera de Platea Alta, con zoom dinámico al acercarse a las áreas.
-- **3ra Persona (`pro`):** Detrás del jugador controlado mirando hacia `-Z`, acotada (`z <= 54`) para no invadir la Popular Sur.
-- **Tribuna (`tribuna`):** Cicla entre sectores reales del 23 de Agosto (`popular_norte`, `platea_baja`, `preferencial`, `palcos_vip`, `popular_sur`) mediante `_getSectorCameraPos()` seguro contra `NaN`.
-- **Celebración:** Ángulo detrás del arco anotado (`popular_norte` para goles de Gimnasia, `popular_sur` para goles rivales).
+- **`broadcast` (TV Broadcast):** Seguimiento lateral desde Platea Alta con *look-ahead* según velocidad del balón y zoom suave cerca de las áreas.
+- **`tactical` (Táctica):** Plano elevado amplio para lectura de pases y desmarques.
+- **`pro` (3ra Persona):** Cámara baja detrás del futbolista activo.
+- **`free` (Libre 360°):** Órbita dinámica alrededor del balón.
+- **`tribuna` (Explorar Estadio):** Recorrido por los 8 sectores del Estadio 23 de Agosto (`popular_norte`, `platea_baja`, `platea_alta`, `preferencial`, `palcos_vip`, `popular_sur`, `campo_juego`, `vista_aerea`).
+- **Seguridad:** Validación `Number.isFinite` en `camPos` y `camLook` contra `NaN`, más separación total respecto a las reglas del partido.

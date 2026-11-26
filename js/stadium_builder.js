@@ -23,7 +23,9 @@
     crowdFlags: [],
     highwayCars: [],
     confettiSystem: null,
-    smokeSystem: null
+    smokeSystem: null,
+    goalNets: [],
+    wolfMascot: null
   };
 
 
@@ -41,6 +43,8 @@
   const highwayCars = [];
   let confettiSystem = null;
   let smokeSystem = null;
+  const goalNets = [];
+  let wolfMascot = null;
 
   const appState = {
     scoreHome: 0,
@@ -607,6 +611,75 @@
       buildFootballGoal(0, -52.5, 0);
       buildFootballGoal(0, 52.5, Math.PI);
       buildDugoutsAndTunnel();
+      buildCornerFlagsAndPress();
+      buildWolfMascot();
+    }
+
+    function buildCornerFlagsAndPress() {
+      const poleMat = new THREE.MeshLambertMaterial({ color: 0xf8fafc });
+      const flagMat = new THREE.MeshBasicMaterial({ color: 0x1ea7fd, side: THREE.DoubleSide });
+      [[-34, -52.5], [34, -52.5], [-34, 52.5], [34, 52.5]].forEach(([cx, cz]) => {
+        const grp = new THREE.Group();
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1.5, 6), poleMat);
+        pole.position.y = 0.75;
+        const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.32), flagMat);
+        cloth.position.set(0.22, 1.32, 0);
+        grp.add(pole, cloth);
+        grp.position.set(cx, 0, cz);
+        scene.add(grp);
+      });
+
+      // Sideline photographers / TV broadcast camera behind goals
+      const camMat = new THREE.MeshLambertMaterial({ color: 0x0f172a });
+      const lensMat = new THREE.MeshLambertMaterial({ color: 0x38bdf8 });
+      [[-12, -55.8], [12, -55.8], [-12, 55.8], [12, 55.8]].forEach(([px, pz]) => {
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.5), camMat);
+        body.position.set(px, 0.45, pz);
+        const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.35, 8), lensMat);
+        lens.rotation.x = Math.PI / 2;
+        lens.position.set(px, 0.65, pz + (pz < 0 ? 0.3 : -0.3));
+        scene.add(body, lens);
+      });
+    }
+
+    function buildWolfMascot() {
+      const grp = new THREE.Group();
+      const furMat = new THREE.MeshLambertMaterial({ color: 0x64748b });
+      const bellyMat = new THREE.MeshLambertMaterial({ color: 0xf8fafc });
+      const jerseyMat = new THREE.MeshLambertMaterial({ color: 0x1ea7fd });
+      const snoutMat = new THREE.MeshLambertMaterial({ color: 0x334155 });
+
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.9, 0.48), jerseyMat);
+      torso.position.y = 1.15;
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.54, 0.56), furMat);
+      head.position.y = 1.92;
+      const snout = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 0.32), bellyMat);
+      snout.position.set(0, 1.84, 0.36);
+      const nose = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.09, 0.08), snoutMat);
+      nose.position.set(0, 1.92, 0.53);
+      const earL = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.32, 4), furMat);
+      earL.position.set(-0.19, 2.32, 0);
+      const earR = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.32, 4), furMat);
+      earR.position.set(0.19, 2.32, 0);
+
+      const armL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.68, 0.2), furMat);
+      armL.position.set(-0.48, 1.25, 0);
+      const armR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.68, 0.2), furMat);
+      armR.position.set(0.48, 1.25, 0);
+      const legL = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.65, 0.24), snoutMat);
+      legL.position.set(-0.18, 0.35, 0);
+      const legR = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.65, 0.24), snoutMat);
+      legR.position.set(0.18, 0.35, 0);
+      const tail = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.55, 6), furMat);
+      tail.rotation.x = -0.9;
+      tail.position.set(0, 0.9, -0.42);
+
+      grp.add(torso, head, snout, nose, earL, earR, armL, armR, legL, legR, tail);
+      grp.position.set(-8.5, 0, -55.4);
+      grp.scale.set(1.35, 1.35, 1.35);
+      grp.userData = { armL, armR, tail };
+      scene.add(grp);
+      wolfMascot = grp;
     }
 
     function buildPerimeterFence() {
@@ -680,8 +753,20 @@
       crossbar.rotation.z = Math.PI / 2;
       crossbar.position.set(0, 2.44, 0);
 
-      const netBox = new THREE.Mesh(new THREE.BoxGeometry(7.32, 2.42, 2.0, 16, 6, 4), netMat);
+      const netGeo = new THREE.BoxGeometry(7.32, 2.42, 2.0, 14, 6, 4);
+      const netBox = new THREE.Mesh(netGeo, netMat);
       netBox.position.set(0, 1.21, -1.0);
+      const posAttr = netGeo.attributes.position;
+      const basePos = new Float32Array(posAttr.array.length);
+      basePos.set(posAttr.array);
+      netBox.userData.basePos = basePos;
+      netBox.userData.goalZ = z;
+      netBox.userData.rotY = rotY;
+      netBox.userData.rippleTime = 0;
+      netBox.userData.impactLocalX = 0;
+      netBox.userData.impactLocalY = 1.2;
+      netBox.userData.impactStrength = 0;
+      goalNets.push(netBox);
 
       goalGroup.add(leftPost, rightPost, crossbar, netBox);
       goalGroup.position.set(x, 0, z);
@@ -816,17 +901,47 @@
       scene.add(plateaGroup);
     }
 
+    function createSpectatorGeometry() {
+      // Stylized human silhouette (torso + shoulders + head) merged into 1 BufferGeometry
+      const parts = [
+        { g: new THREE.BoxGeometry(0.42, 0.56, 0.24), y: 0.28 },
+        { g: new THREE.BoxGeometry(0.56, 0.18, 0.22), y: 0.50 },
+        { g: new THREE.SphereGeometry(0.155, 7, 6), y: 0.75 }
+      ];
+      let totalVerts = 0;
+      const nonIndexed = parts.map((p) => {
+        const ng = p.g.toNonIndexed();
+        ng.translate(0, p.y, 0);
+        totalVerts += ng.attributes.position.count;
+        return ng;
+      });
+      const positions = new Float32Array(totalVerts * 3);
+      const normals = new Float32Array(totalVerts * 3);
+      let offset = 0;
+      nonIndexed.forEach((ng) => {
+        positions.set(ng.attributes.position.array, offset);
+        normals.set(ng.attributes.normal.array, offset);
+        offset += ng.attributes.position.array.length;
+        ng.dispose();
+      });
+      const merged = new THREE.BufferGeometry();
+      merged.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      merged.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+      return merged;
+    }
+
     function populatePlateaSpectators(group) {
       const count = 780;
-      const geo = new THREE.BoxGeometry(0.45, 0.78, 0.45);
+      const geo = createSpectatorGeometry();
       const mat = new THREE.MeshLambertMaterial({ color: 0xffffff });
       plateaCrowdMesh = new THREE.InstancedMesh(geo, mat, count);
       const dummy = new THREE.Object3D();
       const colors = [
-        new THREE.Color(0x38bdf8),
-        new THREE.Color(0xffffff),
+        new THREE.Color(0x1ea7fd),
+        new THREE.Color(0xf8fafc),
         new THREE.Color(0x0284c7),
-        new THREE.Color(0x0f172a)
+        new THREE.Color(0x1e293b),
+        new THREE.Color(0x7dd3fc)
       ];
 
       for (let i = 0; i < count; i++) {
@@ -834,8 +949,12 @@
         const z = (Math.random() - 0.5) * 82;
         const t = Math.random();
         const x = isUpper ? -49.5 - t * 8.0 : -40.2 - t * 7.2;
-        const y = isUpper ? 11.4 + t * 7.8 : 2.2 + t * 6.4;
+        const y = isUpper ? 11.1 + t * 7.8 : 1.9 + t * 6.4;
         dummy.position.set(x, y, z);
+        dummy.rotation.y = Math.PI * 0.5;
+        const hScale = 0.88 + Math.random() * 0.28;
+        const wScale = 0.90 + Math.random() * 0.22;
+        dummy.scale.set(wScale, hScale, wScale);
         dummy.updateMatrix();
         plateaCrowdMesh.setMatrixAt(i, dummy.matrix);
         plateaCrowdMesh.setColorAt(i, colors[i % colors.length]);
@@ -912,17 +1031,17 @@
 
     function populateBowlSpectatorsAndFlags(group, startAngle, endAngle) {
       const totalFans = 1800;
-      const fanGeo = new THREE.BoxGeometry(0.48, 0.88, 0.48);
+      const fanGeo = createSpectatorGeometry();
       const fanMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
       bowlCrowdMesh = new THREE.InstancedMesh(fanGeo, fanMat, totalFans);
 
       const dummy = new THREE.Object3D();
       const palette = [
-        new THREE.Color(0x38bdf8),
-        new THREE.Color(0xffffff),
+        new THREE.Color(0x1ea7fd),
+        new THREE.Color(0xf8fafc),
         new THREE.Color(0x0284c7),
         new THREE.Color(0x7dd3fc),
-        new THREE.Color(0x0f172a)
+        new THREE.Color(0x1e293b)
       ];
 
       for (let i = 0; i < totalFans; i++) {
@@ -930,8 +1049,11 @@
         const step = Math.floor(Math.random() * 13);
         const rx = 42.0 + step * 1.05;
         const rz = 59.0 + step * 1.08;
-        dummy.position.set(Math.cos(angle) * rx, 2.25 + step * 0.68, Math.sin(angle) * rz);
-        dummy.rotation.y = -angle + Math.PI;
+        dummy.position.set(Math.cos(angle) * rx, 1.95 + step * 0.68, Math.sin(angle) * rz);
+        dummy.rotation.y = -angle - Math.PI * 0.5;
+        const hScale = 0.88 + Math.random() * 0.28;
+        const wScale = 0.90 + Math.random() * 0.24;
+        dummy.scale.set(wScale, hScale, wScale);
         dummy.updateMatrix();
         bowlCrowdMesh.setMatrixAt(i, dummy.matrix);
         bowlCrowdMesh.setColorAt(i, palette[i % palette.length]);
@@ -1137,7 +1259,7 @@
         highwayCars.push({ mesh: carMesh, speed: laneDir * (14 + (c % 4) * 3) });
       }
 
-      const houseColors = [0xd6d3d1, 0xfed7aa, 0xe2e8f0, 0xfca5a5, 0xcbd5e1];
+      const houseColors = [0x94a3b8, 0xb89b7a, 0xcbd5e1, 0x8d6e63, 0x64748b];
       for (let b = 0; b < 90; b++) {
         const angle = (b / 90) * Math.PI * 2;
         const dist = 108 + (b % 5) * 24;
@@ -1195,13 +1317,6 @@
 
     function setSkyMode(mode) {
       appState.skyMode = mode;
-      ['day', 'sunset', 'night'].forEach((m) => {
-        const btn = document.getElementById(`btn-sky-${m}`);
-        if (!btn) return;
-        btn.className = m === mode
-          ? 'btn-tactile px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-sky-500/25 text-sky-200 border border-sky-400/40 flex items-center gap-1.5'
-          : 'btn-tactile px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white flex items-center gap-1.5';
-      });
 
       if (skyDomeMesh) {
         skyDomeMesh.material.map = createSkyDomeTexture(mode);
@@ -1263,10 +1378,6 @@
 
     buildSkyAndJujuyMountains();
     buildPitchAndDetails();
-    buildPerimeterFence();
-    buildFootballGoal(0, -52.5, 0);
-    buildFootballGoal(0, 52.5, Math.PI);
-    buildDugoutsAndTunnel();
     buildWestPlateaUlloa();
     buildOvalBowlAndPreferencial();
     buildNorthScoreboard();
@@ -1288,8 +1399,47 @@
     stadiumRefs.pressWindowMats = pressWindowMats;
     stadiumRefs.crowdFlags = crowdFlags;
     stadiumRefs.highwayCars = highwayCars;
+    stadiumRefs.goalNets = goalNets;
+    stadiumRefs.wolfMascot = wolfMascot;
 
     return stadiumRefs;
+  }
+
+  function deformGoalNet(goalZ, impactX, impactY, strength = 1.0) {
+    goalNets.forEach((net) => {
+      if (Math.sign(net.userData.goalZ) !== Math.sign(goalZ)) return;
+      net.userData.rippleTime = 1.1;
+      net.userData.impactLocalX = net.userData.rotY ? -impactX : impactX;
+      net.userData.impactLocalY = Math.max(0.2, Math.min(2.2, impactY)) - 1.21;
+      net.userData.impactStrength = Math.min(1.6, Math.max(0.4, strength));
+    });
+  }
+
+  function relaxGoalNets(dt) {
+    goalNets.forEach((net) => {
+      if (net.userData.rippleTime <= 0) return;
+      net.userData.rippleTime = Math.max(0, net.userData.rippleTime - dt);
+      const t = net.userData.rippleTime;
+      const pos = net.geometry.attributes.position;
+      const base = net.userData.basePos;
+      const ix = net.userData.impactLocalX;
+      const iy = net.userData.impactLocalY;
+      const str = net.userData.impactStrength * (t / 1.1);
+      for (let i = 0; i < pos.count; i++) {
+        const bx = base[i * 3];
+        const by = base[i * 3 + 1];
+        const bz = base[i * 3 + 2];
+        if (bz < -0.1) {
+          const dist = Math.hypot(bx - ix, by - iy);
+          const falloff = Math.exp(-dist * 0.45);
+          const wave = Math.sin((1.1 - t) * 18) * 0.25 + 0.75;
+          pos.array[i * 3 + 2] = bz - str * falloff * wave * 0.85;
+        } else {
+          pos.array[i * 3 + 2] = bz;
+        }
+      }
+      pos.needsUpdate = true;
+    });
   }
 
   global.StadiumBuilder = {
@@ -1297,6 +1447,8 @@
     buildAll,
     updateScoreboardCanvas,
     setSkyMode,
+    deformGoalNet,
+    relaxGoalNets,
     refs: stadiumRefs
   };
 })(window);

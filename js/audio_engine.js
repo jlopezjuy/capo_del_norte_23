@@ -1,5 +1,5 @@
 /**
- * AudioEngine — Web Audio API Synthesizer (Zero external audio assets)
+ * AudioEngine — Web Audio API Synthesizer (Capas reactivas + volúmenes independientes)
  */
 (function (global) {
   'use strict';
@@ -11,7 +11,8 @@
       this.crowdGain = null;
       this.crowdFilter = null;
       this.baseCrowdLevel = 0.18;
-      this.volumes = { crowd: 0.8, sfx: 0.9 };
+      this.volumes = { crowd: 0.8, sfx: 0.9, music: 0.7 };
+      this._lastOohTime = 0;
     }
 
     setCategoryVolume(cat, val) {
@@ -29,7 +30,6 @@
         if (!AudioCtx) return false;
         this.ctx = new AudioCtx();
 
-        // Crowd noise buffer (3 seconds pink-ish noise)
         const bufferSize = this.ctx.sampleRate * 3;
         const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
         const output = noiseBuffer.getChannelData(0);
@@ -69,7 +69,7 @@
       this.enabled = !!val;
       if (this.enabled) {
         if (this.ensureContext() && this.crowdGain) {
-          this.crowdGain.gain.setTargetAtTime(this.baseCrowdLevel, this.ctx.currentTime, 0.25);
+          this.crowdGain.gain.setTargetAtTime(this.baseCrowdLevel * this.volumes.crowd, this.ctx.currentTime, 0.25);
         }
       } else if (this.ctx && this.crowdGain) {
         this.crowdGain.gain.setTargetAtTime(0.0, this.ctx.currentTime, 0.15);
@@ -81,21 +81,32 @@
       return this.setEnabled(!this.enabled);
     }
 
-    /**
-     * Adjusts crowd murmur dynamically based on goal danger (0.0 to 1.0)
-     */
     setCrowdDanger(danger) {
       if (!this.enabled || !this.ctx || !this.crowdGain) return;
       const clamped = Math.max(0, Math.min(1, danger));
-      const targetGain = (this.baseCrowdLevel + clamped * 0.22) * this.volumes.crowd;
-      const targetFreq = 410 + clamped * 340;
+      const targetGain = (this.baseCrowdLevel + clamped * 0.24) * this.volumes.crowd;
+      const targetFreq = 410 + clamped * 360;
       this.crowdGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.2);
       this.crowdFilter.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.2);
     }
 
-    playWhistle(type = 'short') {
-      if (!this.enabled || !this.ensureContext()) return;
+    playCrowdOoh() {
+      if (!this.enabled || !this.ctx || !this.crowdGain) return;
+      const nowMs = performance.now();
+      if (nowMs - this._lastOohTime < 2800) return;
+      this._lastOohTime = nowMs;
       const now = this.ctx.currentTime;
+      const vol = this.volumes.crowd;
+      this.crowdGain.gain.setTargetAtTime(0.45 * vol, now, 0.08);
+      this.crowdFilter.frequency.setTargetAtTime(650, now, 0.1);
+      this.crowdGain.gain.setTargetAtTime(this.baseCrowdLevel * vol, now + 0.9, 0.5);
+      this.crowdFilter.frequency.setTargetAtTime(420, now + 0.9, 0.5);
+    }
+
+    playWhistle(type = 'short') {
+      if (!this.enabled || !this.ensureContext() || this.volumes.sfx <= 0.01) return;
+      const now = this.ctx.currentTime;
+      const sfxGain = 0.09 * this.volumes.sfx;
       const pulse = (start, dur, freq = 2780) => {
         const osc = this.ctx.createOscillator();
         const mod = this.ctx.createOscillator();
@@ -106,7 +117,6 @@
         osc.frequency.setValueAtTime(freq, start);
         osc.frequency.exponentialRampToValueAtTime(freq * 1.05, start + dur);
 
-        // Pea-whistle trill
         mod.type = 'sine';
         mod.frequency.setValueAtTime(42, start);
         modGain.gain.setValueAtTime(110, start);
@@ -114,8 +124,8 @@
         modGain.connect(osc.frequency);
 
         gain.gain.setValueAtTime(0.001, start);
-        gain.gain.linearRampToValueAtTime(0.09, start + 0.02);
-        gain.gain.setValueAtTime(0.09, start + dur - 0.03);
+        gain.gain.linearRampToValueAtTime(sfxGain, start + 0.02);
+        gain.gain.setValueAtTime(sfxGain, start + dur - 0.03);
         gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
 
         osc.connect(gain);
@@ -139,34 +149,51 @@
     }
 
     playKick(power = 0.6) {
-      if (!this.enabled || !this.ensureContext()) return;
+      if (!this.enabled || !this.ensureContext() || this.volumes.sfx <= 0.01) return;
       const now = this.ctx.currentTime;
       const p = Math.max(0.2, Math.min(1.0, power));
 
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(140 + p * 60, now);
-      osc.frequency.exponentialRampToValueAtTime(42, now + 0.11);
+      osc.frequency.setValueAtTime(135 + p * 65, now);
+      osc.frequency.exponentialRampToValueAtTime(40, now + 0.12);
 
-      gain.gain.setValueAtTime(0.22 * p, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      gain.gain.setValueAtTime(0.24 * p * this.volumes.sfx, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
 
       osc.connect(gain);
       gain.connect(this.ctx.destination);
       osc.start(now);
-      osc.stop(now + 0.13);
+      osc.stop(now + 0.14);
+    }
+
+    playSave() {
+      if (!this.enabled || !this.ensureContext() || this.volumes.sfx <= 0.01) return;
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.exponentialRampToValueAtTime(75, now + 0.14);
+      gain.gain.setValueAtTime(0.18 * this.volumes.sfx, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.16);
+      this.playCrowdOoh();
     }
 
     playPostHit() {
-      if (!this.enabled || !this.ensureContext()) return;
+      if (!this.enabled || !this.ensureContext() || this.volumes.sfx <= 0.01) return;
       const now = this.ctx.currentTime;
       [620, 940, 1480].forEach((freq, idx) => {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, now);
-        gain.gain.setValueAtTime(0.12 / (idx + 1), now);
+        gain.gain.setValueAtTime((0.14 * this.volumes.sfx) / (idx + 1), now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
@@ -179,25 +206,26 @@
       if (!this.enabled || !this.ensureContext() || !this.crowdGain) return;
       const now = this.ctx.currentTime;
       const vol = this.volumes.crowd;
-      this.crowdGain.gain.setTargetAtTime(0.62 * vol, now, 0.12);
-      this.crowdFilter.frequency.setTargetAtTime(780, now, 0.15);
-      this.crowdGain.gain.setTargetAtTime(this.baseCrowdLevel * vol, now + 3.8, 0.9);
-      this.crowdFilter.frequency.setTargetAtTime(420, now + 3.8, 0.9);
+      this.crowdGain.gain.setTargetAtTime(0.68 * vol, now, 0.10);
+      this.crowdFilter.frequency.setTargetAtTime(820, now, 0.14);
+      this.crowdGain.gain.setTargetAtTime(this.baseCrowdLevel * vol, now + 4.0, 0.9);
+      this.crowdFilter.frequency.setTargetAtTime(420, now + 4.0, 0.9);
 
-      // Fanfarria sintética de gol (acorde albiceleste)
-      const sfxVol = 0.08 * this.volumes.sfx;
-      [261.63, 329.63, 392.0, 523.25].forEach((freq, i) => {
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, now + i * 0.06);
-        gain.gain.setValueAtTime(sfxVol, now + i * 0.06);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9 + i * 0.06);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(now + i * 0.06);
-        osc.stop(now + 1.0 + i * 0.06);
-      });
+      const fanfareVol = 0.085 * this.volumes.music;
+      if (fanfareVol > 0.002) {
+        [261.63, 329.63, 392.0, 523.25].forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + i * 0.065);
+          gain.gain.setValueAtTime(fanfareVol, now + i * 0.065);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.95 + i * 0.065);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + i * 0.065);
+          osc.stop(now + 1.05 + i * 0.065);
+        });
+      }
     }
   }
 

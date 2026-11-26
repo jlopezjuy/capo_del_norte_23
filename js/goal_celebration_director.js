@@ -1,18 +1,26 @@
 /**
- * GoalCelebrationDirector — Director Contextual de Festejos y VFX (desacoplado de reglas)
+ * GoalCelebrationDirector — Director Contextual de Festejos y VFX (16 variantes, desacoplado de reglas)
  */
 (function (global) {
   'use strict';
 
   const CELEBRATIONS = [
-    { id: 'grito_lobo', title: 'EL GRITO DEL LOBO', subtitle: '¡Ruge el 23 de Agosto!', style: 'dance', duration: 4.2, slowMo: 0.0, shake: 0.35, wave: false, wolfTotem: true, halo: false },
-    { id: 'terremoto_jujuy', title: 'TERREMOTO EN JUJUY', subtitle: '¡Explota la Popular Lobo Norte!', style: 'dance', duration: 4.2, slowMo: 0.0, shake: 0.85, wave: false, wolfTotem: false, halo: false },
-    { id: 'ola_celeste', title: 'LA OLA CELESTE', subtitle: 'Todo el estadio de pie', style: 'orchestra', duration: 4.4, slowMo: 0.0, shake: 0.15, wave: true, wolfTotem: false, halo: false },
-    { id: 'gol_otro_planeta', title: 'GOL DE OTRO PLANETA', subtitle: '¡Definición estelar!', style: 'dance', duration: 4.0, slowMo: 0.9, shake: 0.25, wave: false, wolfTotem: false, halo: true },
-    { id: 'baile_colectivo', title: 'BAILE COLECTIVO', subtitle: 'Festejo grupal albiceleste', style: 'dance', duration: 4.0, slowMo: 0.0, shake: 0.20, wave: false, wolfTotem: false, halo: false },
-    { id: 'director_orquesta', title: 'DIRECTOR DE ORQUESTA', subtitle: 'El goleador dirige a la hinchada', style: 'orchestra', duration: 4.2, slowMo: 0.0, shake: 0.15, wave: true, wolfTotem: false, halo: false },
-    { id: 'todos_al_corner', title: 'TODOS AL CÓRNER', subtitle: 'Locura junto al banderín', style: 'corner', duration: 4.0, slowMo: 0.0, shake: 0.30, wave: false, wolfTotem: false, halo: false },
-    { id: 'gol_minuto_90', title: 'GOL AGÓNICO • MINUTO 90', subtitle: '¡Inolvidable en San Salvador!', style: 'dance', duration: 4.6, slowMo: 1.1, shake: 0.65, wave: true, wolfTotem: true, halo: true }
+    { id: 'grito_lobo', title: 'EL GRITO DEL LOBO', subtitle: '¡Ruge el 23 de Agosto!', style: 'grito', duration: 4.0, slowMo: 0.0, shake: 0.35, wave: false, wolfTotem: true, halo: false, flash: false },
+    { id: 'terremoto_jujuy', title: 'TERREMOTO EN JUJUY', subtitle: '¡Tiembla la Popular Norte!', style: 'grito', duration: 4.1, slowMo: 0.0, shake: 0.78, wave: false, wolfTotem: false, halo: false, flash: true },
+    { id: 'gol_otro_planeta', title: 'GOL DE OTRO PLANETA', subtitle: '¡Definición estelar!', style: 'dance', duration: 4.0, slowMo: 0.85, shake: 0.25, wave: false, wolfTotem: false, halo: true, flash: true },
+    { id: 'baile_colectivo', title: 'BAILE COLECTIVO', subtitle: 'Coreografía albiceleste en el área', style: 'dance', duration: 3.9, slowMo: 0.0, shake: 0.18, wave: false, wolfTotem: false, halo: false, flash: false },
+    { id: 'ola_celeste', title: 'LA OLA CELESTE', subtitle: 'Todo el estadio se levanta por sectores', style: 'orchestra', duration: 4.3, slowMo: 0.0, shake: 0.14, wave: true, wolfTotem: false, halo: false, flash: false },
+    { id: 'lobo_gigante', title: 'EL LOBO GIGANTE', subtitle: '¡La mascota del Lobo festeja atrás del arco!', style: 'grito', duration: 4.0, slowMo: 0.0, shake: 0.30, wave: false, wolfTotem: true, halo: false, flash: false },
+    { id: 'golazo_cinematografico', title: 'GOLAZO CINEMATOGRÁFICO', subtitle: 'Repetición en cámara lenta', style: 'grito', duration: 4.4, slowMo: 1.4, shake: 0.22, wave: false, wolfTotem: false, halo: false, flash: false, replay: true },
+    { id: 'lluvia_papelitos', title: 'LLUVIA DE PAPELITOS', subtitle: 'Celeste y blanco sobre el césped', style: 'dance', duration: 3.8, slowMo: 0.0, shake: 0.16, wave: true, wolfTotem: false, halo: false, flash: false },
+    { id: 'arquero_incredulo', title: 'EL ARQUERO INCRÉDULO', subtitle: 'No la pudo ni ver pasar', style: 'grito', duration: 3.8, slowMo: 0.5, shake: 0.20, wave: false, wolfTotem: false, halo: false, flash: false },
+    { id: 'todos_al_corner', title: 'TODOS AL CÓRNER', subtitle: 'Locura junto al banderín', style: 'corner', duration: 3.9, slowMo: 0.0, shake: 0.28, wave: false, wolfTotem: false, halo: false, flash: false },
+    { id: 'gol_minuto_90', title: 'GOL DEL MINUTO 90', subtitle: '¡Agónico en San Salvador de Jujuy!', style: 'grito', duration: 4.6, slowMo: 1.1, shake: 0.60, wave: true, wolfTotem: true, halo: true, flash: true, replay: true },
+    { id: 'gol_imposible', title: 'EL GOL IMPOSIBLE', subtitle: '¡Remate de otro calibre!', style: 'dance', duration: 4.3, slowMo: 1.0, shake: 0.45, wave: true, wolfTotem: false, halo: true, flash: true },
+    { id: 'director_orquesta', title: 'DIRECTOR DE ORQUESTA', subtitle: 'El goleador dirige a la hinchada', style: 'orchestra', duration: 4.2, slowMo: 0.0, shake: 0.12, wave: true, wolfTotem: false, halo: false, flash: false },
+    { id: 'locura_banco', title: 'LOCURA EN EL BANCO', subtitle: '¡Festeja todo el plantel!', style: 'dance', duration: 3.9, slowMo: 0.0, shake: 0.24, wave: true, wolfTotem: false, halo: false, flash: false },
+    { id: 'fiesta_lobo', title: 'FIESTA DEL LOBO', subtitle: 'Banderas, humo celeste y estadio lleno', style: 'grito', duration: 4.3, slowMo: 0.0, shake: 0.40, wave: true, wolfTotem: true, halo: true, flash: false },
+    { id: 'celebracion_sorpresa', title: 'SORPRESA ALBICELESTE', subtitle: '¡Festejo especial inesperado!', style: 'dance', duration: 4.1, slowMo: 0.6, shake: 0.32, wave: true, wolfTotem: true, halo: true, flash: false }
   ];
 
   class GoalCelebrationDirector {
@@ -20,17 +28,17 @@
       this.scene = scene;
       this.active = false;
       this.current = null;
-      this.lastId = null;
+      this.recentIds = [];
       this.timer = 0;
       this.slowMoTimer = 0;
       this.reduceMotion = false;
+      this.noFlash = false;
       this.intensity = 1.0;
 
       this._buildVfxProps();
     }
 
     _buildVfxProps() {
-      // Halo holográfico ("Gol de otro planeta")
       this.haloGroup = new THREE.Group();
       const ring1 = new THREE.Mesh(
         new THREE.TorusGeometry(1.15, 0.06, 8, 28),
@@ -46,9 +54,8 @@
       this.haloGroup.visible = false;
       this.scene.add(this.haloGroup);
 
-      // Silueta luminosa del Lobo detrás del arco ("El Grito del Lobo")
       this.wolfTotem = new THREE.Group();
-      const wolfMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.72, wireframe: false });
+      const wolfMat = new THREE.MeshBasicMaterial({ color: 0x1ea7fd, transparent: true, opacity: 0.78 });
       const head = new THREE.Mesh(new THREE.ConeGeometry(2.6, 4.2, 5), wolfMat);
       head.rotation.x = Math.PI / 2;
       const earL = new THREE.Mesh(new THREE.ConeGeometry(0.9, 2.4, 4), wolfMat);
@@ -61,40 +68,78 @@
     }
 
     selectCelebration(ctx) {
-      let pool = CELEBRATIONS.filter((c) => c.id !== this.lastId);
-      if (ctx.minute >= 85 && ctx.isHomeGoal) {
-        return CELEBRATIONS.find((c) => c.id === 'gol_minuto_90');
-      }
-      if (ctx.shotDistance > 22) {
-        const longShot = pool.find((c) => c.id === 'gol_otro_planeta');
-        if (longShot && Math.random() < 0.65) return longShot;
-      }
       if (!ctx.isHomeGoal) {
-        // Rival goal uses shorter standard celebration
         return {
           id: 'rival_goal',
           title: `GOL DE ${ctx.teamName.toUpperCase()}`,
-          subtitle: `Minuto ${ctx.minute}'`,
-          style: 'dance',
-          duration: 3.2,
+          subtitle: `Minuto ${ctx.minute}' • Silencio en el 23 de Agosto`,
+          style: 'grito',
+          duration: 3.1,
           slowMo: 0.0,
-          shake: 0.1,
+          shake: 0.08,
           wave: false,
           wolfTotem: false,
-          halo: false
+          halo: false,
+          flash: false
         };
       }
-      return pool[Math.floor(Math.random() * pool.length)];
+
+      const pickById = (id) => CELEBRATIONS.find((c) => c.id === id);
+      if (ctx.isStoppageTime || (ctx.minute >= 85 && ctx.isDecisive)) {
+        return pickById('gol_minuto_90');
+      }
+      if (ctx.shotDistance > 25) {
+        return pickById(Math.random() < 0.5 ? 'gol_imposible' : 'gol_otro_planeta');
+      }
+      if (ctx.isComeback && !this.recentIds.includes('fiesta_lobo')) {
+        return pickById('fiesta_lobo');
+      }
+      if (ctx.isEqualizer && !this.recentIds.includes('terremoto_jujuy')) {
+        return pickById('terremoto_jujuy');
+      }
+      if (ctx.isFirstGoal && !this.recentIds.includes('grito_lobo')) {
+        return pickById('grito_lobo');
+      }
+      if (Math.random() < 0.08 && !this.recentIds.includes('celebracion_sorpresa')) {
+        return pickById('celebracion_sorpresa');
+      }
+
+      const pool = CELEBRATIONS.filter((c) => !this.recentIds.includes(c.id));
+      const candidates = pool.length > 0 ? pool : CELEBRATIONS;
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    triggerInteractive(keyNum) {
+      if (!this.active || !this.current || this.current.id === 'rival_goal') return null;
+      const map = {
+        1: 'grito_lobo',
+        2: 'baile_colectivo',
+        3: 'director_orquesta',
+        4: 'celebracion_sorpresa'
+      };
+      const found = CELEBRATIONS.find((c) => c.id === map[keyNum]);
+      if (!found) return null;
+      this.current = found;
+      this.haloGroup.visible = !!(found.halo && !this.reduceMotion && !this.noFlash);
+      this.wolfTotem.visible = !!(found.wolfTotem && !this.reduceMotion);
+      const titleEl = document.getElementById('goal-banner-title');
+      const subEl = document.getElementById('goal-banner-sub');
+      if (titleEl) titleEl.textContent = found.title;
+      if (subEl) subEl.textContent = found.subtitle;
+      return found;
     }
 
     start(ctx) {
       this.current = this.selectCelebration(ctx);
-      this.lastId = this.current.id;
+      if (ctx.isHomeGoal) {
+        this.recentIds.push(this.current.id);
+        if (this.recentIds.length > 4) this.recentIds.shift();
+      }
       this.active = true;
       this.timer = this.current.duration;
       this.slowMoTimer = this.reduceMotion ? 0 : this.current.slowMo;
 
-      this.haloGroup.visible = !!(this.current.halo && !this.reduceMotion);
+      this.haloGroup.visible = !!(this.current.halo && !this.reduceMotion && !this.noFlash);
       this.wolfTotem.visible = !!(this.current.wolfTotem && !this.reduceMotion);
       if (this.wolfTotem.visible) {
         this.wolfTotem.position.set(0, 5.5, ctx.isHomeGoal ? -55.5 : 55.5);
@@ -108,10 +153,16 @@
     _showBanner(ctx, cel) {
       const banner = document.getElementById('goal-banner-overlay');
       if (!banner) return;
+      const badgeEl = document.getElementById('goal-banner-badge');
+      if (badgeEl && global.ClubBadges) {
+        badgeEl.innerHTML = global.ClubBadges.getSvg(ctx.isHomeGoal ? 'gye' : (ctx.awayId || 'mad'), ctx.isHomeGoal ? null : ctx.awayHex, 42);
+      }
       document.getElementById('goal-banner-title').textContent = cel.title;
       document.getElementById('goal-banner-scorer').textContent = `#${ctx.scorerNumber} ${ctx.scorerName} • ${ctx.minute}'`;
       document.getElementById('goal-banner-score').textContent = `GYE ${ctx.scoreHome} - ${ctx.scoreAway} ${ctx.awayShort}`;
       document.getElementById('goal-banner-sub').textContent = cel.subtitle;
+      const keysEl = document.getElementById('goal-interactive-keys');
+      if (keysEl) keysEl.classList.toggle('hidden', !ctx.isHomeGoal);
       banner.classList.remove('hidden');
     }
 
@@ -147,7 +198,7 @@
         this.wolfTotem.scale.set(s, s, s);
       }
 
-      const shakeAmt = this.reduceMotion ? 0 : (this.current.shake * this.intensity * 0.35);
+      const shakeAmt = this.reduceMotion ? 0 : (this.current.shake * this.intensity * 0.32);
       const shakeOffset = {
         x: (Math.random() - 0.5) * shakeAmt,
         y: (Math.random() - 0.5) * shakeAmt

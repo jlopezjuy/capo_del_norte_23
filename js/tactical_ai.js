@@ -79,6 +79,14 @@
       let tx = target ? target.x + (target.vx || 0) * 0.28 : passer.x + Math.sin(passer.rotY) * 16;
       let tz = target ? target.z + (target.vz || 0) * 0.28 : passer.z + Math.cos(passer.rotY) * 16;
 
+      if (passer.team === 'away') {
+        const err = this.getTuning(matchState.difficulty).passError || 0;
+        if (err > 0) {
+          tx += (Math.random() - 0.5) * err * 14;
+          tz += (Math.random() - 0.5) * err * 14;
+        }
+      }
+
       // Clamp target inside field
       tx = Math.max(-33, Math.min(33, tx));
       tz = Math.max(-50, Math.min(50, tz));
@@ -172,6 +180,9 @@
             p.aiState = 'MAKE_RUN';
             targetZ += attackDirZ * 8;
             sprint = Math.abs(b.z - p.z) < 28;
+            if (isHome && owner && owner.team === 'home' && Math.hypot(b.x - p.x, b.z - p.z) > 10 && Math.random() < 0.018) {
+              p.callingPassTimer = 0.85;
+            }
           } else {
             p.aiState = 'SUPPORT_ATTACK';
           }

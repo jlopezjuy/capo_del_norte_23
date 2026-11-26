@@ -187,10 +187,13 @@
         (pad ? pad.lobPressed : false);
 
       const switchPressed =
-        this.justPressed.has('KeyQ') ||
+        !hasBall &&
+        (this.justPressed.has('KeyQ') ||
         this.justPressed.has('KeyE') ||
         touchSwitchEdge ||
-        (pad ? pad.switchPressed : false);
+        (pad ? pad.switchPressed : false));
+
+      const dribblePressed = hasBall && this.justPressed.has('KeyE');
 
       // Shoot / Tackle (L or F; note D is used for WASD right movement, so we support L and F, plus Space/J in defense!)
       const shootKeyHeld = this.keys.has('KeyL') || this.keys.has('KeyF') || this.touchButtons.shoot || (pad ? pad.shootHeld : false);
@@ -236,6 +239,7 @@
         passPressed,
         lobPressed,
         switchPressed,
+        dribblePressed,
         tacklePressed,
         shootTriggered,
         shootPower,

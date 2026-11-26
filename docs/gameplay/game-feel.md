@@ -1,9 +1,6 @@
-# Game Feel (`js/physics_engine.js`, `js/game_engine.js`, `js/input_controller.js`)
+# Game Feel y Sensaciones de Juego — El Lobo Jujeño
 
-- **Física 60 Hz:** *Fixed timestep* (`1/60s`), rozamiento en césped, rebote elástico, colisión con postes/travesaño y amortiguación en red.
-- **Juice implementado:**
-  - Estela celeste (`ballTrailPoints`) en remates de velocidad > 16.5 m/s.
-  - Micro *camera shake* acotado en impactos contra el palo y remates potentes (desactivable con `Reducir movimiento`).
-  - Indicador de caída aérea en césped (`dropRingMesh`).
-  - Remate rápido con potencia mínima `0.58` y carga hasta `1.0`.
-- **Modo Entrenamiento:** Acceso directo desde el Lobby para practicar pases y remates cerca del área rival sin reloj.
+- **Respuesta inmediata (`js/input_controller.js`):** Muestreo a 60 Hz para teclado, gamepad y joystick táctil; carga de remate progresiva (`L`/`F`) y regate rápido (`E`).
+- **Física expresiva (`js/physics_engine.js`):** Efecto Magnus (`spinY`) en remates con dirección lateral, estela luminosa en disparos potentes y deformación física de la red (`onNetHit`).
+- **Feedback de impacto:** Micro *hit-stop* (~36–45ms) y *micro-shake* en remates potentes, palos y goles (desactivables con `Reducir movimiento`).
+- **Reacciones humanas:** Arquero festeja atajadas (`saveCelebrateTimer`), delantero se agarra la cabeza al fallar (`frustratedTimer`) y compañeros en ataque piden el balón (`callingPassTimer`).

@@ -29,8 +29,8 @@
       }
       mesh.geometry.setAttribute('aPhase', new THREE.InstancedBufferAttribute(phases, 1));
       mesh.geometry.setAttribute('aGroup', new THREE.InstancedBufferAttribute(groups, 1));
-      mesh.computeBoundingBox();
-      mesh.computeBoundingSphere();
+      mesh.geometry.computeBoundingSphere();
+      mesh.frustumCulled = false;
 
       const mat = mesh.material.clone();
       const uniforms = this.uniforms;

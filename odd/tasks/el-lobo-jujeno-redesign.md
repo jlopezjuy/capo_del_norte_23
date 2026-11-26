@@ -12,12 +12,12 @@ Tracking: ODD Feature Document
 - S7: Validación integral en navegador (Playwright, 0 errores consola, métricas FPS/draw calls), capturas `docs/design-audit/after/`, `comparison.md` y documentación completa en `docs/`.
 
 ## Tasks
-- [ ] T1 (S1, S2): Investigación web, auditoría `before/`, guía visual, rediseño de Lobby/HUD/Escudos/Selector de jugador | Route: inline | Commit: pending
-- [ ] T2 (S3): Rediseño de futbolistas 3D expresivos y sistema de animación con blending | Route: inline | Commit: pending
-- [ ] T3 (S4): Hinchada viva GPU con siluetas, trapos jujeños y Mascota del Lobo | Route: inline | Commit: pending
-- [ ] T4 (S5): GoalCelebrationDirector (16 celebraciones, replay, interactividad 1-4, accesibilidad) | Route: inline | Commit: pending
-- [ ] T5 (S6): Game feel, cámaras, deformación de red, detalles de estadio y audio multicapa | Route: inline | Commit: pending
-- [ ] T6 (S7): QA en navegador, capturas `after/`, `comparison.md` y cierre de documentación | Route: inline | Commit: pending
+- [x] T1 (S1, S2): Investigación web, auditoría `before/`, guía visual, rediseño de Lobby/HUD/Escudos/Selector de jugador | Route: inline | Commit: working-tree
+- [x] T2 (S3): Rediseño de futbolistas 3D expresivos y sistema de animación con blending | Route: inline | Commit: working-tree
+- [x] T3 (S4): Hinchada viva GPU con siluetas, trapos jujeños y Mascota del Lobo | Route: inline | Commit: working-tree
+- [x] T4 (S5): GoalCelebrationDirector (16 celebraciones, replay, interactividad 1-4, accesibilidad) | Route: inline | Commit: working-tree
+- [x] T5 (S6): Game feel, cámaras, deformación de red, detalles de estadio y audio multicapa | Route: inline | Commit: working-tree
+- [x] T6 (S7): QA en navegador, capturas `after/`, `comparison.md` y cierre de documentación | Route: inline | Commit: working-tree
 
 ## Log
 - L1: User requested full mission "TRANSFORMAR EL LOBO JUJEÑO EN UN VIDEOJUEGO MEMORABLE" without clarifying questions: audit, run & screenshot before, research communities, define Art Direction C, redesign players, badges/kits, living crowd, 16+ goal celebrations, game feel, cameras, stadium/net/lighting, UI/HUD, reactive audio, optimization, after screenshots, comparison, QA, and full docs/.

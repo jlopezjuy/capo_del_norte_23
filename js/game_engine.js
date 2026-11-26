@@ -46,7 +46,10 @@
       this.kitInfo = null;
       this.cameraMode = 'broadcast'; // 'broadcast' | 'pro' | 'tribuna'
       this.tribunaSectorIndex = 0;
-      this.tribunaKeys = ['popular_norte', 'platea_baja', 'preferencial', 'palcos_vip', 'popular_sur'];
+      this.tribunaKeys = ['popular_norte', 'platea_baja', 'platea_alta', 'preferencial', 'palcos_vip', 'popular_sur', 'campo_juego', 'vista_aerea'];
+      this.starterNumber = 9;
+      this.hitStopTimer = 0;
+      this.crowdFrustrationTimer = 0;
 
       this.camPos = new THREE.Vector3(-52, 21.5, 0);
       this.camLook = new THREE.Vector3(0, 1.0, 0);
@@ -133,7 +136,17 @@
       if (this.crowdSystem) {
         this.crowdSystem.registerInstancedCrowd(this.stadiumRefs.bowlCrowdMesh);
         this.crowdSystem.registerInstancedCrowd(this.stadiumRefs.plateaCrowdMesh);
+        if (this.stadiumRefs.wolfMascot) {
+          this.crowdSystem.setMascot(this.stadiumRefs.wolfMascot);
+        }
         this.applyGraphicsQuality('auto');
+      }
+      if (this.physics) {
+        this.physics.onNetHit = (goalZ, ix, iy, strength) => {
+          if (global.StadiumBuilder && global.StadiumBuilder.deformGoalNet) {
+            global.StadiumBuilder.deformGoalNet(goalZ, ix, iy, strength);
+          }
+        };
       }
       if (global.GoalCelebrationDirector) {
         this.celebrationDirector = new global.GoalCelebrationDirector(this.scene);
@@ -365,6 +378,7 @@
       if (options.skyMode) {
         global.StadiumBuilder.setSkyMode(options.skyMode);
       }
+      this.starterNumber = options.starterNumber || 9;
 
       this._buildPlayersForFixture(fixture);
       this._setupKickoff('home');
@@ -419,6 +433,28 @@
     setReduceMotion(val) {
       this.reduceMotion = !!val;
       if (this.celebrationDirector) this.celebrationDirector.reduceMotion = this.reduceMotion;
+    }
+
+    setNoFlash(val) {
+      this.noFlash = !!val;
+      if (this.celebrationDirector) this.celebrationDirector.noFlash = this.noFlash;
+    }
+
+    triggerInteractiveCelebration(keyNum) {
+      if (this.matchState.phase !== 'GOAL_CELEBRATION' || !this.celebrationDirector) return;
+      const cel = this.celebrationDirector.triggerInteractive(keyNum);
+      if (cel) {
+        this.matchState.celebrationStyle = cel.style;
+      }
+    }
+
+    nextExploreSector() {
+      this.cameraMode = 'tribuna';
+      this.tribunaSectorIndex = (this.tribunaSectorIndex + 1) % this.tribunaKeys.length;
+      const key = this.tribunaKeys[this.tribunaSectorIndex];
+      const sec = global.StadiumBuilder.STADIUM_SECTORS[key];
+      const lbl = document.getElementById('explore-sector-name');
+      if (lbl && sec) lbl.textContent = sec.name;
     }
 
     startTraining(fixture) {
@@ -479,8 +515,10 @@
         }
       });
 
-      // Put striker near center spot
-      const striker = this.matchState.players.find((p) => p.team === team && p.number === 9);
+      // Put starter near center spot
+      const targetNum = team === 'home' ? (this.starterNumber || 9) : 9;
+      const striker = this.matchState.players.find((p) => p.team === team && p.number === targetNum)
+        || this.matchState.players.find((p) => p.team === team && p.role === 'FW');
       if (striker) {
         striker.x = 0;
         striker.z = team === 'home' ? 0.65 : -0.65;
@@ -496,6 +534,9 @@
       this.matchState.lastGoalTeam = scoringTeam;
       this.matchState.ownerPlayerId = null;
 
+      const prevHome = this.matchState.scoreHome;
+      const prevAway = this.matchState.scoreAway;
+
       if (scoringTeam === 'home') {
         this.matchState.scoreHome += 1;
         this.audio.playGoalRoar();
@@ -503,9 +544,11 @@
         this._setCommentary(`¡GOOOOL DE GIMNASIA Y ESGRIMA DE JUJUY! Explota la Popular Lobo Norte (${this.matchState.scoreHome} - ${this.matchState.scoreAway}).`);
       } else {
         this.matchState.scoreAway += 1;
+        this.crowdFrustrationTimer = 2.4;
         this.audio.playWhistle('short');
         this._setCommentary(`Gol de ${this.currentFixture.opponent.name}. El marcador queda ${this.matchState.scoreHome} - ${this.matchState.scoreAway}.`);
       }
+      if (!this.reduceMotion) this.hitStopTimer = 0.045;
 
       const scorer = this.matchState.players.find((p) => p.id === this.matchState.lastTouchPlayerId && p.team === scoringTeam)
         || this.matchState.players.find((p) => p.team === scoringTeam && p.role === 'FW')
@@ -517,18 +560,30 @@
 
       if (this.celebrationDirector) {
         const clk = this.matchState.getDisplayClock();
+        const isFirstGoal = prevHome === 0 && prevAway === 0;
+        const isEqualizer = this.matchState.scoreHome === this.matchState.scoreAway;
+        const isComeback = scoringTeam === 'home' && prevHome < prevAway && this.matchState.scoreHome >= this.matchState.scoreAway;
+        const isDecisive = Math.abs(this.matchState.scoreHome - this.matchState.scoreAway) <= 1;
         const cel = this.celebrationDirector.start({
           isHomeGoal: scoringTeam === 'home',
           teamName: scoringTeam === 'home' ? 'Gimnasia (J)' : this.currentFixture.opponent.name,
+          awayId: this.currentFixture.opponent.id,
           awayShort: this.currentFixture.opponent.shortName,
+          awayHex: this.kitInfo ? this.kitInfo.hex : '#facc15',
           scorerName: scorer ? scorer.name : 'Jugador',
           scorerNumber: scorer ? scorer.number : 9,
           minute: Math.max(1, clk.mins),
+          isFirstGoal,
+          isEqualizer,
+          isComeback,
+          isDecisive,
+          isStoppageTime: clk.mins >= 90,
           scoreHome: this.matchState.scoreHome,
           scoreAway: this.matchState.scoreAway,
           shotDistance: scorer ? Math.hypot(scorer.x, (scoringTeam === 'home' ? -52.5 : 52.5) - scorer.z) : 14
         });
         this.matchState.celebrationTimer = cel.duration;
+        this.matchState.celebrationStyle = cel.style;
       } else {
         this.matchState.celebrationTimer = 4.2;
       }
@@ -781,16 +836,26 @@
           }
         } else if (frame.shootTriggered) {
           if (this.playerMeshes[ms.activeHomeIndex]) this.playerMeshes[ms.activeHomeIndex].kickTimer = 0.34;
-          // Aim toward North goal (-52.5) blended with player's lateral input, kept inside posts (±3.2m)
           const aimX = Math.max(-3.2, Math.min(3.2, dirX * 3.1));
           const dx = aimX - ms.ball.x;
           const dz = -52.5 - ms.ball.z;
           const dist = Math.max(1, Math.hypot(dx, dz));
-          const speed = 19 + frame.shootPower * 15;
+          const speed = 19.5 + frame.shootPower * 15.5;
           const vy = 1.6 + frame.shootPower * 5.2;
+          ms.ball.spinY = dirX * frame.shootPower * 1.35;
           this.physics.kickBall(ms, p, (dx / dist) * speed, vy, (dz / dist) * speed, true);
+          if (frame.shootPower > 0.72 && !this.reduceMotion) {
+            this.hitStopTimer = 0.036;
+            this._triggerMicroShake(0.24);
+          }
           ms.stats.homeShots += 1;
           if (Math.abs(aimX) < 3.66) ms.stats.homeShotsOnTarget += 1;
+        } else if (frame.dribblePressed && p.stamina > 0.12) {
+          p.vx = dirX * p.speed * 1.55;
+          p.vz = dirZ * p.speed * 1.55;
+          p.x += p.vx * dt * 2.2;
+          p.z += p.vz * dt * 2.2;
+          p.stamina = Math.max(0, p.stamina - 0.1);
         }
       } else {
         // Defensive actions
@@ -858,6 +923,13 @@
           if (!currentOwner && ms.lastTouchTeam === p.team && ms.lastTouchPlayerId !== p.id) {
             if (p.team === 'home') ms.stats.homePassesCompleted += 1;
             else ms.stats.awayPassesCompleted += 1;
+          }
+
+          if (p.role === 'GK' && !currentOwner && Math.hypot(b.vx, b.vz) > 13 && ms.lastTouchTeam && ms.lastTouchTeam !== p.team) {
+            this.audio.playSave();
+            p.saveCelebrateTimer = 1.1;
+            const shooter = ms.players.find((pl) => pl.id === ms.lastTouchPlayerId);
+            if (shooter) shooter.frustratedTimer = 1.4;
           }
 
           ms.ownerPlayerId = p.id;
@@ -1079,10 +1151,14 @@
         }
 
         const simDt = rawDt * (this.lastCelebrationResult.timeScale || 1);
-        this.simAccum += simDt;
-        while (this.simAccum >= FIXED_DT) {
-          this._stepSimulation(FIXED_DT);
-          this.simAccum -= FIXED_DT;
+        if (this.hitStopTimer > 0) {
+          this.hitStopTimer -= rawDt;
+        } else {
+          this.simAccum += simDt;
+          while (this.simAccum >= FIXED_DT) {
+            this._stepSimulation(FIXED_DT);
+            this.simAccum -= FIXED_DT;
+          }
         }
 
         this._syncVisuals(rawDt, elapsed);
@@ -1105,8 +1181,12 @@
       const isGoal = ms.phase === 'GOAL_CELEBRATION';
       const distToAnyGoal = Math.min(Math.abs(ms.ball.z + 52.5), Math.abs(ms.ball.z - 52.5));
       const excitement = ms.phase === 'PLAYING' ? Math.max(0.1, 1 - distToAnyGoal / 36) : 0.15;
+      if (this.crowdFrustrationTimer > 0) this.crowdFrustrationTimer = Math.max(0, this.crowdFrustrationTimer - dt);
       if (this.crowdSystem) {
-        this.crowdSystem.update(elapsed, excitement, isGoal, !!this.lastCelebrationResult.wave);
+        this.crowdSystem.update(elapsed, excitement, isGoal, !!this.lastCelebrationResult.wave, this.crowdFrustrationTimer > 0 ? 1.0 : 0.0);
+      }
+      if (global.StadiumBuilder && global.StadiumBuilder.relaxGoalNets) {
+        global.StadiumBuilder.relaxGoalNets(dt);
       }
 
       // Smoke & confetti
@@ -1251,13 +1331,17 @@
         targetPos.set(secPos.x, secPos.y + 3, secPos.z);
         targetLook.set(ms.ball.x, 1.5, ms.ball.z);
       } else if (this.cameraMode === 'broadcast') {
-        // TV Broadcast in front of Platea Alta roof (x=-51) with wide 58deg FOV & dynamic zoom near boxes
+        // TV Broadcast with smooth look-ahead along ball velocity
         const nearBox = Math.max(0, (Math.abs(ms.ball.z) - 24) / 28);
+        const lookAheadZ = Math.max(-5, Math.min(5, (ms.ball.vz || 0) * 0.16));
         const camX = -51 + nearBox * 8 + ms.ball.x * 0.14;
         const camY = 25.5 - nearBox * 4.5;
-        const camZ = ms.ball.z * 0.64;
+        const camZ = ms.ball.z * 0.64 + lookAheadZ * 0.4;
         targetPos.set(camX, camY, camZ);
-        targetLook.set(ms.ball.x * 0.30 + 3.5, 0.8, ms.ball.z * 0.88);
+        targetLook.set(ms.ball.x * 0.30 + 3.5, 0.8, ms.ball.z * 0.88 + lookAheadZ);
+      } else if (this.cameraMode === 'tactical') {
+        targetPos.set(-48, 38, ms.ball.z * 0.35);
+        targetLook.set(0, 0.5, ms.ball.z * 0.45);
       } else if (this.cameraMode === 'pro') {
         const active = ms.players[ms.activeHomeIndex] || { x: 0, z: 0 };
         targetPos.set(
@@ -1266,6 +1350,10 @@
           Math.min(54, active.z + 14.5)
         );
         targetLook.set(active.x * 0.7, 1.2, Math.max(-52.5, active.z - 20));
+      } else if (this.cameraMode === 'free') {
+        const ang = elapsed * 0.22;
+        targetPos.set(ms.ball.x + Math.cos(ang) * 28, 16, ms.ball.z + Math.sin(ang) * 28);
+        targetLook.set(ms.ball.x, 1.0, ms.ball.z);
       } else {
         // Tribuna spectator mode
         const key = this.tribunaKeys[this.tribunaSectorIndex % this.tribunaKeys.length];
@@ -1373,8 +1461,14 @@
 
       const opp = this.currentFixture.opponent;
       document.getElementById('hud-away-short').textContent = opp.shortName;
+      const homeBadge = document.getElementById('hud-home-badge');
+      if (homeBadge && global.ClubBadges) {
+        homeBadge.innerHTML = global.ClubBadges.getSvg('gye', null, 24);
+      }
       const awayBadge = document.getElementById('hud-away-badge');
-      if (awayBadge) awayBadge.style.backgroundColor = this.kitInfo.hex;
+      if (awayBadge && global.ClubBadges) {
+        awayBadge.innerHTML = global.ClubBadges.getSvg(opp.id, this.kitInfo.hex, 24);
+      }
     }
 
     _hideAllModals() {
@@ -1395,6 +1489,10 @@
         customHeadline || (type === 'halftime' ? 'ENTRETIEMPO' : 'FINAL DEL PARTIDO');
       document.getElementById('stats-score-line').textContent =
         `GYE ${ms.scoreHome} - ${ms.scoreAway} ${this.currentFixture.opponent.shortName}`;
+      const shBadge = document.getElementById('stats-home-badge');
+      const saBadge = document.getElementById('stats-away-badge');
+      if (shBadge && global.ClubBadges) shBadge.innerHTML = global.ClubBadges.getSvg('gye', null, 34);
+      if (saBadge && global.ClubBadges) saBadge.innerHTML = global.ClubBadges.getSvg(this.currentFixture.opponent.id, this.kitInfo ? this.kitInfo.hex : null, 34);
 
       document.getElementById('stat-poss-home').textContent = `${poss.home}%`;
       document.getElementById('stat-poss-away').textContent = `${poss.away}%`;
@@ -1454,7 +1552,7 @@
     }
 
     cycleCameraMode() {
-      const order = ['broadcast', 'pro', 'tribuna'];
+      const order = ['broadcast', 'tactical', 'pro', 'free', 'tribuna'];
       if (this.cameraMode === 'tribuna') {
         this.tribunaSectorIndex += 1;
         if (this.tribunaSectorIndex < this.tribunaKeys.length) {
@@ -1472,7 +1570,9 @@
       const el = document.getElementById('hud-cam-label');
       if (!el) return;
       if (this.cameraMode === 'broadcast') el.textContent = 'TV Broadcast';
+      else if (this.cameraMode === 'tactical') el.textContent = 'Táctica';
       else if (this.cameraMode === 'pro') el.textContent = '3ra Persona';
+      else if (this.cameraMode === 'free') el.textContent = 'Libre 360°';
       else {
         const key = this.tribunaKeys[this.tribunaSectorIndex % this.tribunaKeys.length];
         const sec = global.StadiumBuilder.STADIUM_SECTORS[key];

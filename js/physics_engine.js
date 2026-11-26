@@ -21,6 +21,7 @@
       this.onOut = callbacks.onOut || (() => {});
       this.onPostHit = callbacks.onPostHit || (() => {});
       this.onKick = callbacks.onKick || (() => {});
+      this.onNetHit = callbacks.onNetHit || (() => {});
       this.postCooldown = 0;
     }
 
@@ -51,7 +52,12 @@
         }
       }
 
-      // Free ball integration
+      // Free ball integration + subtle Magnus curve spin
+      if (b.spinY) {
+        b.vx += -b.vz * b.spinY * dt * 0.35;
+        b.vz += b.vx * b.spinY * dt * 0.35;
+        b.spinY *= 1 - 1.2 * dt;
+      }
       b.vy += PITCH.GRAVITY * dt;
       b.x += b.vx * dt;
       b.y += b.vy * dt;
@@ -118,11 +124,14 @@
 
     _dampInNet(b, signZ) {
       const backZ = signZ * (PITCH.HALF_L + PITCH.GOAL_DEPTH - PITCH.BALL_RADIUS);
+      const speed = Math.hypot(b.vx, b.vz);
       if (signZ < 0 && b.z < backZ) {
+        if (speed > 2.5) this.onNetHit(signZ * PITCH.HALF_L, b.x, b.y, speed / 18);
         b.z = backZ;
         b.vz = Math.abs(b.vz) * 0.18;
         b.vx *= 0.4;
       } else if (signZ > 0 && b.z > backZ) {
+        if (speed > 2.5) this.onNetHit(signZ * PITCH.HALF_L, b.x, b.y, speed / 18);
         b.z = backZ;
         b.vz = -Math.abs(b.vz) * 0.18;
         b.vx *= 0.4;
