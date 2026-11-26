@@ -1504,11 +1504,13 @@
       const btnResume2nd = document.getElementById('btn-start-second-half');
       const btnPenalties = document.getElementById('btn-start-penalties');
       const btnRematch = document.getElementById('btn-rematch');
+      const supportCard = document.getElementById('stats-support-card');
 
       if (type === 'halftime') {
         btnResume2nd.classList.remove('hidden');
         btnPenalties.classList.add('hidden');
         btnRematch.classList.add('hidden');
+        if (supportCard) supportCard.classList.add('hidden');
       } else {
         btnResume2nd.classList.add('hidden');
         btnRematch.classList.remove('hidden');
@@ -1516,6 +1518,9 @@
           btnPenalties.classList.remove('hidden');
         } else {
           btnPenalties.classList.add('hidden');
+        }
+        if (supportCard && global.CreatorConfig) {
+          supportCard.classList.toggle('hidden', !global.CreatorConfig.recordFulltimeAndShouldShow());
         }
       }
     }
