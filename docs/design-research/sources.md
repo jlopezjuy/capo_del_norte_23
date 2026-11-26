@@ -1,24 +1,10 @@
-# Fuentes Verificables de Investigación
+# Fuentes Verificables — Investigación de Diseño y Tecnología
 
-Consultadas el **2026-11-25**:
-
-1. **Three.js Official Docs — InstancedMesh**  
-   - URL: https://threejs.org/docs/#api/en/objects/InstancedMesh  
-   - Uso: Arquitectura GPU instancing, `instanceColor` y `instanceMatrix`.
-
-2. **Reddit r/threejs — Crowd Animation & InstancedMesh Optimization**  
-   - URL: https://www.reddit.com/r/threejs/  
-   - Uso: Prevención de *fragment overdraw*, desplazamiento de animación al vertex shader y límites de culling.
-
-3. **GDC — "Juice It or Lose It" (Martin Jonasson & Petri Purho)**  
-   - URL: https://www.youtube.com/watch?v=Fy0aCDmgnxg  
-   - Uso: Diseño de feedback audiovisual en cascada (*juice*), *screen shake* moderado y respuesta de UI.
-
-4. **Game Developer / Principios de Game Feel (Steve Swink)**  
-   - URL: https://www.gamedeveloper.com/  
-   - Uso: Control en tiempo real sin latencia percibida, peso del balón y claridad espacial.
-
-5. **Referencias de Diseño Arcade Deportivo**  
-   - *Rocket League* (Psyonix): Celebraciones de gol explosivas con transición limpia al saque.  
-   - *Super Mario Strikers* (Next Level Games): Expresividad corporal exagerada y siluetas legibles desde cámara aérea.  
-   - *Football Manager* (Sports Interactive): Jerarquía de información táctica y tarjetas de estado en HUD.
+| # | Categoría | Fuente | URL | Fecha de consulta | Uso en el proyecto |
+|---|---|---|---|---|---|
+| 1 | Doc. Oficial | Three.js `InstancedMesh` | https://threejs.org/docs/#api/en/objects/InstancedMesh | 2026-11-25 | Arquitectura de hinchada GPU y draw calls |
+| 2 | Doc. Oficial | MDN Web Audio API | https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API | 2026-11-25 | Capas de audio reactivo y control de ganancia |
+| 3 | Charla GDC | *Juice It or Lose It* (Jonasson & Purho) | https://www.gdcvault.com/play/1016487/Juice-it-or-lose-it | 2026-11-25 | Principios de feedback, hit-stop y respuesta |
+| 4 | Comunidad | `r/gamedesign` — Arcade Sports Feel | https://www.reddit.com/r/gamedesign/ | 2026-11-25 | Input overrides animation, celebraciones y ritmo |
+| 5 | Comunidad | `r/threejs` & Three.js Discourse | https://discourse.threejs.org/ | 2026-11-25 | Vertex animation por instancia y prevención de overdraw |
+| 6 | Referencia | *Super Mario Strikers* / *Rocket League* (principios) | — | 2026-11-25 | Lectura de cancha, deformación de red y replay corto |

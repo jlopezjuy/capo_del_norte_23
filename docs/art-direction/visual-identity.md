@@ -1,16 +1,32 @@
-# Dirección Artística — Dirección C: Híbrido Realista + Arcade
+# Guía de Dirección de Arte — El Lobo Jujeño
 
-## 1. Comparación y Elección
-- **A (Realismo deportivo):** Exige assets fotorrealistas y esqueletos complejos que penalizan carga web y pierden personalidad propia.
-- **B (Arcade caricaturesco total):** Desdibuja la arquitectura real del Estadio 23 de Agosto.
-- **C (Híbrido Realista + Arcade — ELEGIDA):** Conserva la fidelidad arquitectónica del Estadio 23 de Agosto (Platea «Ing. Raúl Ulloa», «G Y E J» / «-19 31-», Preferencial «Hugo Fayek Llapur», Populares Norte/Sur, cerros jujeños y Av. El Éxodo) combinada con futbolistas estilizados de proporciones limpias, animaciones expresivas y celebraciones arcade espectaculares.
+## 1. Comparación de Direcciones y Elección
 
-## 2. Guía Visual Coherente
-- **Paleta Principal:**
-  - Celeste Lobo: `#38BDF8` / `#0284C7`
-  - Blanco Albiceleste: `#F8FAFC`
-  - Noche Jujeña (fondos UI): `#06101F` / `#0B182E`
-  - Césped 23 de Agosto: `#1D6F42` y `#24824E` (franjas de corte alternadas)
-  - Acento Gol / Energía: `#FACC15` (Ámbar) y `#4ADE80` (Esmeralda)
-- **Tipografía:** `Barlow Condensed` (títulos y dorsales), `Plus Jakarta Sans` (UI legible), `JetBrains Mono` (reloj, métricas y keycaps).
-- **Lenguaje de VFX:** Partículas celestes y blancas acotadas, estela translúcida en remates de potencia > 0.7, deformación elástica de red y ondas de tribuna sin saturar ni tapar el balón.
+| Dirección | Ventajas | Desventajas | Decisión |
+|---|---|---|---|
+| **A. Realismo deportivo optimizado** | Fidelidad fotográfica del estadio. | Personajes realistas en WebGL sin assets pesados caen en *uncanny valley* y consumen demasiada GPU. | Descartada |
+| **B. Arcade estilizado premium** | Muy expresivo y divertido. | Corre el riesgo de perder la arquitectura reconocible del Estadio 23 de Agosto. | Descartada |
+| **C. Híbrido Realista + Arcade (ELEGIDA)** | **Estadio 23 de Agosto fiel en escala, tribunas y entorno jujeño**, combinado con **futbolistas estilizados expresivos, hinchada viva y celebraciones exageradas**. | Exige coherencia cromática para que el estadio realista y los personajes estilizados convivan sin chocar. | **SELECCIONADA** |
+
+---
+
+## 2. Sistema Visual (Dirección C)
+
+- **Paleta Principal (Identidad Albiceleste + Jujuy):**
+  - Celeste Lobo (primario): `#1EA7FD` / `#0EA5E9`
+  - Blanco Puro (contraste): `#F8FAFC`
+  - Azul Nocturno Estadio (fondos UI sólidos, sin blur excesivo): `#0B1320`
+  - Grafito Técnico (tarjetas HUD): `#111B2B` con borde `1px solid rgba(248, 250, 252, 0.14)`
+  - Oro Gol / Alerta: `#FACC15`
+  - Césped 23 de Agosto: `#2E7D32` / `#388E3C` (franjas de corte limpias)
+  - Terracota / Cerros Jujeños: `#8C5A4B` / `#4A3835`
+- **Tipografía:**
+  - Títulos, dorsales y marcador: `Barlow Condensed` (700/800/900, tabular-nums para reloj y goles).
+  - UI, controles y lectura rápida: `Plus Jakarta Sans` (500/600/700).
+- **Reglas de UI (Anti-clutter):**
+  - Cero glassmorphism pesado sobre el campo de juego; usar paneles compactos de alto contraste en esquinas.
+  - Durante el partido, el HUD ocupa < 12% de la pantalla; el banner de gol se ubica en el tercio superior dejando visible al goleador y la hinchada.
+  - Cero glow decorativo sin función: el resaltado luminoso se reserva exclusivamente para el jugador activo, la carga de remate y eventos de gol.
+- **Estilo de Personajes e Hinchada:**
+  - Proporciones heroicas estilizadas (cabeza ligeramente expresiva 1:6.5 respecto al cuerpo, hombros marcados, torso en V, ojos y cejas legibles en cámara Pro y celebraciones).
+  - Hinchada con siluetas humanas simplificadas (cabeza + torso + brazos) y colores celeste/blanco/azul marino, evitando bloques cúbicos sueltos.

@@ -1,41 +1,62 @@
-# Investigación de Diseño, Game Feel y Optimización Web 3D
+# Investigación de Diseño de Videojuegos y Comunidades — El Lobo Jujeño
 
 **Fecha de consulta:** 2026-11-25  
-**Proyecto:** El Lobo Jujeño — Estadio 23 de Agosto 3D (Gimnasia y Esgrima de Jujuy)
+**Alcance:** Principios verificables de Game Feel, diseño de fútbol arcade, multitudes GPU en Three.js, celebraciones de gol y optimización WebGL.
 
 ---
 
-## 1. Documentación Técnica Oficial (Three.js / WebGL)
+## 1. Documentación Técnica Oficial
 
-### 1.1 GPU Instancing (`THREE.InstancedMesh`) y Vertex Shaders
-- **Fuente:** Three.js Documentation (`InstancedMesh`, `InstancedBufferAttribute`)
+### 1.1 Three.js `InstancedMesh` y Presupuesto de Draw Calls
+- **Fuente:** Three.js Documentation (`InstancedMesh`)
 - **URL:** https://threejs.org/docs/#api/en/objects/InstancedMesh
-- **Recomendación principal:** Agrupar miles de espectadores en un único `InstancedMesh` reduce los *draw calls* a 1 por lote. Sin embargo, actualizar matrices en CPU mediante bucles `setMatrixAt()` cada frame genera presión de GC y transferencia CPU→GPU. La animación masiva debe delegarse al **Vertex Shader** (`onBeforeCompile` + atributos por instancia como `aPhase` y uniformes `uTime`, `uExcitement`, `uWavePhase`).
-- **Limitación / Cuidado:** `InstancedMesh` comparte un único *bounding box* para frustum culling. Separar en dos mallas (`bowlCrowd` y `plateaCrowd`) evita que el culling falle por completo o procese toda la geometría innecesariamente.
-- **Decisión:** **IMPLEMENTAR** — Migrar el salto en bloque de `bowlCrowdMesh` a un shader por instancia (`onBeforeCompile`) para olas por sectores, saltos desfasados y brazos arriba en tiempo real sin costo de CPU.
+- **Fecha de consulta:** 2026-11-25
+- **Recomendación principal:** Agrupar miles de elementos repetidos (espectadores, banderas, asientos) en un único `InstancedMesh` con geometría y material compartidos, calculando manualmente `computeBoundingBox()` / `computeBoundingSphere()` cuando las instancias se distribuyen en un área amplia.
+- **Evidencia / argumento:** Cada `Mesh` estándar emite al menos un draw call desde CPU a GPU. `InstancedMesh` reduce miles de espectadores a 1 draw call por capa de material.
+- **Aplicabilidad al proyecto:** Directa en `js/crowd_system.js` y `js/stadium_builder.js` para mantener < 120 draw calls totales con 2.500+ hinchas.
+- **Coste / limitación:** Un único bounding volume para todas las instancias impide frustum culling granular por sector si no se divide por tribuna.
+- **Decisión:** **Implementar** dividiendo la hinchada en capas instanciadas (cuerpos, cabezas/gorras, bufandas/banderas) con bounding spheres calculadas y animación 100% en vertex shader.
 
-### 1.2 Overdraw de Fragmentos en Multitudes
-- **Fuente:** Comunidad `r/threejs`
-- **URL:** https://www.reddit.com/r/threejs/
-- **Recomendación principal:** Al acercar la cámara a una multitud densa, el cuello de botella pasa de ser la cantidad de triángulos a ser el *pixel fill-rate / overdraw*. Usar geometrías low-poly limpias sin transparencia innecesaria en los cuerpos del público mantiene 60 FPS incluso en cámaras de tribuna.
-- **Decisión:** **IMPLEMENTAR** — Mantener materiales opacos compartidos con `instanceColor` y ajustar la densidad de instancias según perfil gráfico (`Bajo`, `Medio`, `Alto`).
+### 1.2 Web Audio API y Capas Dinámicas sin Assets Pesados
+- **Fuente:** MDN Web Docs — Web Audio API
+- **URL:** https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
+- **Fecha de consulta:** 2026-11-25
+- **Recomendación principal:** Usar nodos `GainNode` separados por categoría (`crowd`, `sfx`, `music`) conectados al destino final, y modular filtros `BiquadFilterNode` en tiempo real según eventos del juego.
+- **Evidencia / argumento:** Evita descargas MP3 pesadas y problemas de licencias musicales, manteniendo latencia < 20ms en navegadores.
+- **Aplicabilidad al proyecto:** Corregir el ruteo de `volumes.sfx` y `volumes.crowd` en `js/audio_engine.js` y añadir capas reactivas (ambiente, reacción de peligro, golpes de balón, fanfarria de gol, menú).
+- **Coste / limitación:** Requiere desbloqueo de `AudioContext` tras el primer gesto del usuario.
+- **Decisión:** **Implementar** en Sprint 5-6.
 
 ---
 
-## 2. Game Feel y Diseño Arcade Deportivo (Comunidad y GDC)
+## 2. Recomendaciones Comunitarias y Charlas GDC
 
-### 2.1 "Juice It or Lose It" — Cascada Audiovisual
-- **Fuente:** GDC Talk — Martin Jonasson & Petri Purho (*Juice It or Lose It*) / GameDeveloper
-- **URL:** https://www.youtube.com/watch?v=Fy0aCDmgnxg
-- **Recomendación principal:** Una acción mínima del jugador (patear, atajar, convertir) debe disparar una respuesta audiovisual en capas: sonido proporcional a la potencia, estela visual en el balón, micro *screen shake* en impactos fuertes (palo/remate), y reacción exagerada en UI y entorno.
-- **Aplicabilidad:** En fútbol arcade, sin *juice* el remate se siente como un cálculo de vectores. Con estela en tiros potentes, deformación de red, vibración sutil al pegar en el palo y festejo explosivo, cada jugada cobra peso físico.
-- **Decisión:** **IMPLEMENTAR** — Estela de balón en remates potentes, deformación de red al gol, micro *camera shake* acotado y audio multicapa reactivo.
+### 2.1 Game Feel & "Juice It or Lose It" en Fútbol Arcade
+- **Fuente:** GDC Vault — *Juice It or Lose It* (Martin Jonasson & Petri Purho) y discusiones en `r/gamedesign`
+- **URL:** https://www.gdcvault.com/play/1016487/Juice-it-or-lose-it
+- **Fecha de consulta:** 2026-11-25
+- **Recomendación principal:** Primero asegurar que la mecánica central (conducción, pase, remate) responda sin demora ("input overrides animation"), y luego sumar feedback audiovisual proporcional: micro hit-stop en remates potentes, estela del balón, deformación física de la red y cámara dinámica.
+- **Evidencia / argumento:** Los juegos deportivos tipo arcade (*Super Mario Strikers*, *Rocket League*) priorizan la respuesta inmediata sobre la inercia lenta de simuladores; el feedback auditivo y visual convierte un disparo común en un momento memorable.
+- **Aplicabilidad al proyecto:** Añadir efecto/curva (Magnus) al balón, hit-stop de ~40ms en remates fuertes, deformación elástica de red al impacto y cámara con look-ahead.
+- **Coste / limitación:** Exceso de screen shake o partículas ocultando el balón perjudica la lectura del partido.
+- **Decisión:** **Implementar** con límites estrictos y toggle de `Reducir movimiento`.
 
-### 2.2 Legibilidad y Ritmo sobre Simulación Rígida (*Rocket League* & *Super Mario Strikers*)
-- **Fuente:** Análisis de diseño arcade deportivo (GDC / GameDev.net / Wikipedia)
-- **URL:** https://www.gamedeveloper.com/
-- **Recomendación principal:**
-  - *Rocket League:* convierte el gol en un evento físico y cinematográfico (explosión, impulso de cámara, replay corto y vuelta rápida al juego sin fricción).
-  - *Super Mario Strikers:* personajes con siluetas reconocibles, poses exageradas de festejo/frustración y reglas ágiles que no frenan el ritmo.
-- **Limitación:** En navegador, las celebraciones largas aburren si no se pueden omitir o si bloquean el estado.
-- **Decisión:** **IMPLEMENTAR** — `GoalCelebrationDirector` con 8+ variantes contextuales cortas (3.5–4.5s), botón/tecla para omitir (`Espacio`/`Enter`) y modo de movimiento reducido accesible.
+### 2.2 Secuencia de Gol Cinematográfica (Hit-Stop + Slow-Mo + Replay)
+- **Fuente:** Discusiones de diseño arcade deportivo (`r/gamedesign`, *Rocket League* / *Mario Strikers* post-mortems)
+- **URL:** https://www.reddit.com/r/gamedesign/
+- **Fecha de consulta:** 2026-11-25
+- **Recomendación principal:** Separar el evento de gol en 3 fases breves: (1) Impacto (micro freeze-frame + rugido de estadio + red deformada), (2) Cámara lenta / replay breve de 1.5–2.5s o zoom heroico al goleador, (3) Transición limpia al saque sin menús invasivos y siempre omitible.
+- **Evidencia / argumento:** Celebraciones largas o repetitivas frustran después del tercer gol; variedad contextual + opción de omitir mantienen la sorpresa sin cortar el ritmo.
+- **Aplicabilidad al proyecto:** `GoalCelebrationDirector` con 16 variantes contextuales, replay lento opcional en golazos, teclas `1–4` opcionales para elegir festejo y botón/tecla `Espacio` para omitir.
+- **Coste / limitación:** Requiere buffer circular de posiciones recientes (últimos ~3 segundos) para el replay sin duplicar goles.
+- **Decisión:** **Implementar**.
+
+### 2.3 Multitudes en Three.js: Vertex Animation + Desincronización por Instancia
+- **Fuente:** `r/threejs` y Three.js Discourse (*InstancedMesh crowd vertex animation*)
+- **URL:** https://discourse.threejs.org/
+- **Fecha de consulta:** 2026-11-25
+- **Recomendación principal:** Nunca actualizar miles de matrices en CPU por frame (`setMatrixAt` en bucle); usar atributos por instancia (`aPhase`, `aSector`, `aRole`) y animar saltos, aplausos, olas y banderas dentro de `onBeforeCompile` en el vertex shader, manteniendo geometría low-poly para evitar *fragment overdraw* al acercar la cámara.
+- **Evidencia / argumento:** Mover matrices desde JS cada frame satura el bus CPU-GPU; las fases individuales eliminan el efecto "ejército de clones".
+- **Aplicabilidad al proyecto:** Reemplazar los cubos planos actuales en `js/crowd_system.js` por siluetas estilizadas de hinchas (torso + cabeza + brazos/bufanda) animadas en GPU con estados de partido.
+- **Coste / limitación:** Requiere cuidado con shaders WebGL1/WebGL2 compatibles con Three.js r128.
+- **Decisión:** **Implementar**.

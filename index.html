@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Estadio 23 de Agosto 3D — Gimnasia y Esgrima de Jujuy</title>
+  <title>El Lobo Jujeño 3D — Estadio 23 de Agosto</title>
   <meta name="description" content="Videojuego de fútbol 3D en el Estadio 23 de Agosto enfrentando al rival oficial de la semana AFA de Gimnasia y Esgrima de Jujuy." />
-  <meta name="theme-color" content="#0284c7" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#0b1320" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta property="og:title" content="Estadio 23 de Agosto 3D — Gimnasia y Esgrima de Jujuy" />
+  <meta property="og:title" content="El Lobo Jujeño 3D — Estadio 23 de Agosto" />
   <meta property="og:description" content="Jugá el Partido de la Semana AFA en el Estadio 23 de Agosto en 3D." />
   <meta property="og:type" content="website" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
@@ -27,21 +27,28 @@
       height: 100%;
       overflow: hidden;
       font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      background-color: #06101f;
+      background-color: #0b1320;
       color: #f8fafc;
       touch-action: none;
     }
     .font-display { font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.02em; }
-    .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
+    .font-mono-tech { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
     #canvas-container { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1; }
     #canvas-container canvas { width: 100% !important; height: 100% !important; display: block; }
     .hud-glass {
-      background: linear-gradient(165deg, rgba(11, 24, 46, 0.88) 0%, rgba(5, 12, 25, 0.92) 100%);
-      backdrop-filter: blur(16px) saturate(140%);
-      -webkit-backdrop-filter: blur(16px) saturate(140%);
-      border: 1px solid rgba(148, 213, 255, 0.18);
-      box-shadow: 0 12px 32px rgba(2, 8, 20, 0.65);
+      background: rgba(11, 19, 32, 0.92);
+      border: 1px solid rgba(248, 250, 252, 0.14);
+      box-shadow: 0 8px 20px rgba(4, 9, 18, 0.45);
     }
+    .hud-accent-top {
+      border-top: 3px solid #1ea7fd;
+    }
+    .btn-tactile {
+      transition: transform 90ms ease, background-color 140ms ease, border-color 140ms ease;
+      cursor: pointer;
+    }
+    .btn-tactile:hover { transform: translateY(-1px); }
+    .btn-tactile:active { transform: translateY(1px) scale(0.98); }
     .kbd-key {
       display: inline-flex;
       align-items: center;
@@ -49,9 +56,9 @@
       min-width: 22px;
       height: 20px;
       padding: 0 5px;
-      border-radius: 5px;
-      background: rgba(30, 41, 59, 0.95);
-      border: 1px solid rgba(148, 163, 184, 0.4);
+      border-radius: 4px;
+      background: #172235;
+      border: 1px solid rgba(148, 163, 184, 0.42);
       border-bottom-width: 2px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
@@ -66,27 +73,23 @@
   <!-- ======================================================================= -->
   <!-- MATCHDAY LOBBY OVERLAY                                                  -->
   <!-- ======================================================================= -->
-  <div id="lobby-overlay" class="fixed inset-0 z-30 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
-    <div class="hud-glass rounded-3xl w-full max-w-4xl p-5 sm:p-8 border border-sky-400/25 my-auto">
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+  <div id="lobby-overlay" class="fixed inset-0 z-30 flex items-start sm:items-center justify-center p-3 sm:p-5 bg-slate-950/45 overflow-y-auto">
+    <div class="hud-glass hud-accent-top rounded-2xl w-full max-w-4xl p-5 sm:p-7 my-auto">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/30">
-            <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
-            </svg>
-          </div>
+          <div id="lobby-lobo-emblem" class="shrink-0"></div>
           <div>
-            <p id="lobby-afa-badge" class="text-[11px] font-bold uppercase tracking-widest text-sky-300">FECHA AFA • ESTA SEMANA</p>
-            <h1 class="font-display text-2xl sm:text-3xl font-black uppercase text-white leading-none">Estadio 23 de Agosto • Matchday 3D</h1>
+            <p id="lobby-afa-badge" class="text-[11px] font-bold uppercase tracking-widest text-sky-400">FECHA AFA • ESTA SEMANA</p>
+            <h1 class="font-display text-3xl sm:text-4xl font-black uppercase text-white leading-none">El Lobo Jujeño <span class="text-sky-400">23 de Agosto</span></h1>
           </div>
         </div>
-        <span id="lobby-kit-note" class="hidden text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-200 border border-amber-400/30">
+        <span id="lobby-kit-note" class="hidden text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-200 border border-amber-400/35">
           Camiseta alternativa activada (anti-choque)
         </span>
       </div>
 
       <!-- Featured Match Card -->
-      <div class="rounded-2xl bg-slate-900/75 border border-slate-700/70 p-5 mb-5">
+      <div class="rounded-xl bg-[#0e1829] border border-slate-700/80 p-4 sm:p-5 mb-4">
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
           <!-- Home: Gimnasia -->
           <div class="flex items-center gap-3.5 w-full sm:w-5/12 justify-center sm:justify-start">
@@ -100,7 +103,7 @@
           <!-- VS / Meta -->
           <div class="text-center shrink-0">
             <div class="font-mono-tech text-xs font-bold text-emerald-400 uppercase" id="lobby-match-date">2026-11-28 • 20:00</div>
-            <div class="font-display text-3xl font-black text-slate-300 my-0.5">VS</div>
+            <div class="font-display text-3xl font-black text-slate-200 my-0.5">VS</div>
             <div class="text-[11px] font-semibold text-slate-400" id="lobby-match-round">Cuartos de Final (Vuelta)</div>
           </div>
 
@@ -113,21 +116,25 @@
             <div id="lobby-away-badge" class="shrink-0 order-1 sm:order-2"></div>
           </div>
         </div>
-        <div class="mt-3 pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
-          <span id="lobby-tournament" class="font-semibold text-sky-200">Primera Nacional • Reducido</span>
+        <div class="mt-3 pt-2.5 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
+          <span id="lobby-tournament" class="font-semibold text-sky-300">Primera Nacional • Reducido</span>
           <span id="lobby-agg-note" class="text-slate-400">Ida: GYE 1 - 0 MAD</span>
         </div>
       </div>
 
       <!-- Configuration Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5 mb-4">
         <div class="sm:col-span-2">
           <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Fixture AFA</label>
-          <select id="sel-fixture" class="w-full h-9 bg-slate-900 border border-slate-700 rounded-xl px-3 text-xs font-semibold text-white truncate"></select>
+          <select id="sel-fixture" class="w-full h-9 bg-[#0d1626] border border-slate-700 rounded-lg px-2.5 text-xs font-semibold text-white truncate"></select>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Jugador Inicial</label>
+          <select id="sel-starter" class="w-full h-9 bg-[#0d1626] border border-slate-700 rounded-lg px-2.5 text-xs font-semibold text-sky-200 truncate"></select>
         </div>
         <div>
           <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Dificultad IA</label>
-          <select id="sel-difficulty" class="w-full h-9 bg-slate-900 border border-slate-700 rounded-xl px-3 text-xs font-semibold text-white">
+          <select id="sel-difficulty" class="w-full h-9 bg-[#0d1626] border border-slate-700 rounded-lg px-2.5 text-xs font-semibold text-white">
             <option value="amateur">Amateur</option>
             <option value="nacional" selected>Primera Nacional</option>
             <option value="reducido">Reducido / Difícil</option>
@@ -135,7 +142,7 @@
         </div>
         <div>
           <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Duración x Tiempo</label>
-          <select id="sel-duration" class="w-full h-9 bg-slate-900 border border-slate-700 rounded-xl px-3 text-xs font-semibold text-white">
+          <select id="sel-duration" class="w-full h-9 bg-[#0d1626] border border-slate-700 rounded-lg px-2.5 text-xs font-semibold text-white">
             <option value="120">2 minutos</option>
             <option value="180" selected>3 minutos</option>
             <option value="300">5 minutos</option>
@@ -143,7 +150,7 @@
         </div>
         <div>
           <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Horario Estadio</label>
-          <select id="sel-sky" class="w-full h-9 bg-slate-900 border border-slate-700 rounded-xl px-3 text-xs font-semibold text-white">
+          <select id="sel-sky" class="w-full h-9 bg-[#0d1626] border border-slate-700 rounded-lg px-2.5 text-xs font-semibold text-white">
             <option value="day">Tarde (16:30)</option>
             <option value="sunset" selected>Atardecer Jujeño</option>
             <option value="night">Noche (Torres LED)</option>
@@ -153,31 +160,31 @@
 
       <!-- Controls summary & Start Button -->
       <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-[11px] flex-1">
-          <div class="rounded-xl bg-slate-900/80 border border-slate-800 px-3 py-2.5 space-y-1.5">
-            <div class="font-bold text-sky-300 uppercase text-[10px]">1. Moverse</div>
-            <div class="flex flex-wrap items-center gap-1 text-slate-200"><span class="kbd-key">W</span><span class="kbd-key">A</span><span class="kbd-key">S</span><span class="kbd-key">D</span><span class="text-slate-400 text-[10px]">o Flechas</span></div>
-            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-300"><span><span class="kbd-key">Shift</span> Correr</span><span><span class="kbd-key">C</span> Cámara</span></div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] flex-1">
+          <div class="rounded-lg bg-[#0d1626] border border-slate-800 px-3 py-2 space-y-1">
+            <div class="font-bold text-sky-400 uppercase text-[10px]">1. Moverse y Regate</div>
+            <div class="flex flex-wrap items-center gap-1 text-slate-200"><span class="kbd-key">W</span><span class="kbd-key">A</span><span class="kbd-key">S</span><span class="kbd-key">D</span><span class="text-slate-400 text-[10px]">+ <span class="kbd-key">Shift</span></span></div>
+            <div class="text-slate-300"><span class="kbd-key">E</span> Regate • <span class="kbd-key">C</span> Cámara</div>
           </div>
-          <div class="rounded-xl bg-slate-900/80 border border-slate-800 px-3 py-2.5 space-y-1.5">
-            <div class="font-bold text-emerald-400 uppercase text-[10px]">2. Con Pelota (←)</div>
+          <div class="rounded-lg bg-[#0d1626] border border-slate-800 px-3 py-2 space-y-1">
+            <div class="font-bold text-emerald-400 uppercase text-[10px]">2. Con Pelota</div>
             <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-200"><span><span class="kbd-key">Espacio</span> Pase</span><span><span class="kbd-key">K</span> Centro</span></div>
-            <div class="text-slate-300"><span class="kbd-key">L</span> o <span class="kbd-key">F</span> Remate al arco</div>
+            <div class="text-slate-300"><span class="kbd-key">L</span>/<span class="kbd-key">F</span> Remate (mantener)</div>
           </div>
-          <div class="rounded-xl bg-slate-900/80 border border-slate-800 px-3 py-2.5 space-y-1.5">
+          <div class="rounded-lg bg-[#0d1626] border border-slate-800 px-3 py-2 space-y-1">
             <div class="font-bold text-amber-300 uppercase text-[10px]">3. Sin Pelota</div>
             <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-200"><span><span class="kbd-key">Q</span> Cambiar</span><span><span class="kbd-key">Espacio</span> Quitar</span></div>
-            <div class="text-slate-300"><span class="kbd-key">L</span> o <span class="kbd-key">F</span> Barrida</div>
+            <div class="text-slate-300"><span class="kbd-key">L</span>/<span class="kbd-key">F</span> Barrida</div>
           </div>
         </div>
         <div class="flex flex-col gap-2 shrink-0">
-          <button id="btn-play-match" class="btn-tactile w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-display text-xl font-black uppercase tracking-wide shadow-lg shadow-sky-500/30">
+          <button id="btn-play-match" class="btn-tactile w-full sm:w-auto px-6 py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-display text-2xl font-black uppercase tracking-wide border border-sky-300">
             Jugar Partido de la Semana
           </button>
           <div class="grid grid-cols-3 gap-1.5">
-            <button id="btn-training-mode" class="btn-tactile px-2.5 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-[11px] font-bold text-emerald-300 border border-slate-700">Entrenamiento</button>
-            <button id="btn-explore-stadium" class="btn-tactile px-2.5 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-[11px] font-bold text-sky-300 border border-slate-700">Estadio 3D</button>
-            <button id="btn-open-settings" class="btn-tactile px-2.5 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-[11px] font-bold text-slate-200 border border-slate-700">Ajustes</button>
+            <button id="btn-training-mode" class="btn-tactile px-2.5 py-2 rounded-lg bg-[#142034] hover:bg-[#1b2a44] text-[11px] font-bold text-emerald-300 border border-slate-700">Entrenamiento</button>
+            <button id="btn-explore-stadium" class="btn-tactile px-2.5 py-2 rounded-lg bg-[#142034] hover:bg-[#1b2a44] text-[11px] font-bold text-sky-300 border border-slate-700">Estadio 3D</button>
+            <button id="btn-open-settings" class="btn-tactile px-2.5 py-2 rounded-lg bg-[#142034] hover:bg-[#1b2a44] text-[11px] font-bold text-slate-200 border border-slate-700">Ajustes</button>
           </div>
         </div>
       </div>
@@ -192,83 +199,86 @@
     <div class="flex flex-wrap items-center justify-between gap-2 p-2 sm:p-3">
       <div class="flex items-center gap-2 min-w-0 pointer-events-auto">
         <!-- Scorebug -->
-        <div class="hud-glass rounded-xl px-3 py-1.5 flex items-center gap-3">
+        <div class="hud-glass rounded-xl px-2.5 py-1 flex items-center gap-2.5">
           <div class="flex items-center gap-1.5">
-            <span class="w-2.5 h-5 rounded-sm bg-sky-400 inline-block"></span>
+            <span id="hud-home-badge" class="inline-flex items-center"></span>
             <span class="font-display text-lg font-black text-white">GYE</span>
           </div>
-          <div class="font-mono-tech text-lg font-extrabold bg-slate-950/80 px-2.5 py-0.5 rounded-lg border border-slate-700/70 flex items-center gap-2">
+          <div class="font-mono-tech text-lg font-extrabold bg-[#060c16] px-2.5 py-0.5 rounded-md border border-slate-700/80 flex items-center gap-1.5">
             <span id="hud-score-home">0</span>
             <span class="text-slate-500">-</span>
             <span id="hud-score-away">0</span>
           </div>
           <div class="flex items-center gap-1.5">
             <span id="hud-away-short" class="font-display text-lg font-black text-white">MAD</span>
-            <span id="hud-away-badge" class="w-2.5 h-5 rounded-sm bg-amber-400 inline-block"></span>
+            <span id="hud-away-badge" class="inline-flex items-center"></span>
           </div>
           <div class="pl-2 border-l border-slate-700/80 flex items-center gap-1.5">
-            <span id="hud-half" class="text-[11px] font-bold text-sky-300">1°T</span>
+            <span id="hud-half" class="text-[11px] font-bold text-sky-400">1°T</span>
             <span id="hud-clock" class="font-mono-tech text-sm font-bold text-emerald-400">00:00</span>
           </div>
         </div>
 
         <!-- Live Commentary -->
-        <div class="hidden xl:flex hud-glass rounded-xl px-3.5 py-2 max-w-md min-w-0">
+        <div class="hidden xl:flex hud-glass rounded-xl px-3 py-1.5 max-w-md min-w-0">
           <span id="hud-commentary" class="text-xs font-medium text-slate-200 truncate">Estadio 23 de Agosto • En vivo</span>
         </div>
       </div>
 
       <!-- Top Right Controls -->
       <div class="flex items-center gap-1.5 shrink-0 pointer-events-auto">
-        <button id="btn-hud-cam" class="hud-glass btn-tactile px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-sky-200 flex items-center gap-1.5" title="Cambiar Cámara (Tecla C)">
+        <button id="btn-hud-cam" class="hud-glass btn-tactile px-2.5 py-1.5 rounded-lg text-xs font-semibold text-sky-200 flex items-center gap-1.5" title="Cambiar Cámara (Tecla C)">
           <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           <span id="hud-cam-label" class="max-w-[95px] sm:max-w-none truncate">TV Broadcast</span>
         </button>
-        <button id="btn-hud-touch" class="hud-glass btn-tactile px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white" title="Mostrar/Ocultar controles táctiles">
+        <button id="btn-hud-help" class="hidden sm:inline-flex hud-glass btn-tactile px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white" title="Mostrar/Ocultar guía de controles">
+          Teclas
+        </button>
+        <button id="btn-hud-touch" class="hud-glass btn-tactile px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white" title="Mostrar/Ocultar controles táctiles">
           Táctil
         </button>
-        <button id="btn-hud-audio" class="hud-glass btn-tactile p-2 rounded-xl text-sky-300" title="Sonido Estadio">
+        <button id="btn-hud-audio" class="hud-glass btn-tactile p-1.5 rounded-lg text-sky-300" title="Sonido Estadio">
           <svg id="hud-audio-on" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
           <svg id="hud-audio-off" class="w-4 h-4 hidden text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>
         </button>
-        <button id="btn-hud-pause" class="hud-glass btn-tactile px-3 py-1.5 rounded-xl text-xs font-bold text-white" title="Pausa (Esc)">
+        <button id="btn-hud-pause" class="hud-glass btn-tactile px-2.5 py-1.5 rounded-lg text-xs font-bold text-white" title="Pausa (Esc)">
           Pausa
         </button>
       </div>
     </div>
 
     <!-- Bottom Left: Active Player Card + Stamina & Power -->
-    <div id="hud-player-card" class="fixed top-28 left-3 sm:top-auto sm:bottom-3 hud-glass rounded-2xl p-2.5 sm:p-3 w-48 sm:w-56 pointer-events-auto">
-      <div class="flex items-center justify-between mb-1.5">
-        <div class="flex items-center gap-2">
-          <span id="hud-player-num" class="font-mono-tech text-xs font-extrabold px-1.5 py-0.5 rounded bg-sky-500 text-slate-950">#9</span>
+    <div id="hud-player-card" class="fixed top-16 left-2 sm:top-auto sm:bottom-3 sm:left-3 hud-glass rounded-xl p-2 sm:p-2.5 w-44 sm:w-52 pointer-events-auto">
+      <div class="flex items-center justify-between mb-1">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span id="hud-player-num" class="font-mono-tech text-[11px] font-extrabold px-1.5 py-0.5 rounded bg-sky-500 text-slate-950">#9</span>
           <span id="hud-player-name" class="font-display text-base font-bold uppercase text-white truncate">O. Bianchi</span>
         </div>
-        <span class="text-[10px] font-semibold text-sky-300">GYE</span>
+        <span class="text-[10px] font-bold text-sky-400 shrink-0">GYE</span>
       </div>
-      <div class="space-y-1.5">
+      <div class="space-y-1">
         <div>
           <div class="flex justify-between text-[9px] font-bold uppercase text-slate-400 mb-0.5">
-            <span>Stamina</span><span>Shift</span>
+            <span>Energía</span><span>Shift</span>
           </div>
           <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden">
-            <div id="hud-stamina-fill" class="h-full bg-gradient-to-r from-emerald-400 to-sky-400 transition-all duration-75" style="width: 100%"></div>
+            <div id="hud-stamina-fill" class="h-full bg-sky-400 transition-all duration-75" style="width: 100%"></div>
           </div>
         </div>
         <div>
           <div class="flex justify-between text-[9px] font-bold uppercase text-slate-400 mb-0.5">
-            <span>Potencia Remate</span><span>L / F</span>
+            <span>Remate</span><span>L / F</span>
           </div>
           <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden">
-            <div id="hud-power-fill" class="h-full bg-gradient-to-r from-amber-400 to-rose-500 transition-all duration-75" style="width: 0%"></div>
+            <div id="hud-power-fill" class="h-full bg-amber-400 transition-all duration-75" style="width: 0%"></div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Bottom Center: 2D Tactical Minimap (Horizontal, matching TV Broadcast) -->
-    <div class="hidden sm:block fixed bottom-3 left-1/2 -translate-x-1/2 hud-glass rounded-2xl p-1.5">
-      <svg viewBox="0 0 210 130" class="w-48 h-28">
+    <div class="hidden sm:block fixed bottom-3 left-1/2 -translate-x-1/2 hud-glass rounded-xl p-1">
+      <svg viewBox="0 0 210 130" class="w-44 h-26">
         <rect x="6" y="6" width="198" height="118" rx="4" fill="#14532d" stroke="#86efac" stroke-width="1.2" />
         <line x1="105" y1="6" x2="105" y2="124" stroke="#86efac" stroke-width="0.9" stroke-opacity="0.7" />
         <circle cx="105" cy="65" r="16" fill="none" stroke="#86efac" stroke-width="0.9" stroke-opacity="0.7" />
@@ -279,38 +289,36 @@
       </svg>
     </div>
 
-    <!-- Bottom Right: Live Context-Aware Controls Cheat Sheet -->
-    <div id="hud-controls-card" class="hidden sm:block fixed bottom-3 right-3 hud-glass rounded-2xl p-3 w-64 pointer-events-auto">
-      <div class="flex items-center justify-between mb-2 pb-1 border-b border-slate-800">
+    <!-- Bottom Right: Live Context-Aware Controls Cheat Sheet (compact & toggleable) -->
+    <div id="hud-controls-card" class="hidden fixed bottom-3 right-3 hud-glass rounded-xl p-2.5 w-60 pointer-events-auto">
+      <div class="flex items-center justify-between mb-1.5 pb-1 border-b border-slate-800">
         <span id="hud-ctrl-mode" class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">EN ATAQUE • CON PELOTA</span>
         <span id="hud-attack-dir" class="text-[10px] font-bold text-sky-300">Arco ← Izq</span>
       </div>
-      <div id="hud-ctrl-attack" class="space-y-1.5 text-[11px] text-slate-200">
-        <div class="flex items-center justify-between"><span class="text-slate-300">Mover / Correr</span><span><span class="kbd-key">WASD</span> <span class="kbd-key">Shift</span></span></div>
-        <div class="flex items-center justify-between"><span class="text-slate-300">Pase al pie</span><span><span class="kbd-key">Espacio</span> <span class="text-slate-500">/</span> <span class="kbd-key">J</span></span></div>
-        <div class="flex items-center justify-between"><span class="text-slate-300">Centro / Largo</span><span><span class="kbd-key">K</span> <span class="text-slate-500">/</span> <span class="kbd-key">X</span></span></div>
-        <div class="flex items-center justify-between"><span class="text-slate-300">Remate al arco</span><span><span class="kbd-key">L</span> <span class="text-slate-500">/</span> <span class="kbd-key">F</span></span></div>
+      <div id="hud-ctrl-attack" class="space-y-1 text-[11px] text-slate-200">
+        <div class="flex items-center justify-between"><span class="text-slate-300">Mover / Regate</span><span><span class="kbd-key">WASD</span> <span class="kbd-key">E</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Pase al pie</span><span><span class="kbd-key">Espacio</span> <span class="kbd-key">J</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Centro / Largo</span><span><span class="kbd-key">K</span> <span class="kbd-key">X</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Remate al arco</span><span><span class="kbd-key">L</span> <span class="kbd-key">F</span></span></div>
       </div>
-      <div id="hud-ctrl-defense" class="hidden space-y-1.5 text-[11px] text-slate-200">
+      <div id="hud-ctrl-defense" class="hidden space-y-1 text-[11px] text-slate-200">
         <div class="flex items-center justify-between"><span class="text-slate-300">Mover / Correr</span><span><span class="kbd-key">WASD</span> <span class="kbd-key">Shift</span></span></div>
-        <div class="flex items-center justify-between"><span class="text-slate-300">Cambiar jugador</span><span><span class="kbd-key">Q</span> <span class="text-slate-500">/</span> <span class="kbd-key">E</span></span></div>
-        <div class="flex items-center justify-between"><span class="text-slate-300">Presionar / Quitar</span><span><span class="kbd-key">Espacio</span> <span class="text-slate-500">/</span> <span class="kbd-key">J</span></span></div>
-        <div class="flex items-center justify-between"><span class="text-slate-300">Barrida</span><span><span class="kbd-key">L</span> <span class="text-slate-500">/</span> <span class="kbd-key">F</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Cambiar jugador</span><span><span class="kbd-key">Q</span> <span class="kbd-key">E</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Presionar / Quitar</span><span><span class="kbd-key">Espacio</span> <span class="kbd-key">J</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Barrida</span><span><span class="kbd-key">L</span> <span class="kbd-key">F</span></span></div>
       </div>
     </div>
 
     <!-- Touch Controls Overlay (Auto on touch or toggled) -->
-    <div id="touch-controls" class="hidden fixed inset-x-0 bottom-4 px-4 flex items-end justify-between pointer-events-none">
-      <!-- Virtual Stick -->
-      <div id="touch-stick-base" class="w-28 h-28 rounded-full bg-slate-900/60 border-2 border-sky-400/40 relative pointer-events-auto flex items-center justify-center">
-        <div id="touch-stick-knob" class="w-12 h-12 rounded-full bg-sky-400/80 shadow-lg pointer-events-none"></div>
+    <div id="touch-controls" class="hidden fixed inset-x-0 bottom-3 px-4 flex items-end justify-between pointer-events-none">
+      <div id="touch-stick-base" class="w-28 h-28 rounded-full bg-slate-900/75 border-2 border-sky-400/50 relative pointer-events-auto flex items-center justify-center">
+        <div id="touch-stick-knob" class="w-12 h-12 rounded-full bg-sky-400 shadow-lg pointer-events-none"></div>
       </div>
-      <!-- Action Buttons -->
-      <div class="grid grid-cols-2 gap-2.5 pointer-events-auto">
+      <div class="grid grid-cols-2 gap-2 pointer-events-auto">
         <button data-touch-btn="switchPlayer" class="w-14 h-14 rounded-full hud-glass text-[10px] font-bold text-slate-200">CAMBIAR</button>
         <button data-touch-btn="lob" class="w-14 h-14 rounded-full hud-glass text-[10px] font-bold text-amber-300">CENTRO</button>
-        <button id="touch-btn-pass" data-touch-btn="pass" class="w-16 h-16 rounded-full bg-sky-500/85 border-2 border-sky-300 text-[11px] font-extrabold text-white shadow-lg">PASE</button>
-        <button id="touch-btn-shoot" data-touch-btn="shoot" class="w-16 h-16 rounded-full bg-rose-500/85 border-2 border-rose-300 text-[11px] font-extrabold text-white shadow-lg">REMATE</button>
+        <button id="touch-btn-pass" data-touch-btn="pass" class="w-16 h-16 rounded-full bg-sky-500 border-2 border-sky-300 text-[11px] font-extrabold text-slate-950 shadow-lg">PASE</button>
+        <button id="touch-btn-shoot" data-touch-btn="shoot" class="w-16 h-16 rounded-full bg-rose-500 border-2 border-rose-300 text-[11px] font-extrabold text-white shadow-lg">REMATE</button>
       </div>
     </div>
   </div>
@@ -319,7 +327,7 @@
   <!-- PENALTY SHOOTOUT HUD                                                    -->
   <!-- ======================================================================= -->
   <div id="penalty-hud" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-30 hud-glass rounded-2xl px-5 py-3 text-center">
-    <div class="text-[11px] font-bold uppercase tracking-wider text-sky-300 mb-1">Tanda de Penales</div>
+    <div class="text-[11px] font-bold uppercase tracking-wider text-sky-400 mb-1">Tanda de Penales</div>
     <div class="flex items-center justify-center gap-6 mb-2">
       <div>
         <span class="font-display text-lg font-black text-sky-400">GYE</span>
@@ -335,22 +343,35 @@
     </div>
     <div class="flex items-center justify-center gap-2">
       <button onclick="window.game.shootPenalty(-2.7)" class="btn-tactile px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold">Izquierda</button>
-      <button onclick="window.game.shootPenalty(0)" class="btn-tactile px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-xs font-bold">Centro</button>
+      <button onclick="window.game.shootPenalty(0)" class="btn-tactile px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold">Centro</button>
       <button onclick="window.game.shootPenalty(2.7)" class="btn-tactile px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold">Derecha</button>
     </div>
   </div>
 
   <!-- ======================================================================= -->
-  <!-- GOAL CELEBRATION CINEMATIC BANNER                                       -->
+  <!-- GOAL CELEBRATION CINEMATIC BANNER (Non-blocking top/bottom strip)       -->
   <!-- ======================================================================= -->
-  <div id="goal-banner-overlay" class="hidden fixed inset-x-0 top-20 z-30 flex justify-center px-4 pointer-events-none">
-    <div class="hud-glass rounded-3xl px-7 py-4 border-2 border-sky-400/60 text-center max-w-lg w-full shadow-2xl pointer-events-auto">
-      <div id="goal-banner-title" class="font-display text-4xl sm:text-5xl font-black uppercase text-sky-300 leading-none tracking-wide">EL GRITO DEL LOBO</div>
-      <div id="goal-banner-scorer" class="font-display text-xl font-bold uppercase text-white mt-1">#9 O. Bianchi • 23'</div>
-      <div id="goal-banner-score" class="font-mono-tech text-2xl font-extrabold text-amber-300 my-1">GYE 1 - 0 MAD</div>
-      <div class="flex items-center justify-between gap-3 mt-2 pt-2 border-t border-slate-800">
-        <span id="goal-banner-sub" class="text-xs text-slate-300 font-medium">¡Explota el Estadio 23 de Agosto!</span>
-        <button id="btn-skip-celebration" class="btn-tactile px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-bold text-slate-200 border border-slate-600">Omitir (Espacio)</button>
+  <div id="goal-banner-overlay" class="hidden fixed inset-x-0 top-14 z-30 flex justify-center px-3 pointer-events-none">
+    <div class="hud-glass hud-accent-top rounded-2xl px-5 py-3 text-center max-w-xl w-full pointer-events-auto">
+      <div class="flex items-center justify-between gap-3">
+        <div id="goal-banner-badge" class="shrink-0"></div>
+        <div class="min-w-0 flex-1 text-left">
+          <div id="goal-banner-title" class="font-display text-3xl sm:text-4xl font-black uppercase text-sky-300 leading-none tracking-wide truncate">EL GRITO DEL LOBO</div>
+          <div id="goal-banner-scorer" class="font-display text-lg font-bold uppercase text-white mt-0.5 truncate">#9 O. Bianchi • 23'</div>
+        </div>
+        <div id="goal-banner-score" class="font-mono-tech text-xl sm:text-2xl font-extrabold text-amber-300 bg-[#070d18] px-3 py-1 rounded-lg border border-slate-700 shrink-0">GYE 1 - 0 MAD</div>
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-800 text-[11px]">
+        <span id="goal-banner-sub" class="text-slate-300 font-medium truncate">¡Explota el Estadio 23 de Agosto!</span>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <div id="goal-interactive-keys" class="hidden sm:flex items-center gap-1 text-[10px] text-sky-300">
+            <button data-celeb-key="1" class="btn-tactile px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700">1 Solo</button>
+            <button data-celeb-key="2" class="btn-tactile px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700">2 Baile</button>
+            <button data-celeb-key="3" class="btn-tactile px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700">3 Hinchada</button>
+            <button data-celeb-key="4" class="btn-tactile px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700">4 Sorpresa</button>
+          </div>
+          <button id="btn-skip-celebration" class="btn-tactile px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 font-bold text-slate-100 border border-slate-600">Omitir (Espacio)</button>
+        </div>
       </div>
     </div>
   </div>
@@ -359,23 +380,24 @@
   <!-- EXPLORE STADIUM HUD                                                     -->
   <!-- ======================================================================= -->
   <div id="explore-hud" class="hidden fixed top-4 inset-x-0 z-30 flex justify-center px-4">
-    <div class="hud-glass rounded-2xl px-4 py-2.5 flex items-center gap-3">
+    <div class="hud-glass rounded-xl px-4 py-2 flex items-center gap-3">
       <span class="font-display text-lg font-black uppercase text-sky-300">Estadio 23 de Agosto</span>
-      <button id="btn-explore-next" class="btn-tactile px-3 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-xs font-bold text-white">Siguiente Tribuna</button>
-      <button id="btn-explore-back" class="btn-tactile px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200">Volver al Menú</button>
+      <span id="explore-sector-name" class="text-xs font-semibold text-slate-300 hidden sm:inline">Vista General</span>
+      <button id="btn-explore-next" class="btn-tactile px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-xs font-bold text-slate-950">Siguiente Tribuna</button>
+      <button id="btn-explore-back" class="btn-tactile px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200">Volver al Menú</button>
     </div>
   </div>
 
   <!-- ======================================================================= -->
   <!-- SETTINGS MODAL                                                          -->
   <!-- ======================================================================= -->
-  <div id="modal-settings" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-    <div class="hud-glass rounded-3xl p-6 w-full max-w-md">
+  <div id="modal-settings" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4">
+    <div class="hud-glass hud-accent-top rounded-2xl p-6 w-full max-w-md">
       <h2 class="font-display text-3xl font-black uppercase text-white mb-4">Configuración</h2>
-      <div class="space-y-4 text-xs mb-6">
+      <div class="space-y-3.5 text-xs mb-5">
         <div>
           <label class="block font-bold uppercase text-slate-400 mb-1">Calidad Gráfica</label>
-          <select id="set-quality" class="w-full h-9 bg-slate-900 border border-slate-700 rounded-xl px-3 font-semibold text-white">
+          <select id="set-quality" class="w-full h-9 bg-[#0d1626] border border-slate-700 rounded-lg px-3 font-semibold text-white">
             <option value="auto" selected>Automático (Recomendado)</option>
             <option value="low">Bajo (Máximos FPS)</option>
             <option value="medium">Medio</option>
@@ -390,23 +412,31 @@
           <div class="flex justify-between font-bold uppercase text-slate-400 mb-1"><span>Volumen Efectos / Silbato</span><span id="val-vol-sfx">90%</span></div>
           <input id="set-vol-sfx" type="range" min="0" max="1" step="0.05" value="0.9" class="w-full accent-sky-400" />
         </div>
-        <label class="flex items-center justify-between bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2.5 cursor-pointer">
-          <span class="font-semibold text-slate-200">Reducir movimiento (sin vibración/flashes)</span>
+        <div>
+          <div class="flex justify-between font-bold uppercase text-slate-400 mb-1"><span>Volumen Ambiente / Fanfarria</span><span id="val-vol-music">70%</span></div>
+          <input id="set-vol-music" type="range" min="0" max="1" step="0.05" value="0.7" class="w-full accent-sky-400" />
+        </div>
+        <label class="flex items-center justify-between bg-[#0d1626] border border-slate-800 rounded-lg px-3 py-2 cursor-pointer">
+          <span class="font-semibold text-slate-200">Reducir movimiento (sin vibración/cámara lenta)</span>
           <input id="set-reduce-motion" type="checkbox" class="w-4 h-4 accent-sky-400" />
         </label>
+        <label class="flex items-center justify-between bg-[#0d1626] border border-slate-800 rounded-lg px-3 py-2 cursor-pointer">
+          <span class="font-semibold text-slate-200">Sin flashes intensos en goles</span>
+          <input id="set-no-flash" type="checkbox" class="w-4 h-4 accent-sky-400" />
+        </label>
       </div>
-      <button id="btn-close-settings" class="btn-tactile w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-400 font-bold text-white">Guardar y Cerrar</button>
+      <button id="btn-close-settings" class="btn-tactile w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 font-bold text-slate-950">Guardar y Cerrar</button>
     </div>
   </div>
 
   <!-- ======================================================================= -->
   <!-- PAUSE MODAL                                                             -->
   <!-- ======================================================================= -->
-  <div id="modal-pause" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4">
-    <div class="hud-glass rounded-3xl p-6 w-full max-w-sm text-center">
+  <div id="modal-pause" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-slate-950/75 p-4">
+    <div class="hud-glass hud-accent-top rounded-2xl p-6 w-full max-w-sm text-center">
       <h2 class="font-display text-3xl font-black uppercase text-white mb-4">Partido en Pausa</h2>
       <div class="flex flex-col gap-2.5">
-        <button id="btn-resume-match" class="btn-tactile py-3 rounded-xl bg-sky-500 hover:bg-sky-400 font-bold text-white">Reanudar Partido</button>
+        <button id="btn-resume-match" class="btn-tactile py-3 rounded-xl bg-sky-500 hover:bg-sky-400 font-bold text-slate-950">Reanudar Partido</button>
         <button id="btn-restart-match" class="btn-tactile py-3 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-slate-200">Reiniciar Partido</button>
         <button id="btn-back-lobby" class="btn-tactile py-3 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/40 font-semibold text-rose-200">Volver al Lobby AFA</button>
       </div>
@@ -416,13 +446,17 @@
   <!-- ======================================================================= -->
   <!-- HALFTIME / FULLTIME STATS MODAL                                         -->
   <!-- ======================================================================= -->
-  <div id="modal-stats" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-    <div class="hud-glass rounded-3xl p-6 sm:p-7 w-full max-w-md">
-      <p class="text-center text-xs font-bold uppercase tracking-widest text-sky-300 mb-1">Estadio 23 de Agosto</p>
+  <div id="modal-stats" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-slate-950/80 p-4">
+    <div class="hud-glass hud-accent-top rounded-2xl p-6 w-full max-w-md">
+      <p class="text-center text-xs font-bold uppercase tracking-widest text-sky-400 mb-1">Estadio 23 de Agosto</p>
       <h2 id="stats-title" class="font-display text-3xl font-black uppercase text-white text-center">FINAL DEL PARTIDO</h2>
-      <div id="stats-score-line" class="font-mono-tech text-2xl font-extrabold text-center text-emerald-400 my-3">GYE 0 - 0 MAD</div>
+      <div class="flex items-center justify-center gap-3 my-3">
+        <div id="stats-home-badge"></div>
+        <div id="stats-score-line" class="font-mono-tech text-2xl font-extrabold text-emerald-400">GYE 0 - 0 MAD</div>
+        <div id="stats-away-badge"></div>
+      </div>
 
-      <div class="rounded-2xl bg-slate-900/75 border border-slate-800 p-4 space-y-3 text-xs mb-5">
+      <div class="rounded-xl bg-[#0d1626] border border-slate-800 p-4 space-y-3 text-xs mb-5">
         <div class="flex justify-between items-center">
           <span id="stat-poss-home" class="font-mono-tech font-bold text-sky-300">50%</span>
           <span class="text-slate-400 uppercase font-bold">Posesión</span>
@@ -441,27 +475,27 @@
       </div>
 
       <div class="flex flex-col gap-2.5">
-        <button id="btn-start-second-half" class="hidden btn-tactile py-3 rounded-xl bg-sky-500 hover:bg-sky-400 font-bold text-white">Jugar Segundo Tiempo</button>
+        <button id="btn-start-second-half" class="hidden btn-tactile py-3 rounded-xl bg-sky-500 hover:bg-sky-400 font-bold text-slate-950">Jugar Segundo Tiempo</button>
         <button id="btn-start-penalties" class="hidden btn-tactile py-3 rounded-xl bg-amber-500 hover:bg-amber-400 font-bold text-slate-950">Definir por Penales</button>
-        <button id="btn-rematch" class="hidden btn-tactile py-3 rounded-xl bg-sky-500 hover:bg-sky-400 font-bold text-white">Revancha</button>
+        <button id="btn-rematch" class="hidden btn-tactile py-3 rounded-xl bg-sky-500 hover:bg-sky-400 font-bold text-slate-950">Revancha</button>
         <button id="btn-stats-lobby" class="btn-tactile py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold text-slate-200">Volver al Lobby</button>
       </div>
     </div>
   </div>
 
   <!-- Modular Game Scripts (compatible with both file:// and HTTP) -->
-  <script src="js/afa_fixture.js?v=8"></script>
-  <script src="js/club_badges.js?v=8"></script>
-  <script src="js/audio_engine.js?v=8"></script>
-  <script src="js/match_state.js?v=8"></script>
-  <script src="js/input_controller.js?v=8"></script>
-  <script src="js/physics_engine.js?v=8"></script>
-  <script src="js/tactical_ai.js?v=8"></script>
-  <script src="js/player_renderer.js?v=8"></script>
-  <script src="js/crowd_system.js?v=8"></script>
-  <script src="js/goal_celebration_director.js?v=8"></script>
-  <script src="js/stadium_builder.js?v=8"></script>
-  <script src="js/game_engine.js?v=8"></script>
+  <script src="js/afa_fixture.js?v=9"></script>
+  <script src="js/club_badges.js?v=9"></script>
+  <script src="js/audio_engine.js?v=9"></script>
+  <script src="js/match_state.js?v=9"></script>
+  <script src="js/input_controller.js?v=9"></script>
+  <script src="js/physics_engine.js?v=9"></script>
+  <script src="js/tactical_ai.js?v=9"></script>
+  <script src="js/player_renderer.js?v=9"></script>
+  <script src="js/crowd_system.js?v=9"></script>
+  <script src="js/goal_celebration_director.js?v=9"></script>
+  <script src="js/stadium_builder.js?v=9"></script>
+  <script src="js/game_engine.js?v=9"></script>
   <script>
     (function () {
       const game = new window.GameEngine();
@@ -479,6 +513,20 @@
         if (f.id === weeklyMatch.id) opt.selected = true;
         selFixture.appendChild(opt);
       });
+
+      const selStarter = document.getElementById('sel-starter');
+      (window.AFA_DATA.GYE_SQUAD || []).filter((p) => p.role !== 'GK').forEach((p) => {
+        const opt = document.createElement('option');
+        opt.value = String(p.number);
+        opt.textContent = `#${p.number} ${p.name} (${p.role})`;
+        if (p.number === 9) opt.selected = true;
+        selStarter.appendChild(opt);
+      });
+
+      const loboEl = document.getElementById('lobby-lobo-emblem');
+      if (loboEl && window.ClubBadges.getLoboEmblemSvg) {
+        loboEl.innerHTML = window.ClubBadges.getLoboEmblemSvg(46);
+      }
 
       function renderLobbyCard(fixture) {
         selectedFixture = fixture;
@@ -510,17 +558,19 @@
         const diff = document.getElementById('sel-difficulty').value;
         const dur = parseInt(document.getElementById('sel-duration').value, 10) || 180;
         const sky = document.getElementById('sel-sky').value;
+        const starterNumber = parseInt(selStarter.value, 10) || 9;
         game.startMatch(selectedFixture, {
           difficulty: diff,
           halfDurationRealSec: dur,
-          skyMode: sky
+          skyMode: sky,
+          starterNumber
         });
       }
 
       document.getElementById('btn-play-match').addEventListener('click', launchSelectedMatch);
       document.getElementById('btn-training-mode').addEventListener('click', () => game.startTraining(selectedFixture));
       document.getElementById('btn-explore-stadium').addEventListener('click', () => game.startExploreStadium());
-      document.getElementById('btn-explore-next').addEventListener('click', () => game.cycleCameraMode());
+      document.getElementById('btn-explore-next').addEventListener('click', () => game.nextExploreSector ? game.nextExploreSector() : game.cycleCameraMode());
       document.getElementById('btn-explore-back').addEventListener('click', () => game.exitExploreStadium());
       document.getElementById('btn-open-settings').addEventListener('click', () => document.getElementById('modal-settings').classList.remove('hidden'));
       document.getElementById('btn-close-settings').addEventListener('click', () => document.getElementById('modal-settings').classList.add('hidden'));
@@ -533,14 +583,36 @@
         game.audio.setCategoryVolume('sfx', e.target.value);
         document.getElementById('val-vol-sfx').textContent = `${Math.round(e.target.value * 100)}%`;
       });
+      document.getElementById('set-vol-music').addEventListener('input', (e) => {
+        game.audio.setCategoryVolume('music', e.target.value);
+        document.getElementById('val-vol-music').textContent = `${Math.round(e.target.value * 100)}%`;
+      });
       document.getElementById('set-reduce-motion').addEventListener('change', (e) => game.setReduceMotion(e.target.checked));
+      document.getElementById('set-no-flash').addEventListener('change', (e) => {
+        if (game.setNoFlash) game.setNoFlash(e.target.checked);
+      });
       document.getElementById('btn-skip-celebration').addEventListener('click', () => game.skipGoalCelebration());
+      document.querySelectorAll('[data-celeb-key]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const k = parseInt(btn.getAttribute('data-celeb-key'), 10);
+          if (game.triggerInteractiveCelebration) game.triggerInteractiveCelebration(k);
+        });
+      });
       window.addEventListener('keydown', (e) => {
-        if ((e.code === 'Space' || e.code === 'Enter') && game.matchState.phase === 'GOAL_CELEBRATION') {
-          game.skipGoalCelebration();
+        if (game.matchState.phase === 'GOAL_CELEBRATION') {
+          if (e.code === 'Space' || e.code === 'Enter') {
+            game.skipGoalCelebration();
+          } else if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(e.code) && game.triggerInteractiveCelebration) {
+            game.triggerInteractiveCelebration(parseInt(e.code.replace('Digit', ''), 10));
+          }
         }
       });
       document.getElementById('btn-hud-cam').addEventListener('click', () => game.cycleCameraMode());
+      const helpBtn = document.getElementById('btn-hud-help');
+      const ctrlCard = document.getElementById('hud-controls-card');
+      if (helpBtn && ctrlCard) {
+        helpBtn.addEventListener('click', () => ctrlCard.classList.toggle('hidden'));
+      }
       document.getElementById('btn-hud-audio').addEventListener('click', () => game.toggleAudio());
       document.getElementById('btn-hud-pause').addEventListener('click', () => game.togglePause());
       document.getElementById('btn-resume-match').addEventListener('click', () => game.togglePause());
@@ -555,11 +627,10 @@
       const touchControls = document.getElementById('touch-controls');
       const syncTouchOverlayLayout = () => {
         const touchVisible = !touchControls.classList.contains('hidden');
-        const ctrlCard = document.getElementById('hud-controls-card');
         const playerCard = document.getElementById('hud-player-card');
-        if (ctrlCard) ctrlCard.classList.toggle('sm:hidden', touchVisible);
+        if (ctrlCard && touchVisible) ctrlCard.classList.add('hidden');
         if (playerCard) {
-          playerCard.classList.toggle('sm:top-24', touchVisible);
+          playerCard.classList.toggle('sm:top-20', touchVisible);
           playerCard.classList.toggle('sm:bottom-3', !touchVisible);
         }
       };

@@ -1,6 +1,8 @@
-# Diseño de Personajes (`js/player_renderer.js`)
+# Diseño de Personajes 3D — El Lobo Jujeño
 
-- **Estilo:** Estilizado híbrido optimizado para lectura desde cámara TV Broadcast y 3ra Persona.
-- **Anatomía:** Cabeza con variaciones de piel y cabello, torso texturizado proceduralmente, brazos articulados en pivote de hombro, shorts, muslos, medias del club y botines oscuros.
-- **Uniformes:** Textura `CanvasTexture` cacheada por `(primaryColor, secondaryColor, number, striped)` con bastones albicelestes para Gimnasia y dorsales reales en la espalda.
-- **Escala:** Variación sutil por rol (`GK` y `DF` ligeramente más altos/anchos).
+## Arquitectura Anatómica (`js/player_renderer.js`)
+- **Estilo:** Estilizado deportivo (Dirección C) con lectura clara desde cámara Broadcast y expresividad en cámara Pro/Celebración.
+- **Cabeza y rostro:** Esfera suavizada con `CanvasTexture` facial (ojos, cejas según color de cabello, boca) + 4 estilos de cabello/vincha según dorsal.
+- **Torso y uniformes:** Camiseta con textura separada para frente (bastones albicelestes + escudo) y espalda (bastones + dorsal legible en `Barlow Condensed`), evitando repetir el dorsal en pecho y costados.
+- **Articulaciones:** Hombros, codos, caderas y rodillas articulados (`armLPivot`, `elbowLPivot`, `legL`, `kneeL`, etc.), más medias en color del club y botines diferenciados.
+- **Variación física:** Altura y contextura escaladas por rol (arquero y defensores más altos/anchos; delanteros más ágiles).

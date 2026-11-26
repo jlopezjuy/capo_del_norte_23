@@ -1,25 +1,32 @@
 /**
- * ClubBadges — Emblemas vectoriales SVG reutilizables (provisionales estilizados para web)
- * Usados en Lobby, Marcador HUD, Banner de Gol y Pantalla de Estadísticas.
+ * ClubBadges — Emblemas vectoriales SVG reutilizables (provisionales originales estilizados para web)
+ * Usados en Lobby, Marcador HUD, Banner de Gol, Presentación y Estadísticas.
+ * Nota: Son emblemas originales estilizados de referencia cromática, no escudos oficiales registrados.
  */
 (function (global) {
   'use strict';
 
   const CLUB_STYLES = {
-    gye: { label: 'GYE', bg1: '#38bdf8', bg2: '#ffffff', text: '#06101f', pattern: 'stripes', accent: '#0284c7' },
+    gye: { label: 'GYE', bg1: '#1ea7fd', bg2: '#f8fafc', text: '#06101f', pattern: 'stripes', accent: '#38bdf8' },
     mad: { label: 'MAD', bg1: '#facc15', bg2: '#0f172a', text: '#ffffff', pattern: 'stripes', accent: '#facc15' },
     'mad-ida': { label: 'MAD', bg1: '#facc15', bg2: '#0f172a', text: '#ffffff', pattern: 'stripes', accent: '#facc15' },
-    smt: { label: 'SMT', bg1: '#dc2626', bg2: '#ffffff', text: '#0f172a', pattern: 'stripes', accent: '#dc2626' },
-    tem: { label: 'TEM', bg1: '#38bdf8', bg2: '#ffffff', text: '#0f172a', pattern: 'band', accent: '#0284c7' },
+    smt: { label: 'SMT', bg1: '#dc2626', bg2: '#f8fafc', text: '#0f172a', pattern: 'stripes', accent: '#dc2626' },
+    tem: { label: 'TEM', bg1: '#38bdf8', bg2: '#f8fafc', text: '#0f172a', pattern: 'band', accent: '#0284c7' },
     qui: { label: 'QUI', bg1: '#f8fafc', bg2: '#1e3a8a', text: '#1e3a8a', pattern: 'half', accent: '#1e3a8a' },
-    fer: { label: 'FER', bg1: '#16a34a', bg2: '#ffffff', text: '#064e3b', pattern: 'band', accent: '#16a34a' }
+    fer: { label: 'FER', bg1: '#16a34a', bg2: '#f8fafc', text: '#064e3b', pattern: 'band', accent: '#16a34a' }
   };
 
+  const _svgCache = new Map();
+  let _uidCounter = 0;
+
   function getSvg(clubId, overrideHex = null, size = 48) {
+    const cacheKey = `${clubId}|${overrideHex || ''}|${size}`;
+    if (_svgCache.has(cacheKey)) return _svgCache.get(cacheKey);
+
     const st = CLUB_STYLES[clubId] || { label: 'RIV', bg1: overrideHex || '#facc15', bg2: '#0f172a', text: '#ffffff', pattern: 'stripes', accent: '#facc15' };
     const primary = overrideHex && clubId !== 'gye' ? overrideHex : st.bg1;
     const secondary = st.bg2;
-    const uid = `badge-${clubId}-${Math.random().toString(36).slice(2, 7)}`;
+    const uid = `badge-${clubId}-${++_uidCounter}`;
 
     let innerPattern = '';
     if (st.pattern === 'stripes') {
@@ -32,7 +39,7 @@
     } else if (st.pattern === 'band') {
       innerPattern = `
         <rect x="4" y="4" width="56" height="56" fill="${primary}"/>
-        <polygon points="4,46 46,4 58,4 58,16 16,58 4,58" fill="${secondary}" opacity="0.92"/>
+        <polygon points="4,46 46,4 58,4 58,16 16,58 4,58" fill="${secondary}" opacity="0.94"/>
       `;
     } else {
       innerPattern = `
@@ -41,22 +48,37 @@
       `;
     }
 
-    return `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64" class="shrink-0 drop-shadow">
-        <defs>
-          <clipPath id="${uid}">
-            <path d="M10 8h44v24c0 14-22 24-22 24S10 46 10 32V8z"/>
-          </clipPath>
-        </defs>
-        <g clip-path="url(#${uid})">
-          ${innerPattern}
-        </g>
-        <path d="M10 8h44v24c0 14-22 24-22 24S10 46 10 32V8z" fill="none" stroke="#f8fafc" stroke-width="2.6"/>
-        <rect x="13" y="21" width="38" height="16" rx="4" fill="rgba(6,16,31,0.88)" stroke="${st.accent}" stroke-width="1.2"/>
-        <text x="32" y="32.5" text-anchor="middle" font-family="Barlow Condensed, Arial, sans-serif" font-weight="900" font-size="13" fill="#f8fafc" letter-spacing="0.6">${st.label}</text>
-      </svg>
-    `;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64" class="shrink-0" aria-label="Emblema ${st.label}">
+      <defs>
+        <clipPath id="${uid}">
+          <path d="M10 8h44v24c0 14-22 24-22 24S10 46 10 32V8z"/>
+        </clipPath>
+      </defs>
+      <g clip-path="url(#${uid})">
+        ${innerPattern}
+      </g>
+      <path d="M10 8h44v24c0 14-22 24-22 24S10 46 10 32V8z" fill="none" stroke="#f8fafc" stroke-width="2.6"/>
+      <rect x="13" y="21" width="38" height="16" rx="3" fill="#0b1320" stroke="${st.accent}" stroke-width="1.4"/>
+      <text x="32" y="32.5" text-anchor="middle" font-family="Barlow Condensed, Arial, sans-serif" font-weight="900" font-size="13" fill="#f8fafc" letter-spacing="0.6">${st.label}</text>
+    </svg>`;
+
+    _svgCache.set(cacheKey, svg);
+    return svg;
   }
 
-  global.ClubBadges = { getSvg };
+  function getLoboEmblemSvg(size = 44) {
+    const cacheKey = `lobo|${size}`;
+    if (_svgCache.has(cacheKey)) return _svgCache.get(cacheKey);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64" class="shrink-0" aria-label="El Lobo Jujeño">
+      <path d="M10 8h44v24c0 14-22 24-22 24S10 46 10 32V8z" fill="#0b1320" stroke="#1ea7fd" stroke-width="2.6"/>
+      <path d="M19 19l7 8 6-4 6 4 7-8-2 15-6 9-5 4-5-4-6-9z" fill="#1ea7fd" stroke="#f8fafc" stroke-width="1.8" stroke-linejoin="round"/>
+      <polygon points="24,29 29,31 25,33" fill="#f8fafc"/>
+      <polygon points="40,29 35,31 39,33" fill="#f8fafc"/>
+      <polygon points="30,38 34,38 32,42" fill="#0b1320"/>
+    </svg>`;
+    _svgCache.set(cacheKey, svg);
+    return svg;
+  }
+
+  global.ClubBadges = { getSvg, getLoboEmblemSvg };
 })(window);

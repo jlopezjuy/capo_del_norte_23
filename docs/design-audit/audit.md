@@ -1,37 +1,37 @@
-# Auditoría Visual y Funcional Inicial (Sprint 0)
+# Auditoría Visual y Funcional Completa (Estado Inicial — `before/`)
 
 **Fecha:** 2026-11-25  
-**Capturas base:** `docs/design-audit/before/` (`01-tv-broadcast-before.png`, `02-pro-camera-before.png`, `03-popular-norte-before.png`)
+**Capturas reales:** `docs/design-audit/before/` (`01` a `09` en `1366×768` y `390×844`)  
+**Errores de consola iniciales:** 0 errores, 2 advertencias (`cdn.tailwindcss.com` en producción y meta `apple-mobile-web-app-capable` obsoleta).
 
 ---
 
-## 1. Inventario Real del Código Base
-- **Motor y render:** Three.js r128 vía CDN (`index.html`), sin bundler Vite (arquitectura estática compatible con Vercel y `file://`).
-- **Módulos existentes:** `afa_fixture.js`, `audio_engine.js`, `match_state.js`, `input_controller.js`, `physics_engine.js`, `tactical_ai.js`, `stadium_builder.js`, `game_engine.js`.
-- **Pantallas existentes:** Lobby «Partido de la Semana», HUD en partido (marcador, reloj, tarjeta jugador, minimapa, panel controles), Pausa, Estadísticas Entretiempo/Final, Tanda de Penales.
-- **Pantallas ausentes al inicio de la auditoría:** Modo Entrenamiento / Tiros Libres, Exploración Libre del Estadio desde el menú, Configuración gráfica (`Bajo/Medio/Alto/Auto`), Reducción de movimiento y Volúmenes por categoría.
+## 1. Inventario Real del Código y Pantallas
+
+| Pantalla / Módulo | Estado Real | Evidencia |
+|---|---|---|
+| 1–2. Pantalla inicial / Menú principal | Implementado (`#lobby-overlay`) | Tarjeta oscura centrada con blur, ícono genérico de reloj, sin marca propia *El Lobo Jujeño*. |
+| 3. Selección de partido | Implementado (`#sel-fixture`) | 6 partidos AFA 2026 en `afa_fixture.js`, con indicador de contraste de camiseta. |
+| 4. Selección de jugador / formación | **Ausente** | No existe selector de titular inicial ni vista previa de dorsal/rol en el lobby. |
+| 5–8. Estadio, campo, platea, populares | Implementado (`stadium_builder.js`) | Geometría reconocible del 23 de Agosto, pero `buildAll` duplica arcos, cercos y bancos. Entorno urbano con cubos pastel genéricos. |
+| 9–12. Jugador en reposo, carrera, conducción, remate | Parcial (`player_renderer.js`) | Cajas rígidas tipo bloque sin rostro ni articulaciones de codo/rodilla; dorsal repetido en las 6 caras del torso. |
+| 13–14. Gol y celebración | Parcial (`goal_celebration_director.js`) | 8 presets, pero en cancha los jugadores apenas levantan un brazo y el banner oscuro tapa el centro de la toma. |
+| 15. Marcador y HUD | Implementado (`#match-hud`) | Scorebug con rectángulos de color en lugar de escudos SVG; panel de controles grande fijo abajo a la derecha. |
+| 16–18. Pausa, Resultado final, Configuraciones | Implementado | Modales funcionales; `volumes.sfx` ignorado en silbato, patada y palo (`audio_engine.js`). |
 
 ---
 
 ## 2. Evaluación por Criterio (1 a 10)
 
-| Criterio | Puntaje | Evidencia y Diagnóstico |
-|---|---:|---|
-| Calidad visual estadio | 7/10 | Arquitectura fiel del 23 de Agosto, pero público estático en bloque y red del arco rígida. |
-| Personajes 3D | 3/10 | Figuras cúbicas primitivas sin botines, medias, cabello, dorsales ni variación física. |
-| Animaciones | 3/10 | Solo oscilación simple de piernas al correr; sin animaciones de remate, pase, barrida, celebración ni frustración. |
-| Celebraciones de gol | 3/10 | Solo cambio de texto en tablero LED, papelitos y humo genérico; sin director contextual ni coreografías. |
-| Escudos y camisetas | 4/10 | Monogramas de texto en cajas cuadradas en el Lobby y camisetas lisas sin bastones albicelestes. |
-| Hinchada | 4/10 | `InstancedMesh` existente pero todo el bloque salta sincronizado (`position.y = sin(...)`); sin olas ni reacción por peligro. |
-| Game Feel | 6/10 | Física 60 Hz sólida, pero falta estela de balón, deformación de red, hit/post feedback y modos de práctica. |
-| Audio | 5/10 | Síntesis funcional básica, sin capas diferenciadas ni controles de volumen independientes. |
-| Rendimiento | 8/10 | 60 FPS estables, pero sin selector de calidad gráfica para dispositivos de gama baja. |
-
----
-
-## 3. Problemas Prioritarios Accionables
-1. **Personajes primitivos y sin expresividad (Prioridad: ALTA)** → Rediseñar con anatomía estilizada (cabeza, pelo, torso con camiseta texturizada a bastones + dorsal, brazos articulados, shorts, medias, botines) y máquina de poses con blending suave (`idle`, `run`, `kick`, `tackle`, `celebrate`, `frustrated`, `gk_dive`).
-2. **Celebraciones de gol planas (Prioridad: ALTA)** → Implementar `GoalCelebrationDirector` con 8+ celebraciones temáticas jujeñas, banner cinematográfico de gol, opción de omitir y accesibilidad.
-3. **Hinchada sincronizada sin vida (Prioridad: ALTA)** → Migrar a animación por instancia en GPU (`onBeforeCompile`) con fases individuales, Ola Celeste por sectores y reacción dinámica al peligro de gol.
-4. **Falta de escudos SVG y camisetas reales (Prioridad: MEDIA-ALTA)** → Crear `ClubBadges` SVG reutilizables y texturas procedurales de camisetas (albiceleste a bastones para Gimnasia, diseños propios para cada rival).
-5. **Ausencia de Entrenamiento, Configuración gráfica y Audio multicapa (Prioridad: MEDIA)** → Agregar modo Entrenamiento/Desafío de Remates, menú de Configuración (`Bajo/Medio/Alto/Auto`, `Reducir movimiento`, volúmenes) y vista Explorar Estadio.
+| Criterio | Puntaje | Evidencia Visual / Técnica | Causa Probable | Impacto | Propuesta Concreta | Prioridad | Costo | Riesgo |
+|---|---:|---|---|---|---|---|---|---|
+| Calidad visual estadio | 7/10 | `06-gameplay-broadcast-1366x768.png`: buena estructura de tribunas, pero red rígida y edificios pastel planos. | Red `BoxGeometry` wireframe estática y ciudad con bloques sin detalle. | Resta credibilidad al remate y al fondo de cámara. | Deformación dinámica de red al impacto, banderines, fotógrafos, banco animado y tonos urbanos andinos. | Media | Medio | Bajo |
+| Legibilidad e UI/HUD | 6/10 | `04-lobby`, `07-goal-banner`: tarjeta de gol tapa el área; scorebug sin escudos SVG; `.btn-tactile` sin CSS. | Estilos rápidos tipo tarjeta genérica con blur. | Ocupa pantalla innecesariamente y pierde identidad futbolera. | Rediseño editorial deportivo celeste/blanco/grafito, escudos SVG en scorebug, banner de gol en tercio superior/inferior sin tapar la acción. | Alta | Medio | Bajo |
+| Identidad de marca | 5/10 | Ícono de reloj en lobby, título "Matchday 3D", sin presencia del Lobo Jujeño. | Enfoque técnico inicial de simulador genérico. | No transmite pasión jujeña desde el primer segundo. | Branding **EL LOBO JUJEÑO**, emblema propio, trapos de tribuna y Mascota del Lobo 3D. | Alta | Bajo | Bajo |
+| Personajes 3D y siluetas | 3/10 | `07-goal-banner-pro-1366x768.png`: muñecos cúbicos sin ojos, boca, rodillas ni codos; dorsal en el pecho. | `BoxGeometry` aplicado con textura única en las 6 caras. | Pierde personalidad en cámara Pro y celebraciones. | Geometría estilizada con cabeza, rostro expresivo, cuello, cabello variado, dorsal solo en espalda, medias y botines. | Crítica | Medio | Bajo |
+| Animaciones | 3/10 | Solo pivote de cadera/hombro; `frustratedTimer` es código muerto. | Sin pose machine expresiva ni reacciones entre compañeros. | Los jugadores parecen robots tras un fallo o gol. | Blending multi-pose (`walk`, `sprint`, `kick`, `header`, `tackle`, `frustrated`, `call_for_pass`, `gk_save_celebrate`, `celebrate`). | Crítica | Medio | Medio |
+| Hinchada | 3/10 | `06-gameplay`: cubos dispersos blancos/celestes/negros saltando al unísono. | Cubo 1×1 instanciado con `sin(uTime)` uniforme. | Parece ruido visual de voxels, no personas alentando. | Siluetas humanas instanciadas (torso+cabeza+brazos), bufandas, banderas, trapos jujeños, desincronización y reacción por peligro. | Crítica | Medio | Medio |
+| Celebraciones de gol | 4/10 | 8 variantes básicas; solo 1 pose de brazo arriba y banner central grande. | Faltan coreografías, replay y opciones interactivas. | El gol no sorprende ni invita a buscar otro gol. | `GoalCelebrationDirector` con 16 variantes, replay corto cámara lenta, teclas `1–4` opcionales y Mascota del Lobo. | Crítica | Medio | Medio |
+| Game Feel | 6/10 | Física sólida a 60 Hz, pero sin curva Magnus, hit-stop ni pases al espacio con error IA. | Motor físico lineal sin efectos de arco/impacto. | Remates planos y poca sensación de impacto. | Efecto Magnus, hit-stop de ~40ms en bombazos, estela mejorada, regate/amague y look-ahead de cámara. | Alta | Medio | Bajo |
+| Audio | 5/10 | Ruido rosa + 4 SFX; `volumes.sfx` no se aplica a patada/silbato/palo. | Parámetros de volumen desconectados en `AudioEngine`. | Ajustes de sonido parcialmente rotos y audio repetitivo. | Corregir gain nodes por categoría, añadir capa de reacción/ambiente, música sutil de menú y fanfarria de gol. | Media | Bajo | Bajo |
+| Rendimiento | 8/10 | 60 FPS en desktop, aunque duplica mallas en `buildAll`. | Llamadas repetidas en `stadium_builder.js:1265`. | Draw calls desperdiciados en móviles. | Eliminar duplicación, mantener presupuesto < 130 draw calls y exponer telemetría opcional de FPS/draw calls. | Alta | Bajo | Bajo |
