@@ -345,19 +345,19 @@
   <!-- ======================================================================= -->
   <!-- PENALTY SHOOTOUT HUD                                                    -->
   <!-- ======================================================================= -->
-  <div id="penalty-hud" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-30 hud-glass rounded-2xl px-5 py-3 text-center">
-    <div class="text-[11px] font-bold uppercase tracking-wider text-sky-400 mb-1">Tanda de Penales</div>
+  <div id="penalty-hud" class="hidden fixed top-3 left-1/2 -translate-x-1/2 z-30 hud-glass hud-accent-top rounded-2xl px-5 py-2.5 text-center max-w-md w-[94vw]">
+    <div id="pen-turn-hint" class="text-[11px] font-bold uppercase tracking-wider text-sky-400 mb-1">Tanda de Penales • Tu Turno</div>
     <div class="flex items-center justify-center gap-6 mb-2">
       <div>
         <span class="font-display text-lg font-black text-sky-400">GYE</span>
         <span id="pen-score-home" class="font-mono-tech text-xl font-black ml-1">0</span>
-        <div id="pen-dots-home" class="flex gap-1 justify-center mt-1"></div>
+        <div id="pen-dots-home" class="flex gap-1 justify-center mt-1 min-h-[12px]"></div>
       </div>
       <span class="text-slate-500 font-bold">vs</span>
       <div>
         <span id="pen-score-away" class="font-mono-tech text-xl font-black mr-1">0</span>
-        <span class="font-display text-lg font-black text-amber-300">RIV</span>
-        <div id="pen-dots-away" class="flex gap-1 justify-center mt-1"></div>
+        <span id="pen-away-short" class="font-display text-lg font-black text-amber-300">RIV</span>
+        <div id="pen-dots-away" class="flex gap-1 justify-center mt-1 min-h-[12px]"></div>
       </div>
     </div>
     <div class="flex items-center justify-center gap-2">
@@ -650,7 +650,7 @@
   <script src="js/crowd_system.js?v=10"></script>
   <script src="js/goal_celebration_director.js?v=10"></script>
   <script src="js/stadium_builder.js?v=10"></script>
-  <script src="js/game_engine.js?v=10"></script>
+  <script src="js/game_engine.js?v=12"></script>
   <script>
     (function () {
       const game = new window.GameEngine();

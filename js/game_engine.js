@@ -222,6 +222,15 @@
       this.dropRingMesh.visible = false;
       this.matchGroup.add(this.dropRingMesh);
 
+      // Penalty aiming target ring inside North goal
+      this.penaltyAimMesh = new THREE.Mesh(
+        new THREE.RingGeometry(0.32, 0.48, 24),
+        new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.9, depthWrite: false })
+      );
+      this.penaltyAimMesh.position.set(0, 1.15, -52.2);
+      this.penaltyAimMesh.visible = false;
+      this.matchGroup.add(this.penaltyAimMesh);
+
       // Active player celeste cursor ring + direction arrow
       this.activeRingMesh = new THREE.Mesh(
         new THREE.RingGeometry(0.68, 0.92, 28),
@@ -964,36 +973,49 @@
         phase: 'AIMING',
         timer: 0,
         aimX: 0,
-        power: 0.72
+        power: 0.78,
+        goalScored: false,
+        saved: false,
+        currentKickerIndex: null
       };
       this._setupPenaltyKick();
       this._hideAllModals();
+      document.getElementById('match-hud').classList.add('hidden');
       document.getElementById('penalty-hud').classList.remove('hidden');
+      const awayShortEl = document.getElementById('pen-away-short');
+      if (awayShortEl && this.currentFixture) awayShortEl.textContent = this.currentFixture.opponent.shortName;
       this._updatePenaltyHUD();
     }
 
     _setupPenaltyKick() {
       const ms = this.matchState;
       ms.ownerPlayerId = null;
-      ms.ball = { x: 0, y: 0.34, z: -41.5, vx: 0, vy: 0, vz: 0 };
+      ms.ball = { x: 0, y: 0.34, z: -41.5, vx: 0, vy: 0, vz: 0, spinY: 0 };
       ms.penalties.phase = 'AIMING';
       ms.penalties.aimX = 0;
+      ms.penalties.goalScored = false;
+      ms.penalties.saved = false;
 
-      // Position kicker and GK at North goal (-52.5)
-      const kicker = ms.players.find((p) => p.team === ms.penalties.turn && p.role === 'FW') || ms.players[9];
+      // Rotate outfield kickers by round at North goal (-52.5)
+      const outfield = ms.players.filter((p) => p.team === ms.penalties.turn && p.role !== 'GK');
+      const kicker = outfield[(ms.penalties.round - 1) % outfield.length] || ms.players[9];
+      ms.penalties.currentKickerIndex = ms.players.indexOf(kicker);
       const gkTeam = ms.penalties.turn === 'home' ? 'away' : 'home';
       const gk = ms.players.find((p) => p.team === gkTeam && p.role === 'GK');
 
       ms.players.forEach((p) => {
-        p.x = (p.id % 5 - 2) * 3;
-        p.z = -10;
+        p.x = (p.id % 7 - 3) * 2.4;
+        p.z = -12;
         p.vx = 0;
         p.vz = 0;
+        p.diveTimer = 0;
+        p.kickAnimTimer = 0;
+        p.saveCelebrateTimer = 0;
         p.rotY = Math.PI;
       });
       if (kicker) {
         kicker.x = 0;
-        kicker.z = -38.5;
+        kicker.z = -38.6;
         kicker.rotY = Math.PI;
       }
       if (gk) {
@@ -1001,11 +1023,12 @@
         gk.z = -51.8;
         gk.rotY = 0;
       }
-      this._setCommentary(
-        ms.penalties.turn === 'home'
-          ? 'PENAL PARA GIMNASIA: Elegí dirección (A / D) y pateá con ESPACIO o L.'
-          : 'PENAL RIVAL: Elegí adónde se tira Milton Álvarez (A Izq / W Centro / D Der).'
-      );
+      const hintEl = document.getElementById('pen-turn-hint');
+      if (hintEl) {
+        hintEl.textContent = ms.penalties.turn === 'home'
+          ? `Ronda ${ms.penalties.round} • Patea Gimnasia (${kicker ? kicker.name : 'Lobo'})`
+          : `Ronda ${ms.penalties.round} • Ataja Gimnasia (Elegí adónde tirarte)`;
+      }
     }
 
     shootPenalty(dirChoice = null) {
@@ -1014,7 +1037,11 @@
       if (ms.phase !== 'PENALTIES' || pen.phase !== 'AIMING') return;
 
       pen.phase = 'FLIGHT';
-      pen.timer = 1.65;
+      pen.timer = 1.85;
+      pen.goalScored = false;
+      pen.saved = false;
+
+      const kicker = ms.players[pen.currentKickerIndex] || ms.players[9];
       const gkTeam = pen.turn === 'home' ? 'away' : 'home';
       const gk = ms.players.find((p) => p.team === gkTeam && p.role === 'GK');
 
@@ -1023,23 +1050,32 @@
 
       if (pen.turn === 'home') {
         aimX = dirChoice !== null ? dirChoice : pen.aimX;
-        const choices = [-2.8, 0, 2.8];
+        const choices = [-2.6, 0, 2.6];
         gkDiveX = choices[Math.floor(Math.random() * 3)];
       } else {
-        const choices = [-2.7, 0, 2.7];
+        const choices = [-2.6, 0, 2.6];
         aimX = choices[Math.floor(Math.random() * 3)];
         gkDiveX = dirChoice !== null ? dirChoice : 0;
       }
 
+      if (kicker) {
+        kicker.rotY = Math.atan2(aimX - kicker.x, -52.5 - kicker.z);
+        const kickerFig = this.playerMeshes[pen.currentKickerIndex];
+        if (kickerFig) kickerFig.kickTimer = 0.30;
+        kicker.kickAnimTimer = 0.30;
+      }
+
       if (gk) {
-        gk.vx = gkDiveX * 2.2;
+        gk.vx = gkDiveX * 2.55;
+        gk.diveTimer = 0.72;
+        gk.diveDir = gkDiveX < -0.5 ? -1 : gkDiveX > 0.5 ? 1 : 0;
       }
 
       const dx = aimX - ms.ball.x;
       const dz = -52.5 - ms.ball.z;
       const d = Math.hypot(dx, dz);
       const speed = 26;
-      this.physics.kickBall(ms, ms.players[0], (dx / d) * speed, 3.2, (dz / d) * speed, true);
+      this.physics.kickBall(ms, kicker || ms.players[0], (dx / d) * speed, 2.55, (dz / d) * speed, true);
       this.audio.playWhistle('short');
     }
 
@@ -1055,9 +1091,8 @@
             this.shootPenalty(pen.aimX);
           }
         } else {
-          // User chooses GK dive direction
           if (Math.abs(frame.moveX) > 0.35 || frame.passPressed) {
-            const dive = frame.moveX < -0.3 ? -2.8 : frame.moveX > 0.3 ? 2.8 : 0;
+            const dive = frame.moveX < -0.3 ? -2.7 : frame.moveX > 0.3 ? 2.7 : 0;
             this.shootPenalty(dive);
           }
         }
@@ -1069,23 +1104,32 @@
         const gkTeam = pen.turn === 'home' ? 'away' : 'home';
         const gk = ms.players.find((p) => p.team === gkTeam && p.role === 'GK');
         if (gk) {
-          gk.x = Math.max(-3.4, Math.min(3.4, gk.x + gk.vx * dt));
-          // Save check
-          if (Math.hypot(gk.x - ms.ball.x, gk.z - ms.ball.z) < 1.25 && ms.ball.z < -50.5) {
-            ms.ball.vx *= -0.35;
-            ms.ball.vz = 4.0;
+          if (gk.diveTimer > 0) gk.diveTimer = Math.max(0, gk.diveTimer - dt);
+          gk.x = Math.max(-3.35, Math.min(3.35, gk.x + gk.vx * dt));
+          if (!pen.goalScored && !pen.saved && Math.hypot(gk.x - ms.ball.x, gk.z - ms.ball.z) < 1.35 && ms.ball.z < -50.2) {
+            pen.saved = true;
+            ms.ball.vx *= -0.4;
+            ms.ball.vz = 5.5;
+            gk.saveCelebrateTimer = 1.1;
+            this.audio.playSave();
           }
+        }
+
+        // Latch goal immediately when ball crosses North goal line inside posts & under bar
+        if (!pen.saved && !pen.goalScored && ms.ball.z < -52.52 && Math.abs(ms.ball.x) < 3.60 && ms.ball.y < 2.42) {
+          pen.goalScored = true;
+          ms.ball.vx *= 0.25;
+          ms.ball.vz *= 0.20;
+          if (pen.turn === 'home') this.audio.playGoalRoar();
+          this._triggerMicroShake(0.28);
         }
 
         pen.timer -= dt;
         if (pen.timer <= 0) {
-          const scored = ms.ball.z < -52.5 && Math.abs(ms.ball.x) < 3.66;
+          const scored = !!pen.goalScored;
           if (pen.turn === 'home') {
             pen.homeHistory.push(scored ? 'G' : 'M');
-            if (scored) {
-              pen.homeScore += 1;
-              this.audio.playGoalRoar();
-            }
+            if (scored) pen.homeScore += 1;
           } else {
             pen.awayHistory.push(scored ? 'G' : 'M');
             if (scored) pen.awayScore += 1;
@@ -1093,11 +1137,18 @@
 
           this._updatePenaltyHUD();
 
-          // Check winner after 5 rounds or unbeatable lead
           const hCount = pen.homeHistory.length;
           const aCount = pen.awayHistory.length;
           const bothDoneRound = hCount === aCount;
-          if (bothDoneRound && hCount >= 5 && pen.homeScore !== pen.awayScore) {
+          const homeRem = Math.max(0, 5 - hCount);
+          const awayRem = Math.max(0, 5 - aCount);
+          const clinchedEarly = (hCount <= 5 && aCount <= 5) && (
+            pen.homeScore - pen.awayScore > awayRem ||
+            pen.awayScore - pen.homeScore > homeRem
+          );
+          const suddenDeathWin = bothDoneRound && hCount >= 5 && pen.homeScore !== pen.awayScore;
+
+          if (clinchedEarly || suddenDeathWin) {
             ms.phase = 'FULLTIME';
             document.getElementById('penalty-hud').classList.add('hidden');
             this._showOverlayModal('fulltime', pen.homeScore > pen.awayScore ? '¡GANÓ GIMNASIA POR PENALES!' : `Ganó ${this.currentFixture.opponent.name} por penales`);
@@ -1227,6 +1278,14 @@
         if (c.mesh.position.z < -155) c.mesh.position.z = 155;
       });
 
+      if (this.penaltyAimMesh) {
+        const showAim = ms.phase === 'PENALTIES' && ms.penalties.phase === 'AIMING' && ms.penalties.turn === 'home';
+        this.penaltyAimMesh.visible = showAim;
+        if (showAim) {
+          this.penaltyAimMesh.position.set(ms.penalties.aimX, 1.15, -52.2);
+        }
+      }
+
       // Ball & shadow & aerial drop indicator
       this.ballMesh.position.set(ms.ball.x, ms.ball.y, ms.ball.z);
       this.ballMesh.rotation.x += ms.ball.vz * dt * 1.4;
@@ -1320,8 +1379,8 @@
         targetPos.set(Math.cos(ang) * 72, 34, Math.sin(ang) * 72);
         targetLook.set(0, 2, 0);
       } else if (ms.phase === 'PENALTIES') {
-        targetPos.set(0, 5.2, -31.5);
-        targetLook.set(0, 1.4, -52.5);
+        targetPos.set(0, 3.1, -33.8);
+        targetLook.set(0, 1.35, -52.5);
       } else if (ms.phase === 'GOAL_CELEBRATION') {
         // Tribuna celebration angle behind the scored goal!
         const celebSec = ms.lastGoalTeam === 'away'
