@@ -401,7 +401,9 @@
       this._setCommentary(
         this.isTraining
           ? 'MODO ENTRENAMIENTO • Practicá pases y remates al arco sin reloj • Volvé al Lobby cuando quieras.'
-          : `¡Sacás vos! WASD/Flechas = Mover • ESPACIO = Pase • L = Remate`
+          : (this.input && this.input.controlScheme === 'pes'
+            ? '¡Sacás vos! Flechas = Mover • E = Correr • S = Pase • D = Remate'
+            : '¡Sacás vos! WASD/Flechas = Mover • ESPACIO = Pase • L = Remate')
       );
       this._showHudForMatch();
     }

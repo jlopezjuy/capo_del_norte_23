@@ -25,6 +25,7 @@
       padding: 0;
       width: 100%;
       height: 100%;
+      height: 100dvh;
       overflow: hidden;
       font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
       background-color: #0b1320;
@@ -279,7 +280,7 @@
         <div class="space-y-1">
           <div>
             <div class="flex justify-between text-[9px] font-bold uppercase text-slate-400 mb-0.5">
-              <span>Energía</span><span class="hidden sm:inline">Shift</span>
+              <span>Energía</span><span id="hud-hint-sprint" class="hidden sm:inline">E</span>
             </div>
             <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden">
               <div id="hud-stamina-fill" class="h-full bg-sky-400 transition-all duration-75" style="width: 100%"></div>
@@ -287,7 +288,7 @@
           </div>
           <div>
             <div class="flex justify-between text-[9px] font-bold uppercase text-slate-400 mb-0.5">
-              <span>Remate</span><span class="hidden sm:inline">L / F</span>
+              <span>Remate</span><span id="hud-hint-shoot" class="hidden sm:inline">D</span>
             </div>
             <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden">
               <div id="hud-power-fill" class="h-full bg-amber-400 transition-all duration-75" style="width: 0%"></div>
@@ -311,35 +312,36 @@
     </div>
 
     <!-- Bottom Right: Live Context-Aware Controls Cheat Sheet (compact & toggleable) -->
-    <div id="hud-controls-card" class="hidden fixed bottom-3 right-3 hud-glass rounded-xl p-2.5 w-60 pointer-events-auto">
-      <div class="flex items-center justify-between mb-1.5 pb-1 border-b border-slate-800">
+    <div id="hud-controls-card" class="hidden fixed bottom-3 right-3 hud-glass rounded-xl p-2.5 w-64 pointer-events-auto">
+      <div class="flex items-center justify-between mb-1.5 pb-1 border-b border-slate-800 gap-1">
         <span id="hud-ctrl-mode" class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">EN ATAQUE • CON PELOTA</span>
-        <span id="hud-attack-dir" class="text-[10px] font-bold text-sky-300">Arco ← Izq</span>
+        <button id="btn-toggle-scheme" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[9px] font-bold text-sky-300" title="Cambiar esquema de teclado">PES</button>
       </div>
       <div id="hud-ctrl-attack" class="space-y-1 text-[11px] text-slate-200">
-        <div class="flex items-center justify-between"><span class="text-slate-300">Mover / Regate</span><span><span class="kbd-key">WASD</span> <span class="kbd-key">E</span></span></div>
-        <div class="flex items-center justify-between"><span class="text-slate-300">Pase al pie</span><span><span class="kbd-key">Espacio</span> <span class="kbd-key">J</span></span></div>
-        <div class="flex items-center justify-between"><span class="text-slate-300">Centro / Largo</span><span><span class="kbd-key">K</span> <span class="kbd-key">X</span></span></div>
-        <div class="flex items-center justify-between"><span class="text-slate-300">Remate al arco</span><span><span class="kbd-key">L</span> <span class="kbd-key">F</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Mover / Correr</span><span id="ctrl-atk-move"><span class="kbd-key">Flechas</span> <span class="kbd-key">E</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Pase al pie</span><span id="ctrl-atk-pass"><span class="kbd-key">S</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Centro / Largo</span><span id="ctrl-atk-lob"><span class="kbd-key">A</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Remate al arco</span><span id="ctrl-atk-shoot"><span class="kbd-key">D</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Regate</span><span id="ctrl-atk-dribble"><span class="kbd-key">Q</span></span></div>
       </div>
       <div id="hud-ctrl-defense" class="hidden space-y-1 text-[11px] text-slate-200">
-        <div class="flex items-center justify-between"><span class="text-slate-300">Mover / Correr</span><span><span class="kbd-key">WASD</span> <span class="kbd-key">Shift</span></span></div>
-        <div class="flex items-center justify-between"><span class="text-slate-300">Cambiar jugador</span><span><span class="kbd-key">Q</span> <span class="kbd-key">E</span></span></div>
-        <div class="flex items-center justify-between"><span class="text-slate-300">Presionar / Quitar</span><span><span class="kbd-key">Espacio</span> <span class="kbd-key">J</span></span></div>
-        <div class="flex items-center justify-between"><span class="text-slate-300">Barrida</span><span><span class="kbd-key">L</span> <span class="kbd-key">F</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Mover / Correr</span><span id="ctrl-def-move"><span class="kbd-key">Flechas</span> <span class="kbd-key">E</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Cambiar jugador</span><span id="ctrl-def-switch"><span class="kbd-key">Q</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Presionar / Quitar</span><span id="ctrl-def-pass"><span class="kbd-key">S</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Barrida</span><span id="ctrl-def-shoot"><span class="kbd-key">D</span></span></div>
       </div>
     </div>
 
-    <!-- Touch Controls Overlay (Auto on touch or toggled) -->
-    <div id="touch-controls" class="hidden fixed inset-x-0 bottom-3 px-4 flex items-end justify-between pointer-events-none">
-      <div id="touch-stick-base" class="w-28 h-28 rounded-full bg-slate-900/75 border-2 border-sky-400/50 relative pointer-events-auto flex items-center justify-center">
-        <div id="touch-stick-knob" class="w-12 h-12 rounded-full bg-sky-400 shadow-lg pointer-events-none"></div>
+    <!-- Touch Controls Overlay (Auto on touch/mobile or toggled) -->
+    <div id="touch-controls" class="hidden fixed inset-x-0 bottom-3 z-30 px-3 sm:px-4 flex items-end justify-between pointer-events-none" style="bottom: max(0.75rem, env(safe-area-inset-bottom));">
+      <div id="touch-stick-base" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-900/75 border-2 border-sky-400/50 relative pointer-events-auto flex items-center justify-center" style="touch-action: none;">
+        <div id="touch-stick-knob" class="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-sky-400 shadow-lg pointer-events-none"></div>
       </div>
-      <div class="grid grid-cols-2 gap-2 pointer-events-auto">
-        <button data-touch-btn="switchPlayer" class="w-14 h-14 rounded-full hud-glass text-[10px] font-bold text-slate-200">CAMBIAR</button>
-        <button data-touch-btn="lob" class="w-14 h-14 rounded-full hud-glass text-[10px] font-bold text-amber-300">CENTRO</button>
-        <button id="touch-btn-pass" data-touch-btn="pass" class="w-16 h-16 rounded-full bg-sky-500 border-2 border-sky-300 text-[11px] font-extrabold text-slate-950 shadow-lg">PASE</button>
-        <button id="touch-btn-shoot" data-touch-btn="shoot" class="w-16 h-16 rounded-full bg-rose-500 border-2 border-rose-300 text-[11px] font-extrabold text-white shadow-lg">REMATE</button>
+      <div class="grid grid-cols-2 gap-1.5 sm:gap-2 pointer-events-auto" style="touch-action: none;">
+        <button data-touch-btn="switchPlayer" class="w-12 h-12 sm:w-14 sm:h-14 rounded-full hud-glass text-[10px] font-bold text-slate-200" style="touch-action: none;">CAMBIAR</button>
+        <button data-touch-btn="lob" class="w-12 h-12 sm:w-14 sm:h-14 rounded-full hud-glass text-[10px] font-bold text-amber-300" style="touch-action: none;">CENTRO</button>
+        <button id="touch-btn-pass" data-touch-btn="pass" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-sky-500 border-2 border-sky-300 text-[11px] font-extrabold text-slate-950 shadow-lg" style="touch-action: none;">PASE</button>
+        <button id="touch-btn-shoot" data-touch-btn="shoot" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-rose-500 border-2 border-rose-300 text-[11px] font-extrabold text-white shadow-lg" style="touch-action: none;">REMATE</button>
       </div>
     </div>
   </div>
@@ -418,6 +420,13 @@
     <div class="hud-glass hud-accent-top rounded-2xl p-6 w-full max-w-md">
       <h2 class="font-display text-3xl font-black uppercase text-white mb-4">Configuración</h2>
       <div class="space-y-3.5 text-xs mb-5">
+        <div>
+          <label class="block font-bold uppercase text-slate-400 mb-1">Controles de Teclado</label>
+          <select id="set-controls" class="w-full h-9 bg-[#0d1626] border border-slate-700 rounded-lg px-3 font-semibold text-white">
+            <option value="pes" selected>Clásico PES (Flechas • A Centro • S Pase • D Remate • E Correr)</option>
+            <option value="wasd">Moderno WASD (WASD • Espacio Pase • K Centro • L Remate • Shift)</option>
+          </select>
+        </div>
         <div>
           <label class="block font-bold uppercase text-slate-400 mb-1">Calidad Gráfica</label>
           <select id="set-quality" class="w-full h-9 bg-[#0d1626] border border-slate-700 rounded-lg px-3 font-semibold text-white">
@@ -642,20 +651,20 @@
   </div>
 
   <!-- Modular Game Scripts (compatible with both file:// and HTTP) -->
-  <script src="js/brand_registry.js?v=13"></script>
-  <script src="js/afa_fixture.js?v=13"></script>
-  <script src="js/club_badges.js?v=13"></script>
-  <script src="js/creator_config.js?v=13"></script>
-  <script src="js/audio_engine.js?v=13"></script>
-  <script src="js/match_state.js?v=13"></script>
-  <script src="js/input_controller.js?v=13"></script>
-  <script src="js/physics_engine.js?v=13"></script>
-  <script src="js/tactical_ai.js?v=13"></script>
-  <script src="js/player_renderer.js?v=13"></script>
-  <script src="js/crowd_system.js?v=13"></script>
-  <script src="js/goal_celebration_director.js?v=13"></script>
-  <script src="js/stadium_builder.js?v=13"></script>
-  <script src="js/game_engine.js?v=13"></script>
+  <script src="js/brand_registry.js?v=14"></script>
+  <script src="js/afa_fixture.js?v=14"></script>
+  <script src="js/club_badges.js?v=14"></script>
+  <script src="js/creator_config.js?v=14"></script>
+  <script src="js/audio_engine.js?v=14"></script>
+  <script src="js/match_state.js?v=14"></script>
+  <script src="js/input_controller.js?v=14"></script>
+  <script src="js/physics_engine.js?v=14"></script>
+  <script src="js/tactical_ai.js?v=14"></script>
+  <script src="js/player_renderer.js?v=14"></script>
+  <script src="js/crowd_system.js?v=14"></script>
+  <script src="js/goal_celebration_director.js?v=14"></script>
+  <script src="js/stadium_builder.js?v=14"></script>
+  <script src="js/game_engine.js?v=14"></script>
   <script>
     (function () {
       const game = new window.GameEngine();
@@ -770,6 +779,56 @@
         }
       });
       document.getElementById('set-quality').addEventListener('change', (e) => game.applyGraphicsQuality(e.target.value));
+
+      const setControlsEl = document.getElementById('set-controls');
+      const syncControlSchemeUI = (scheme) => {
+        const isPes = scheme !== 'wasd';
+        if (setControlsEl) setControlsEl.value = isPes ? 'pes' : 'wasd';
+        const hintSprint = document.getElementById('hud-hint-sprint');
+        const hintShoot = document.getElementById('hud-hint-shoot');
+        if (hintSprint) hintSprint.textContent = isPes ? 'E' : 'Shift';
+        if (hintShoot) hintShoot.textContent = isPes ? 'D' : 'L / F';
+        const schemeBtn = document.getElementById('btn-toggle-scheme');
+        if (schemeBtn) schemeBtn.textContent = isPes ? 'PES (→ WASD)' : 'WASD (→ PES)';
+
+        const setHtml = (id, html) => {
+          const el = document.getElementById(id);
+          if (el) el.innerHTML = html;
+        };
+        if (isPes) {
+          setHtml('ctrl-atk-move', '<span class="kbd-key">Flechas</span> <span class="kbd-key">E</span>');
+          setHtml('ctrl-atk-pass', '<span class="kbd-key">S</span>');
+          setHtml('ctrl-atk-lob', '<span class="kbd-key">A</span>');
+          setHtml('ctrl-atk-shoot', '<span class="kbd-key">D</span>');
+          setHtml('ctrl-atk-dribble', '<span class="kbd-key">Q</span>');
+          setHtml('ctrl-def-move', '<span class="kbd-key">Flechas</span> <span class="kbd-key">E</span>');
+          setHtml('ctrl-def-switch', '<span class="kbd-key">Q</span>');
+          setHtml('ctrl-def-pass', '<span class="kbd-key">S</span>');
+          setHtml('ctrl-def-shoot', '<span class="kbd-key">D</span>');
+        } else {
+          setHtml('ctrl-atk-move', '<span class="kbd-key">WASD</span> <span class="kbd-key">Shift</span>');
+          setHtml('ctrl-atk-pass', '<span class="kbd-key">Espacio</span> <span class="kbd-key">J</span>');
+          setHtml('ctrl-atk-lob', '<span class="kbd-key">K</span> <span class="kbd-key">X</span>');
+          setHtml('ctrl-atk-shoot', '<span class="kbd-key">L</span> <span class="kbd-key">F</span>');
+          setHtml('ctrl-atk-dribble', '<span class="kbd-key">E</span>');
+          setHtml('ctrl-def-move', '<span class="kbd-key">WASD</span> <span class="kbd-key">Shift</span>');
+          setHtml('ctrl-def-switch', '<span class="kbd-key">Q</span> <span class="kbd-key">E</span>');
+          setHtml('ctrl-def-pass', '<span class="kbd-key">Espacio</span> <span class="kbd-key">J</span>');
+          setHtml('ctrl-def-shoot', '<span class="kbd-key">L</span> <span class="kbd-key">F</span>');
+        }
+      };
+      if (setControlsEl) {
+        setControlsEl.addEventListener('change', (e) => {
+          game.input.setControlScheme(e.target.value);
+          syncControlSchemeUI(game.input.controlScheme);
+        });
+      }
+      document.getElementById('btn-toggle-scheme')?.addEventListener('click', () => {
+        const next = game.input.controlScheme === 'pes' ? 'wasd' : 'pes';
+        game.input.setControlScheme(next);
+        syncControlSchemeUI(next);
+      });
+      syncControlSchemeUI(game.input.controlScheme);
       document.getElementById('set-vol-crowd').addEventListener('input', (e) => {
         game.audio.setCategoryVolume('crowd', e.target.value);
         document.getElementById('val-vol-crowd').textContent = `${Math.round(e.target.value * 100)}%`;
@@ -818,8 +877,11 @@
       document.getElementById('btn-rematch').addEventListener('click', launchSelectedMatch);
       document.getElementById('btn-stats-lobby').addEventListener('click', () => game.returnToLobby());
 
-      // Touch controls toggle & virtual joystick
+      // Touch controls toggle & virtual joystick (resilient for Brave / older Android)
       const touchControls = document.getElementById('touch-controls');
+      const touchToggleBtn = document.getElementById('btn-hud-touch');
+      let userDisabledTouch = false;
+
       const syncTouchOverlayLayout = () => {
         const touchVisible = !touchControls.classList.contains('hidden');
         const playerCard = document.getElementById('hud-player-card');
@@ -828,15 +890,58 @@
           playerCard.classList.toggle('sm:top-20', touchVisible);
           playerCard.classList.toggle('sm:bottom-3', !touchVisible);
         }
+        if (touchToggleBtn) {
+          touchToggleBtn.classList.toggle('text-sky-300', touchVisible);
+          touchToggleBtn.classList.toggle('border-sky-400/60', touchVisible);
+        }
       };
-      if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-        touchControls.classList.remove('hidden');
-        syncTouchOverlayLayout();
+
+      const enableTouchControls = () => {
+        if (userDisabledTouch) return;
+        if (touchControls.classList.contains('hidden')) {
+          touchControls.classList.remove('hidden');
+          syncTouchOverlayLayout();
+        }
+      };
+
+      const isLikelyTouchDevice = () => {
+        if ('ontouchstart' in window) return true;
+        if ((navigator.maxTouchPoints || 0) > 0) return true;
+        if ((navigator.msMaxTouchPoints || 0) > 0) return true;
+        if (window.matchMedia) {
+          if (window.matchMedia('(pointer: coarse)').matches) return true;
+          if (window.matchMedia('(any-pointer: coarse)').matches) return true;
+          if (window.matchMedia('(hover: none)').matches) return true;
+        }
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '')) {
+          return true;
+        }
+        return false;
+      };
+
+      if (isLikelyTouchDevice()) {
+        enableTouchControls();
+      } else {
+        // Brave / privacy browsers may spoof maxTouchPoints=0 until first real touch
+        const onFirstTouch = (e) => {
+          if (e.type === 'touchstart' || e.pointerType === 'touch' || e.pointerType === 'pen') {
+            enableTouchControls();
+            window.removeEventListener('touchstart', onFirstTouch);
+            window.removeEventListener('pointerdown', onFirstTouch);
+          }
+        };
+        window.addEventListener('touchstart', onFirstTouch, { passive: true });
+        window.addEventListener('pointerdown', onFirstTouch, { passive: true });
       }
-      document.getElementById('btn-hud-touch').addEventListener('click', () => {
-        touchControls.classList.toggle('hidden');
-        syncTouchOverlayLayout();
-      });
+
+      if (touchToggleBtn) {
+        touchToggleBtn.addEventListener('click', () => {
+          const willShow = touchControls.classList.contains('hidden');
+          userDisabledTouch = !willShow;
+          touchControls.classList.toggle('hidden');
+          syncTouchOverlayLayout();
+        });
+      }
 
       const stickBase = document.getElementById('touch-stick-base');
       const stickKnob = document.getElementById('touch-stick-knob');
@@ -844,9 +949,10 @@
 
       const handleStickMove = (clientX, clientY) => {
         const rect = stickBase.getBoundingClientRect();
+        if (!rect.width) return;
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
-        const maxR = rect.width / 2 - 16;
+        const maxR = Math.max(16, rect.width / 2 - 16);
         let dx = clientX - cx;
         let dy = clientY - cy;
         const dist = Math.hypot(dx, dy);
@@ -861,7 +967,7 @@
 
       stickBase.addEventListener('pointerdown', (e) => {
         stickActive = true;
-        stickBase.setPointerCapture(e.pointerId);
+        try { stickBase.setPointerCapture(e.pointerId); } catch (_) {}
         handleStickMove(e.clientX, e.clientY);
       });
       stickBase.addEventListener('pointermove', (e) => {
@@ -878,12 +984,14 @@
 
       document.querySelectorAll('[data-touch-btn]').forEach((btn) => {
         const name = btn.getAttribute('data-touch-btn');
+        const release = () => game.input.setTouchButton(name, false);
         btn.addEventListener('pointerdown', (e) => {
           e.preventDefault();
           game.input.setTouchButton(name, true);
         });
-        btn.addEventListener('pointerup', () => game.input.setTouchButton(name, false));
-        btn.addEventListener('pointercancel', () => game.input.setTouchButton(name, false));
+        btn.addEventListener('pointerup', release);
+        btn.addEventListener('pointercancel', release);
+        btn.addEventListener('pointerleave', release);
       });
     })();
   </script>

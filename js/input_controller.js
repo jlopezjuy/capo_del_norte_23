@@ -32,7 +32,25 @@
       this.onPauseCallback = null;
       this.onCameraCycleCallback = null;
 
+      let savedScheme = 'pes';
+      try {
+        const stored = global.localStorage && global.localStorage.getItem('pasion_control_scheme');
+        if (stored === 'wasd' || stored === 'pes') savedScheme = stored;
+      } catch (_) {}
+      this.controlScheme = savedScheme;
+
       this._bindKeyboard();
+    }
+
+    setControlScheme(scheme) {
+      this.controlScheme = scheme === 'wasd' ? 'wasd' : 'pes';
+      this.isChargingShoot = false;
+      this.shootCharge = 0;
+      try {
+        if (global.localStorage) {
+          global.localStorage.setItem('pasion_control_scheme', this.controlScheme);
+        }
+      } catch (_) {}
     }
 
     _bindKeyboard() {
@@ -126,13 +144,15 @@
     sample(dt, cameraMode = 'broadcast', hasBall = true) {
       const pad = this._pollGamepad();
 
+      const isPes = this.controlScheme === 'pes';
+
       // Raw screen-space movement
       let rawX = 0;
       let rawZ = 0;
-      if (this.keys.has('KeyA') || this.keys.has('ArrowLeft')) rawX -= 1;
-      if (this.keys.has('KeyD') || this.keys.has('ArrowRight')) rawX += 1;
-      if (this.keys.has('KeyW') || this.keys.has('ArrowUp')) rawZ -= 1;
-      if (this.keys.has('KeyS') || this.keys.has('ArrowDown')) rawZ += 1;
+      if (this.keys.has('ArrowLeft') || (!isPes && this.keys.has('KeyA'))) rawX -= 1;
+      if (this.keys.has('ArrowRight') || (!isPes && this.keys.has('KeyD'))) rawX += 1;
+      if (this.keys.has('ArrowUp') || (!isPes && this.keys.has('KeyW'))) rawZ -= 1;
+      if (this.keys.has('ArrowDown') || (!isPes && this.keys.has('KeyS'))) rawZ += 1;
 
       rawX += this.touchMoveX;
       rawZ += this.touchMoveZ;
@@ -165,6 +185,7 @@
       const sprint =
         this.keys.has('ShiftLeft') ||
         this.keys.has('ShiftRight') ||
+        (isPes && this.keys.has('KeyE')) ||
         this.touchSprint ||
         (pad ? pad.sprint : false);
 
@@ -175,32 +196,43 @@
       const touchShootRelease = !this.touchButtons.shoot && this.prevTouchButtons.shoot;
 
       const passPressed =
-        this.justPressed.has('Space') ||
-        this.justPressed.has('KeyJ') ||
+        (isPes
+          ? (this.justPressed.has('KeyS') || this.justPressed.has('Space'))
+          : (this.justPressed.has('Space') || this.justPressed.has('KeyJ'))) ||
         touchPassEdge ||
         (pad ? pad.passPressed : false);
 
       const lobPressed =
-        this.justPressed.has('KeyK') ||
-        this.justPressed.has('KeyX') ||
+        (isPes
+          ? this.justPressed.has('KeyA')
+          : (this.justPressed.has('KeyK') || this.justPressed.has('KeyX'))) ||
         touchLobEdge ||
         (pad ? pad.lobPressed : false);
 
       const switchPressed =
         !hasBall &&
-        (this.justPressed.has('KeyQ') ||
-        this.justPressed.has('KeyE') ||
+        ((isPes
+          ? (this.justPressed.has('KeyQ') || this.justPressed.has('KeyW'))
+          : (this.justPressed.has('KeyQ') || this.justPressed.has('KeyE'))) ||
         touchSwitchEdge ||
         (pad ? pad.switchPressed : false));
 
-      const dribblePressed = hasBall && this.justPressed.has('KeyE');
+      const dribblePressed = hasBall && (isPes ? (this.justPressed.has('KeyQ') || this.justPressed.has('KeyW')) : this.justPressed.has('KeyE'));
 
-      // Shoot / Tackle (L or F; note D is used for WASD right movement, so we support L and F, plus Space/J in defense!)
-      const shootKeyHeld = this.keys.has('KeyL') || this.keys.has('KeyF') || this.touchButtons.shoot || (pad ? pad.shootHeld : false);
-      const shootKeyJustPressed = this.justPressed.has('KeyL') || this.justPressed.has('KeyF');
+      // Shoot / Tackle (PES: D; WASD: L or F)
+      const shootKeyHeld =
+        (isPes
+          ? this.keys.has('KeyD')
+          : (this.keys.has('KeyL') || this.keys.has('KeyF'))) ||
+        this.touchButtons.shoot ||
+        (pad ? pad.shootHeld : false);
+      const shootKeyJustPressed = isPes
+        ? this.justPressed.has('KeyD')
+        : (this.justPressed.has('KeyL') || this.justPressed.has('KeyF'));
       const shootKeyReleased =
-        this.justReleased.has('KeyL') ||
-        this.justReleased.has('KeyF') ||
+        (isPes
+          ? this.justReleased.has('KeyD')
+          : (this.justReleased.has('KeyL') || this.justReleased.has('KeyF'))) ||
         touchShootRelease ||
         (pad ? pad.shootReleased : false);
 
