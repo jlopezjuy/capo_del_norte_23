@@ -1,6 +1,5 @@
 /**
- * StadiumBuilder — Estadio 23 de Agosto (100% Architectural Preservation)
- * Gimnasia y Esgrima de Jujuy
+ * StadiumBuilder — Estadio de los Cerros (Escenario A Independiente)
  */
 (function (global) {
   'use strict';
@@ -50,8 +49,8 @@
     scoreHome: 0,
     scoreAway: 0,
     matchSeconds: 0,
-    awayShort: 'MAD',
-    awayName: 'DEPORTIVO MADRYN',
+    awayShort: 'GNF',
+    awayName: 'GOLFO NUEVO FC',
     awayHex: '#facc15',
     halfLabel: '1°T',
     goalTeam: 'home',
@@ -62,19 +61,9 @@
       platea_alta: {
         id: 'platea_alta',
         keyNum: '1',
-        name: 'Platea Alta "Ing. Raúl Ulloa"',
-        shortName: 'Platea Alta (GYEJ)',
+        name: 'Platea Alta "Los Cerros"',
+        shortName: 'Platea Alta',
         badge: 'OESTE • SEGUNDA BANDEJA',
-        priceMayor: 50000,
-        priceJubilado: 40000,
-        priceMenor: 25000,
-        accessGate: 'Calle Santa Bárbara esq. Humahuaca',
-        description: 'Bandeja superior sobre el mosaico "G Y E J". Ofrece la mejor perspectiva táctica de toda la cancha sin obstrucción del alambrado perimetral.',
-        proTip: 'Ubicarse en los bloques centrales "GY" o "EJ" fila media para visión televisiva ideal.',
-        visibilityScore: 98,
-        visibilityLabel: '98% (Limpia, sobre el alambrado)',
-        atmosphereScore: 82,
-        atmosphereLabel: '82% (Apasionado y cómodo con butaca)',
         rows: {
           low:  { x: -49.5, y: 12.2, zSpan: 36 },
           mid:  { x: -53.5, y: 15.6, zSpan: 36 },
@@ -85,19 +74,9 @@
       platea_baja: {
         id: 'platea_baja',
         keyNum: '2',
-        name: 'Platea Baja "Ing. Raúl Ulloa"',
-        shortName: 'Platea Baja (1931)',
+        name: 'Platea Baja "Los Cerros"',
+        shortName: 'Platea Baja',
         badge: 'OESTE • PRIMERA BANDEJA',
-        priceMayor: 50000,
-        priceJubilado: 40000,
-        priceMenor: 25000,
-        accessGate: 'Calle Santa Bárbara esq. Humahuaca',
-        description: 'Bandeja inferior con el mosaico "-19 31-". Estás a pocos metros de los bancos de suplentes, el túnel de salida y los jugadores.',
-        proTip: 'Elegí Fila Media o Alta para ver por encima del techo de los bancos de suplentes.',
-        visibilityScore: 88,
-        visibilityLabel: '88% (Cercanía máxima al jugador)',
-        atmosphereScore: 86,
-        atmosphereLabel: '86% (Se escuchan las indicaciones técnicas)',
         rows: {
           low:  { x: -41.0, y: 3.4, zSpan: 36 },
           mid:  { x: -44.2, y: 5.8, zSpan: 36 },
@@ -108,19 +87,9 @@
       preferencial: {
         id: 'preferencial',
         keyNum: '3',
-        name: 'Tribuna Preferencial "Hugo Fayek Llapur"',
-        shortName: 'Preferencial (Este)',
-        badge: 'LATERAL ESTE • AV. EL ÉXODO',
-        priceMayor: 40000,
-        priceJubilado: 30000,
-        priceMenor: 25000,
-        accessGate: 'Av. El Éxodo — Puertas 1 y 2',
-        description: 'Amplia tribuna lateral frente a la Platea oficial. Permite apreciar todo el frente "GYEJ 1931" y vivir el partido con gran colorido local.',
-        proTip: 'Desplazate unos metros a izquierda o derecha del centro (0 m) para evitar la torre de iluminación central.',
-        visibilityScore: 90,
-        visibilityLabel: '90% (Gran vista lateral y de la Platea)',
-        atmosphereScore: 93,
-        atmosphereLabel: '93% (Banderas, tirantes y aliento constante)',
+        name: 'Tribuna Preferencial Este',
+        shortName: 'Preferencial',
+        badge: 'LATERAL ESTE',
         rows: {
           low:  { x: 43.0, y: 3.3, zSpan: 38, curveX: -4.0 },
           mid:  { x: 47.5, y: 6.8, zSpan: 38, curveX: -4.2 },
@@ -131,19 +100,9 @@
       popular_norte: {
         id: 'popular_norte',
         keyNum: '4',
-        name: 'Popular "Lobo Norte"',
-        shortName: 'Popular Lobo Norte',
-        badge: 'CABECERA NORTE • CALLE HUMAHUACA',
-        priceMayor: 35000,
-        priceJubilado: 25000,
-        priceMenor: 25000,
-        accessGate: 'Av. El Éxodo esq. Humahuaca (Boletería Norte)',
-        description: 'La histórica cabecera local debajo del Tablero Electrónico LED. Es el corazón de la hinchada del Lobo Jujeño con cánticos, humo albiceleste y banderas.',
-        proTip: 'En Fila Alta tenés una vista completa de la cancha de arco a arco y toda la fiesta a tus pies.',
-        visibilityScore: 83,
-        visibilityLabel: '83% (Vista profunda de arco a arco)',
-        atmosphereScore: 100,
-        atmosphereLabel: '100% (El corazón de la fiesta albiceleste)',
+        name: 'Popular Norte',
+        shortName: 'Popular Norte',
+        badge: 'CABECERA NORTE',
         rows: {
           low:  { z: -60.5, y: 3.4, xSpan: 28, curveZ: 5.5 },
           mid:  { z: -65.5, y: 7.0, xSpan: 31, curveZ: 6.0 },
@@ -154,19 +113,9 @@
       popular_sur: {
         id: 'popular_sur',
         keyNum: '5',
-        name: 'Popular "Lobo Sur"',
-        shortName: 'Popular Lobo Sur',
-        badge: 'CABECERA SUR • PLAZOLETA 20 DE JUNIO',
-        priceMayor: 35000,
-        priceJubilado: 25000,
-        priceMenor: 25000,
-        accessGate: 'Calle La Bandera / Plazoleta 20 de Junio',
-        description: 'Cabecera Sur con excelente perspectiva frontal hacia la Pantalla Gigante LED de la tribuna Norte y hacia los cerros de San Salvador de Jujuy.',
-        proTip: 'Ideal si buscás entrada popular con más espacio para ubicarte y vista directa a la pantalla gigante.',
-        visibilityScore: 86,
-        visibilityLabel: '86% (Vista frontal al Tablero LED Norte)',
-        atmosphereScore: 89,
-        atmosphereLabel: '89% (Gran ambiente popular más holgado)',
+        name: 'Popular Sur',
+        shortName: 'Popular Sur',
+        badge: 'CABECERA SUR',
         rows: {
           low:  { z: 60.5, y: 3.4, xSpan: 28, curveZ: -5.5 },
           mid:  { z: 65.5, y: 7.0, xSpan: 31, curveZ: -6.0 },
@@ -230,7 +179,7 @@
         priceJubilado: 40000,
         priceMenor: 25000,
         accessGate: 'Recorrido virtual aéreo sobre Av. El Éxodo y Santa Bárbara',
-        description: 'Sobrevolá la arquitectura completa del Estadio 23 de Agosto, el edificio de prensa, las 5 torres de iluminación y los cerros jujeños.',
+        description: 'Sobrevolá la arquitectura completa del Estadio de los Cerros, las torres de iluminación y los cerros del norte.',
         proTip: 'Mové el control lateral para orbitar suavemente alrededor de todo el estadio.',
         visibilityScore: 100,
         visibilityLabel: '100% (Vista panorámica de pájaro)',
@@ -487,10 +436,11 @@
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 1024, 64);
 
+      const brand = global.BrandRegistry ? global.BrandRegistry.getActiveBrand() : null;
       ctx.fillStyle = '#ffffff';
       ctx.font = '800 28px "Barlow Condensed", Arial, sans-serif';
       ctx.textBaseline = 'middle';
-      ctx.fillText('GIMNASIA Y ESGRIMA DE JUJUY   •   ESTADIO 23 DE AGOSTO   •   1931   •   EL LOBO JUJEÑO   •   PRIMERA NACIONAL   •   ', 12, 34);
+      ctx.fillText(brand ? brand.ledTicker : 'PASIÓN DE TRIBUNA   •   ESTADIO DE LOS CERROS   •   ', 12, 34);
 
       const tex = new THREE.CanvasTexture(canvas);
       tex.wrapS = THREE.RepeatWrapping;
@@ -715,12 +665,13 @@
       ringMesh.position.y = 1.55;
       fenceGroup.add(ringMesh);
 
-      // Authentic Supporter Fence Banners ("Trapos" seen in Jujuy matches)
-      const banners = [
-        { text: 'EL LOBO JUJEÑO • 1931', bg: '#0284c7', fg: '#ffffff', x: 0, z: -57.8, rotY: 0, w: 18 },
-        { text: 'LOS CACHORROS', bg: '#ffffff', fg: '#0284c7', x: 24, z: -47.0, rotY: -0.52, w: 13 },
-        { text: 'JUJUY ES DE GIMNASIA', bg: '#0ea5e9', fg: '#ffffff', x: 40.8, z: -20, rotY: -Math.PI / 2, w: 16 },
-        { text: '23 DE AGOSTO • MI CASA', bg: '#ffffff', fg: '#0f172a', x: 40.8, z: 20, rotY: -Math.PI / 2, w: 16 }
+      // Supporter Fence Banners ("Trapos" ficticios del norte)
+      const brand = global.BrandRegistry ? global.BrandRegistry.getActiveBrand() : null;
+      const banners = (brand && brand.trapos) || [
+        { text: 'PASIÓN DE TRIBUNA', bg: '#0284c7', fg: '#ffffff', x: 0, z: -57.8, rotY: 0, w: 18 },
+        { text: 'LA BANDA CELESTE', bg: '#ffffff', fg: '#0284c7', x: 24, z: -47.0, rotY: -0.52, w: 13 },
+        { text: 'NORTE Y FÚTBOL', bg: '#0ea5e9', fg: '#ffffff', x: 40.8, z: -20, rotY: -Math.PI / 2, w: 16 },
+        { text: 'ESTADIO DE LOS CERROS', bg: '#ffffff', fg: '#0f172a', x: 40.8, z: 20, rotY: -Math.PI / 2, w: 16 }
       ];
       banners.forEach((b) => {
         const bMesh = new THREE.Mesh(
@@ -802,10 +753,12 @@
       const plateaGroup = new THREE.Group();
       const totalWidthZ = 88;
 
-      // Platea Baja ("-19 31-")
+      const brand = global.BrandRegistry ? global.BrandRegistry.getActiveBrand() : null;
+      const yrL = brand ? brand.stadiumYearLeft : '-19';
+      const yrR = brand ? brand.stadiumYearRight : '88-';
       const lowerSlope = new THREE.Mesh(
         new THREE.PlaneGeometry(totalWidthZ, 11.8, 32, 12),
-        new THREE.MeshLambertMaterial({ map: createPlateaMosaicTexture('-19', '31-', false) })
+        new THREE.MeshLambertMaterial({ map: createPlateaMosaicTexture(yrL, yrR, false) })
       );
       lowerSlope.position.set(-43.6, 5.4, 0);
       lowerSlope.rotation.set(0, Math.PI / 2, 0);
@@ -843,10 +796,11 @@
         plateaGroup.add(vom);
       });
 
-      // Platea Alta ("G Y E J")
+      const fL = brand ? brand.stadiumFacadeLeft : 'A L';
+      const fR = brand ? brand.stadiumFacadeRight : 'C S';
       const upperSlope = new THREE.Mesh(
         new THREE.PlaneGeometry(totalWidthZ, 13.5, 32, 12),
-        new THREE.MeshLambertMaterial({ map: createPlateaMosaicTexture('G Y', 'E J', true) })
+        new THREE.MeshLambertMaterial({ map: createPlateaMosaicTexture(fL, fR, true) })
       );
       upperSlope.position.set(-53.5, 15.2, 0);
       upperSlope.rotation.set(0, Math.PI / 2, 0);
@@ -1135,25 +1089,31 @@
       ctx.fillStyle = '#040b16';
       ctx.fillRect(0, 0, 512, 256);
 
+      const brand = global.BrandRegistry ? global.BrandRegistry.getActiveBrand() : null;
+      const sbHeader = brand ? brand.scoreboardHeader : 'ESTADIO DE LOS CERROS  •  ATLÉTICO LOS CERROS';
+      const homeShort = brand ? brand.homeClub.shortName : 'ALC';
+      const homeGoalText = brand ? brand.goalBannerHome : '¡GOOOOL DE LOS CERROS!';
+      const homeNameUpper = brand ? brand.homeClub.shortName : 'LOS CERROS';
+
       ctx.fillStyle = '#0284c7';
       ctx.fillRect(0, 0, 512, 48);
       ctx.fillStyle = '#ffffff';
       ctx.font = '800 22px "Barlow Condensed", Arial, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('ESTADIO 23 DE AGOSTO  •  GIMNASIA Y ESGRIMA DE JUJUY', 256, 32);
+      ctx.fillText(sbHeader, 256, 32);
 
       if (isGoalBanner) {
         const isHomeGoal = appState.goalTeam !== 'away';
         ctx.fillStyle = isHomeGoal ? '#38bdf8' : (appState.awayHex || '#facc15');
         ctx.font = '900 62px "Barlow Condensed", Arial, sans-serif';
-        ctx.fillText(isHomeGoal ? '¡GOOOOL DEL LOBO!' : `GOL DE ${appState.awayShort}`, 256, 138);
+        ctx.fillText(isHomeGoal ? homeGoalText : `GOL DE ${appState.awayShort}`, 256, 138);
         ctx.fillStyle = '#f8fafc';
         ctx.font = '800 30px "Barlow Condensed", Arial, sans-serif';
-        ctx.fillText(`GIMNASIA ${appState.scoreHome} - ${appState.scoreAway} ${appState.awayName}`, 256, 205);
+        ctx.fillText(`${homeNameUpper} ${appState.scoreHome} - ${appState.scoreAway} ${appState.awayName}`, 256, 205);
       } else {
         ctx.fillStyle = '#38bdf8';
         ctx.font = '900 46px "Barlow Condensed", Arial, sans-serif';
-        ctx.fillText('GYE', 110, 132);
+        ctx.fillText(homeShort, 110, 132);
         ctx.fillStyle = appState.awayHex || '#facc15';
         ctx.fillText(appState.awayShort || 'RIV', 402, 132);
         ctx.fillStyle = '#ffffff';

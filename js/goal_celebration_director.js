@@ -5,21 +5,21 @@
   'use strict';
 
   const CELEBRATIONS = [
-    { id: 'grito_lobo', title: 'EL GRITO DEL LOBO', subtitle: '¡Ruge el 23 de Agosto!', style: 'grito', duration: 4.0, slowMo: 0.0, shake: 0.35, wave: false, wolfTotem: true, halo: false, flash: false },
-    { id: 'terremoto_jujuy', title: 'TERREMOTO EN JUJUY', subtitle: '¡Tiembla la Popular Norte!', style: 'grito', duration: 4.1, slowMo: 0.0, shake: 0.78, wave: false, wolfTotem: false, halo: false, flash: true },
+    { id: 'grito_gol', title: 'EL GRITO DE GOL', subtitle: '¡Ruge la tribuna de los cerros!', style: 'grito', duration: 4.0, slowMo: 0.0, shake: 0.35, wave: false, wolfTotem: true, halo: false, flash: false },
+    { id: 'terremoto_tribuna', title: 'TERREMOTO EN LA TRIBUNA', subtitle: '¡Tiembla la Popular Norte!', style: 'grito', duration: 4.1, slowMo: 0.0, shake: 0.78, wave: false, wolfTotem: false, halo: false, flash: true },
     { id: 'gol_otro_planeta', title: 'GOL DE OTRO PLANETA', subtitle: '¡Definición estelar!', style: 'dance', duration: 4.0, slowMo: 0.85, shake: 0.25, wave: false, wolfTotem: false, halo: true, flash: true },
     { id: 'baile_colectivo', title: 'BAILE COLECTIVO', subtitle: 'Coreografía albiceleste en el área', style: 'dance', duration: 3.9, slowMo: 0.0, shake: 0.18, wave: false, wolfTotem: false, halo: false, flash: false },
     { id: 'ola_celeste', title: 'LA OLA CELESTE', subtitle: 'Todo el estadio se levanta por sectores', style: 'orchestra', duration: 4.3, slowMo: 0.0, shake: 0.14, wave: true, wolfTotem: false, halo: false, flash: false },
-    { id: 'lobo_gigante', title: 'EL LOBO GIGANTE', subtitle: '¡La mascota del Lobo festeja atrás del arco!', style: 'grito', duration: 4.0, slowMo: 0.0, shake: 0.30, wave: false, wolfTotem: true, halo: false, flash: false },
+    { id: 'mascota_gigante', title: 'LA MASCOTA DEL NORTE', subtitle: '¡Festejo detrás del arco!', style: 'grito', duration: 4.0, slowMo: 0.0, shake: 0.30, wave: false, wolfTotem: true, halo: false, flash: false },
     { id: 'golazo_cinematografico', title: 'GOLAZO CINEMATOGRÁFICO', subtitle: 'Repetición en cámara lenta', style: 'grito', duration: 4.4, slowMo: 1.4, shake: 0.22, wave: false, wolfTotem: false, halo: false, flash: false, replay: true },
     { id: 'lluvia_papelitos', title: 'LLUVIA DE PAPELITOS', subtitle: 'Celeste y blanco sobre el césped', style: 'dance', duration: 3.8, slowMo: 0.0, shake: 0.16, wave: true, wolfTotem: false, halo: false, flash: false },
     { id: 'arquero_incredulo', title: 'EL ARQUERO INCRÉDULO', subtitle: 'No la pudo ni ver pasar', style: 'grito', duration: 3.8, slowMo: 0.5, shake: 0.20, wave: false, wolfTotem: false, halo: false, flash: false },
     { id: 'todos_al_corner', title: 'TODOS AL CÓRNER', subtitle: 'Locura junto al banderín', style: 'corner', duration: 3.9, slowMo: 0.0, shake: 0.28, wave: false, wolfTotem: false, halo: false, flash: false },
-    { id: 'gol_minuto_90', title: 'GOL DEL MINUTO 90', subtitle: '¡Agónico en San Salvador de Jujuy!', style: 'grito', duration: 4.6, slowMo: 1.1, shake: 0.60, wave: true, wolfTotem: true, halo: true, flash: true, replay: true },
+    { id: 'gol_minuto_90', title: 'GOL DEL MINUTO 90', subtitle: '¡Agónico en el Estadio de los Cerros!', style: 'grito', duration: 4.6, slowMo: 1.1, shake: 0.60, wave: true, wolfTotem: true, halo: true, flash: true, replay: true },
     { id: 'gol_imposible', title: 'EL GOL IMPOSIBLE', subtitle: '¡Remate de otro calibre!', style: 'dance', duration: 4.3, slowMo: 1.0, shake: 0.45, wave: true, wolfTotem: false, halo: true, flash: true },
     { id: 'director_orquesta', title: 'DIRECTOR DE ORQUESTA', subtitle: 'El goleador dirige a la hinchada', style: 'orchestra', duration: 4.2, slowMo: 0.0, shake: 0.12, wave: true, wolfTotem: false, halo: false, flash: false },
     { id: 'locura_banco', title: 'LOCURA EN EL BANCO', subtitle: '¡Festeja todo el plantel!', style: 'dance', duration: 3.9, slowMo: 0.0, shake: 0.24, wave: true, wolfTotem: false, halo: false, flash: false },
-    { id: 'fiesta_lobo', title: 'FIESTA DEL LOBO', subtitle: 'Banderas, humo celeste y estadio lleno', style: 'grito', duration: 4.3, slowMo: 0.0, shake: 0.40, wave: true, wolfTotem: true, halo: true, flash: false },
+    { id: 'fiesta_tribuna', title: 'FIESTA EN LA TRIBUNA', subtitle: 'Banderas, humo celeste y estadio lleno', style: 'grito', duration: 4.3, slowMo: 0.0, shake: 0.40, wave: true, wolfTotem: true, halo: true, flash: false },
     { id: 'celebracion_sorpresa', title: 'SORPRESA ALBICELESTE', subtitle: '¡Festejo especial inesperado!', style: 'dance', duration: 4.1, slowMo: 0.6, shake: 0.32, wave: true, wolfTotem: true, halo: true, flash: false }
   ];
 
@@ -72,7 +72,7 @@
         return {
           id: 'rival_goal',
           title: `GOL DE ${ctx.teamName.toUpperCase()}`,
-          subtitle: `Minuto ${ctx.minute}' • Silencio en el 23 de Agosto`,
+          subtitle: `Minuto ${ctx.minute}' • Silencio en el estadio`,
           style: 'grito',
           duration: 3.1,
           slowMo: 0.0,
@@ -91,14 +91,14 @@
       if (ctx.shotDistance > 25) {
         return pickById(Math.random() < 0.5 ? 'gol_imposible' : 'gol_otro_planeta');
       }
-      if (ctx.isComeback && !this.recentIds.includes('fiesta_lobo')) {
-        return pickById('fiesta_lobo');
+      if (ctx.isComeback && !this.recentIds.includes('fiesta_tribuna')) {
+        return pickById('fiesta_tribuna');
       }
-      if (ctx.isEqualizer && !this.recentIds.includes('terremoto_jujuy')) {
-        return pickById('terremoto_jujuy');
+      if (ctx.isEqualizer && !this.recentIds.includes('terremoto_tribuna')) {
+        return pickById('terremoto_tribuna');
       }
-      if (ctx.isFirstGoal && !this.recentIds.includes('grito_lobo')) {
-        return pickById('grito_lobo');
+      if (ctx.isFirstGoal && !this.recentIds.includes('grito_gol')) {
+        return pickById('grito_gol');
       }
       if (Math.random() < 0.08 && !this.recentIds.includes('celebracion_sorpresa')) {
         return pickById('celebracion_sorpresa');
@@ -112,7 +112,7 @@
     triggerInteractive(keyNum) {
       if (!this.active || !this.current || this.current.id === 'rival_goal') return null;
       const map = {
-        1: 'grito_lobo',
+        1: 'grito_gol',
         2: 'baile_colectivo',
         3: 'director_orquesta',
         4: 'celebracion_sorpresa'
@@ -155,11 +155,11 @@
       if (!banner) return;
       const badgeEl = document.getElementById('goal-banner-badge');
       if (badgeEl && global.ClubBadges) {
-        badgeEl.innerHTML = global.ClubBadges.getSvg(ctx.isHomeGoal ? 'gye' : (ctx.awayId || 'mad'), ctx.isHomeGoal ? null : ctx.awayHex, 42);
+        badgeEl.innerHTML = global.ClubBadges.getSvg(ctx.isHomeGoal ? 'ssc' : (ctx.awayId || 'gnf'), ctx.isHomeGoal ? null : ctx.awayHex, 42);
       }
       document.getElementById('goal-banner-title').textContent = cel.title;
       document.getElementById('goal-banner-scorer').textContent = `#${ctx.scorerNumber} ${ctx.scorerName} • ${ctx.minute}'`;
-      document.getElementById('goal-banner-score').textContent = `GYE ${ctx.scoreHome} - ${ctx.scoreAway} ${ctx.awayShort}`;
+      document.getElementById('goal-banner-score').textContent = `SSC ${ctx.scoreHome} - ${ctx.scoreAway} ${ctx.awayShort}`;
       document.getElementById('goal-banner-sub').textContent = cel.subtitle;
       const keysEl = document.getElementById('goal-interactive-keys');
       if (keysEl) keysEl.classList.toggle('hidden', !ctx.isHomeGoal);

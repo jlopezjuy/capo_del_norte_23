@@ -1,0 +1,15 @@
+# Matriz de Riesgos Legales y de Cumplimiento
+
+> **Escala utilizada:** `CRÍTICO`, `ALTO`, `MEDIO`, `BAJO`, `NO DETERMINADO`. Ningún elemento se clasifica como "sin riesgo".
+
+| ID | Hallazgo / Activo | Nivel de Riesgo | Norma / Fundamento | Evidencia en Código | Estado | Mitigación Concreta |
+|---|---|---|---|---|---|---|
+| **R-01** | 6 fotografías reales embebidas en base64 en HTML legado | **CRÍTICO** | Ley 11.723 (reproducción sin licencia de obra fotográfica) | `estadio_23_de_agosto_*.html:575,587,599,611,623,635` | Sin autorización | Excluir inmediatamente del deploy público (P0). |
+| **R-02** | 66 nombres de futbolistas y 6 DTs reales en juego de entretenimiento | **CRÍTICO** | CCCN Art. 53 (derecho a la imagen) + Ley 11.723 Art. 31 + FAA / Boletín AFA 6606 | `js/afa_fixture.js:20-285`, `index.html:103,118,274,379`, `js/game_engine.js:637` | Sin consentimiento | Reemplazar por planteles 100% ficticios (P0). |
+| **R-03** | Uso marcario de *"El Lobo Jujeño"*, *"Gimnasia (J)"*, *"GYEJ"*, *"AFA"*, *"Primera Nacional"* y texto `"fixture oficial AFA"` | **ALTO** | Ley 22.362 (marcas y riesgo de confusión) + Boletín AFA 6606 | `index.html`, `manifest.json:2-4`, `favicon.svg`, `js/club_badges.js`, `js/stadium_builder.js` | Sin licencia | Migrar a nombre propio verificado en INPI, clubes ficticios y eliminar `"oficial"` (P0). |
+| **R-04** | Coexistencia de donaciones (`mpago.la`) y promoción de servicios con marcas de terceros sin permiso | **ALTO** | Ley 22.362 + CCCN + aprovechamiento económico/promocional | `js/creator_config.js`, `index.html` | Enlace propio; contexto riesgoso | Desacoplar totalmente de marcas reales antes de publicar (P0). |
+| **R-05** | Reconstrucción nominal del Estadio 23 de Agosto, tribunas y trapo `LOS CACHORROS` | **ALTO** | Boletín AFA 6606 (estadios) + Ley 22.362 / signos distintivos | `js/stadium_builder.js:65-233,720-723,801-865` | Sin autorización | Usar estadio ficticio inspirado en el norte argentino para Escenario A (P0). |
+| **R-06** | Tratamiento fiscal/contractual de link de pago Mercado Pago como "donación" | **MEDIO** | Términos de Mercado Pago + normativa fiscal ARCA (ex AFIP) | `js/creator_config.js:13`, `index.html` | Requiere revisión contable | Consultar encuadre tributario con contador público (P2). |
+| **R-07** | Mascota 3D del Lobo y logotipo de lobo geométrico | **MEDIO** | Obra propia, pero vinculable al apodo del club si se usa junto a `GYE` | `js/stadium_builder.js:645-683`, `js/club_badges.js:69-81` | **NO DETERMINADO** (depende del contexto) | Desvincular de signos del club en Escenario A (P1). |
+| **R-08** | Preferencia local en `localStorage` (`lobo_jujeno_support_pref_v1`) | **BAJO** | Ley 25.326 (no almacena datos personales identificables) | `js/creator_config.js:20-38` | Conforme (uso técnico mínimo) | Documentar en aviso de privacidad si se agregan cuentas/analíticas en el futuro. |
+| **R-09** | Dependencias open-source (Three.js MIT, Tailwind CDN, Google Fonts) y motor propio | **BAJO** | Ley 11.723 Art. 1 + Licencias MIT / OFL | `index.html:16-20`, `js/*.js` | Verificado | Mantener atribución en Créditos (P1). |

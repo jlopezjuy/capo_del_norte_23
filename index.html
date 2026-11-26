@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>El Lobo Jujeño 3D — Estadio 23 de Agosto</title>
-  <meta name="description" content="Videojuego de fútbol 3D en el Estadio 23 de Agosto enfrentando al rival oficial de la semana AFA de Gimnasia y Esgrima de Jujuy." />
+  <title>Pasión de Tribuna 3D — Fútbol del Norte</title>
+  <meta name="description" content="Videojuego arcade de fútbol 3D en el Estadio de los Cerros, inspirado en la pasión futbolera del norte argentino." />
   <meta name="theme-color" content="#0b1320" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta property="og:title" content="El Lobo Jujeño 3D — Estadio 23 de Agosto" />
-  <meta property="og:description" content="Jugá el Partido de la Semana AFA en el Estadio 23 de Agosto en 3D." />
+  <meta property="og:title" content="Pasión de Tribuna 3D — Fútbol del Norte" />
+  <meta property="og:description" content="Jugá partidos de fútbol arcade 3D en el Estadio de los Cerros." />
   <meta property="og:type" content="website" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="manifest" href="manifest.json" />
@@ -83,8 +83,8 @@
         <div class="flex items-center gap-3">
           <div id="lobby-lobo-emblem" class="shrink-0"></div>
           <div>
-            <p id="lobby-afa-badge" class="text-[11px] font-bold uppercase tracking-widest text-sky-400">FECHA AFA • ESTA SEMANA</p>
-            <h1 class="font-display text-3xl sm:text-4xl font-black uppercase text-white leading-none">El Lobo Jujeño <span class="text-sky-400">23 de Agosto</span></h1>
+            <p id="lobby-afa-badge" class="text-[11px] font-bold uppercase tracking-widest text-sky-400">COPA DEL NORTE • FECHA DE LA SEMANA</p>
+            <h1 class="font-display text-3xl sm:text-4xl font-black uppercase text-white leading-none">Pasión de Tribuna <span class="text-sky-400">Fútbol del Norte</span></h1>
           </div>
         </div>
         <span id="lobby-kit-note" class="hidden text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-200 border border-amber-400/35">
@@ -95,12 +95,12 @@
       <!-- Featured Match Card -->
       <div class="rounded-xl bg-[#0e1829] border border-slate-700/80 p-4 sm:p-5 mb-4">
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <!-- Home: Gimnasia -->
+          <!-- Home: San Salvador Celeste -->
           <div class="flex items-center gap-3.5 w-full sm:w-5/12 justify-center sm:justify-start">
             <div id="lobby-home-badge" class="shrink-0"></div>
             <div class="text-center sm:text-left">
-              <div class="font-display text-2xl font-black uppercase text-white leading-tight">Gimnasia (J)</div>
-              <div class="text-xs text-sky-300 font-semibold">4-3-3 • DT H. Pellerano</div>
+              <div class="font-display text-2xl font-black uppercase text-white leading-tight">San Salvador Celeste</div>
+              <div class="text-xs text-sky-300 font-semibold">4-3-3 • DT D. Ferreyra</div>
             </div>
           </div>
 
@@ -114,22 +114,22 @@
           <!-- Away: Rival -->
           <div class="flex items-center gap-3.5 w-full sm:w-5/12 justify-center sm:justify-end">
             <div class="text-center sm:text-right order-2 sm:order-1">
-              <div id="lobby-away-name" class="font-display text-2xl font-black uppercase text-white leading-tight">Deportivo Madryn</div>
-              <div id="lobby-away-meta" class="text-xs text-amber-300 font-semibold">4-4-2 • DT Luis García</div>
+              <div id="lobby-away-name" class="font-display text-2xl font-black uppercase text-white leading-tight">Golfo Nuevo FC</div>
+              <div id="lobby-away-meta" class="text-xs text-amber-300 font-semibold">4-4-2 • DT S. Morales</div>
             </div>
             <div id="lobby-away-badge" class="shrink-0 order-1 sm:order-2"></div>
           </div>
         </div>
         <div class="mt-3 pt-2.5 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
-          <span id="lobby-tournament" class="font-semibold text-sky-300">Primera Nacional • Reducido</span>
-          <span id="lobby-agg-note" class="text-slate-400">Ida: GYE 1 - 0 MAD</span>
+          <span id="lobby-tournament" class="font-semibold text-sky-300">Copa del Norte • Final Regional</span>
+          <span id="lobby-agg-note" class="text-slate-400">Ida: SSC 1 - 0 GNF</span>
         </div>
       </div>
 
       <!-- Configuration Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5 mb-4">
         <div class="sm:col-span-2">
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Fixture AFA</label>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Torneo Regional</label>
           <select id="sel-fixture" class="w-full h-9 bg-[#0d1626] border border-slate-700 rounded-lg px-2.5 text-xs font-semibold text-white truncate"></select>
         </div>
         <div>
@@ -140,8 +140,8 @@
           <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Dificultad IA</label>
           <select id="sel-difficulty" class="w-full h-9 bg-[#0d1626] border border-slate-700 rounded-lg px-2.5 text-xs font-semibold text-white">
             <option value="amateur">Amateur</option>
-            <option value="nacional" selected>Primera Nacional</option>
-            <option value="reducido">Reducido / Difícil</option>
+            <option value="nacional" selected>Competitivo</option>
+            <option value="reducido">Final / Difícil</option>
           </select>
         </div>
         <div>
@@ -221,7 +221,7 @@
         <div class="hud-glass rounded-xl px-2.5 py-1 flex items-center gap-2.5">
           <div class="flex items-center gap-1.5">
             <span id="hud-home-badge" class="inline-flex items-center"></span>
-            <span class="font-display text-lg font-black text-white">GYE</span>
+            <span class="font-display text-lg font-black text-white">SSC</span>
           </div>
           <div class="font-mono-tech text-lg font-extrabold bg-[#060c16] px-2.5 py-0.5 rounded-md border border-slate-700/80 flex items-center gap-1.5">
             <span id="hud-score-home">0</span>
@@ -240,7 +240,7 @@
 
         <!-- Live Commentary -->
         <div class="hidden xl:flex hud-glass rounded-xl px-3 py-1.5 max-w-md min-w-0">
-          <span id="hud-commentary" class="text-xs font-medium text-slate-200 truncate">Estadio 23 de Agosto • En vivo</span>
+          <span id="hud-commentary" class="text-xs font-medium text-slate-200 truncate">Estadio de los Cerros • En vivo</span>
         </div>
       </div>
 
@@ -271,9 +271,9 @@
       <div class="flex items-center justify-between mb-1">
         <div class="flex items-center gap-1.5 min-w-0">
           <span id="hud-player-num" class="font-mono-tech text-[11px] font-extrabold px-1.5 py-0.5 rounded bg-sky-500 text-slate-950">#9</span>
-          <span id="hud-player-name" class="font-display text-base font-bold uppercase text-white truncate">O. Bianchi</span>
+          <span id="hud-player-name" class="font-display text-base font-bold uppercase text-white truncate">T. Cardozo</span>
         </div>
-        <span class="text-[10px] font-bold text-sky-400 shrink-0">GYE</span>
+        <span class="text-[10px] font-bold text-sky-400 shrink-0">SSC</span>
       </div>
       <div class="space-y-1">
         <div>
@@ -349,7 +349,7 @@
     <div id="pen-turn-hint" class="text-[11px] font-bold uppercase tracking-wider text-sky-400 mb-1">Tanda de Penales • Tu Turno</div>
     <div class="flex items-center justify-center gap-6 mb-2">
       <div>
-        <span class="font-display text-lg font-black text-sky-400">GYE</span>
+        <span class="font-display text-lg font-black text-sky-400">SSC</span>
         <span id="pen-score-home" class="font-mono-tech text-xl font-black ml-1">0</span>
         <div id="pen-dots-home" class="flex gap-1 justify-center mt-1 min-h-[12px]"></div>
       </div>
@@ -376,12 +376,12 @@
         <div id="goal-banner-badge" class="shrink-0"></div>
         <div class="min-w-0 flex-1 text-left">
           <div id="goal-banner-title" class="font-display text-3xl sm:text-4xl font-black uppercase text-sky-300 leading-none tracking-wide truncate">EL GRITO DEL LOBO</div>
-          <div id="goal-banner-scorer" class="font-display text-lg font-bold uppercase text-white mt-0.5 truncate">#9 O. Bianchi • 23'</div>
+          <div id="goal-banner-scorer" class="font-display text-lg font-bold uppercase text-white mt-0.5 truncate">#9 T. Cardozo • 23'</div>
         </div>
-        <div id="goal-banner-score" class="font-mono-tech text-xl sm:text-2xl font-extrabold text-amber-300 bg-[#070d18] px-3 py-1 rounded-lg border border-slate-700 shrink-0">GYE 1 - 0 MAD</div>
+        <div id="goal-banner-score" class="font-mono-tech text-xl sm:text-2xl font-extrabold text-amber-300 bg-[#070d18] px-3 py-1 rounded-lg border border-slate-700 shrink-0">SSC 1 - 0 GNF</div>
       </div>
       <div class="flex flex-wrap items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-800 text-[11px]">
-        <span id="goal-banner-sub" class="text-slate-300 font-medium truncate">¡Explota el Estadio 23 de Agosto!</span>
+        <span id="goal-banner-sub" class="text-slate-300 font-medium truncate">¡Explota el Estadio de los Cerros!</span>
         <div class="flex items-center gap-1.5 shrink-0">
           <div id="goal-interactive-keys" class="hidden sm:flex items-center gap-1 text-[10px] text-sky-300">
             <button data-celeb-key="1" class="btn-tactile px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700">1 Solo</button>
@@ -400,7 +400,7 @@
   <!-- ======================================================================= -->
   <div id="explore-hud" class="hidden fixed top-4 inset-x-0 z-30 flex justify-center px-4">
     <div class="hud-glass rounded-xl px-4 py-2 flex items-center gap-3">
-      <span class="font-display text-lg font-black uppercase text-sky-300">Estadio 23 de Agosto</span>
+      <span class="font-display text-lg font-black uppercase text-sky-300">Estadio de los Cerros</span>
       <span id="explore-sector-name" class="text-xs font-semibold text-slate-300 hidden sm:inline">Vista General</span>
       <button id="btn-explore-next" class="btn-tactile px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-xs font-bold text-slate-950">Siguiente Tribuna</button>
       <button id="btn-explore-back" class="btn-tactile px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200">Volver al Menú</button>
@@ -467,11 +467,11 @@
   <!-- ======================================================================= -->
   <div id="modal-stats" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-slate-950/80 p-4">
     <div class="hud-glass hud-accent-top rounded-2xl p-6 w-full max-w-md">
-      <p class="text-center text-xs font-bold uppercase tracking-widest text-sky-400 mb-1">Estadio 23 de Agosto</p>
+      <p class="text-center text-xs font-bold uppercase tracking-widest text-sky-400 mb-1">Estadio de los Cerros</p>
       <h2 id="stats-title" class="font-display text-3xl font-black uppercase text-white text-center">FINAL DEL PARTIDO</h2>
       <div class="flex items-center justify-center gap-3 my-3">
         <div id="stats-home-badge"></div>
-        <div id="stats-score-line" class="font-mono-tech text-2xl font-extrabold text-emerald-400">GYE 0 - 0 MAD</div>
+        <div id="stats-score-line" class="font-mono-tech text-2xl font-extrabold text-emerald-400">SSC 0 - 0 GNF</div>
         <div id="stats-away-badge"></div>
       </div>
 
@@ -502,7 +502,7 @@
 
       <!-- Optional Post-Match Voluntary Support Card (Non-blocking) -->
       <div id="stats-support-card" class="hidden mt-4 pt-3.5 border-t border-slate-800 text-center">
-        <p class="text-xs font-semibold text-slate-200 mb-2.5">¿Te divertiste? Ayudame a seguir mejorando El Lobo Jujeño.</p>
+        <p class="text-xs font-semibold text-slate-200 mb-2.5">¿Te divertiste? Ayudame a seguir mejorando Pasión de Tribuna.</p>
         <div class="flex flex-wrap items-center justify-center gap-2">
           <a data-creator-link="donation" class="btn-tactile inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/45 text-xs font-bold text-rose-100">
             <span aria-hidden="true">❤️</span> Apoyar el juego
@@ -538,9 +538,9 @@
         <!-- Voluntary Donation Card -->
         <section id="section-donation" class="rounded-xl bg-[#0d1626] border border-rose-400/25 p-4 flex flex-col justify-between">
           <div>
-            <h3 class="font-display text-xl font-black uppercase text-white mb-2">¿Te gustó El Lobo Jujeño? 🐺</h3>
+            <h3 class="font-display text-xl font-black uppercase text-white mb-2">¿Te gustó Pasión de Tribuna? ⚽</h3>
             <p class="text-xs text-slate-300 leading-relaxed mb-2">
-              Este juego nació de las ganas de llevar la pasión por Gimnasia de Jujuy al mundo de los videojuegos.
+              Este juego nació de las ganas de llevar la pasión por el fútbol del norte argentino al mundo de los videojuegos.
             </p>
             <p class="text-xs text-slate-300 leading-relaxed mb-2">
               Si te divertiste y querés ayudarme a seguir mejorándolo, podés invitarme un cafecito con una pequeña colaboración.
@@ -564,13 +564,13 @@
             <p class="text-[10px] font-bold uppercase tracking-wider text-sky-400 mb-1">Servicios Profesionales</p>
             <h3 class="font-display text-xl font-black uppercase text-white mb-2">¿Tenés una idea para una aplicación o sistema?</h3>
             <p class="text-xs text-slate-300 leading-relaxed mb-2">
-              Soy <strong class="text-white" data-creator-text="name">Juan Manuel Lopez</strong>, desarrollador de software. Además de crear proyectos como El Lobo Jujeño, desarrollo aplicaciones web, aplicaciones móviles y sistemas a medida para empresas y emprendedores.
+              Soy <strong class="text-white" data-creator-text="name">JLopezJuy</strong>, desarrollador de software. Además de crear proyectos como Pasión de Tribuna, desarrollo aplicaciones web, aplicaciones móviles y sistemas a medida para empresas y emprendedores.
             </p>
             <p class="text-xs text-slate-300 leading-relaxed mb-3">
               Si tenés una idea, necesitás modernizar un sistema o querés llevar tu negocio al siguiente nivel, podemos conversar.
             </p>
             <div class="rounded-lg bg-[#09101c] border border-slate-800 px-3 py-2 mb-3 text-[11px]">
-              <div class="font-bold text-white" data-creator-text="name">Juan Manuel Lopez</div>
+              <div class="font-bold text-white" data-creator-text="name">JLopezJuy</div>
               <div class="text-sky-300">Desarrollo de software web, móvil y soluciones empresariales.</div>
             </div>
           </div>
@@ -602,11 +602,11 @@
 
       <div class="space-y-3 text-xs">
         <div class="rounded-xl bg-[#0d1626] border border-slate-800 p-4">
-          <div class="font-display text-2xl font-black uppercase text-sky-400">EL LOBO JUJEÑO</div>
-          <p class="text-slate-300 mt-1">Un proyecto independiente de videojuego de fútbol inspirado en la pasión por Gimnasia y Esgrima de Jujuy.</p>
+          <div class="font-display text-2xl font-black uppercase text-sky-400">PASIÓN DE TRIBUNA</div>
+          <p class="text-slate-300 mt-1">Un proyecto independiente de videojuego de fútbol inspirado en la cultura futbolera del norte argentino (clubes y planteles ficticios).</p>
           <div class="mt-3 pt-3 border-t border-slate-800">
             <div class="text-[10px] font-bold uppercase text-slate-400">Creado y desarrollado por</div>
-            <div class="text-sm font-bold text-white" data-creator-text="name">Juan Manuel Lopez</div>
+            <div class="text-sm font-bold text-white" data-creator-text="name">JLopezJuy</div>
           </div>
         </div>
 
@@ -631,26 +631,27 @@
           <p>• Three.js (r128) — Licencia MIT</p>
           <p>• Tailwind CSS (CDN) &amp; Google Fonts (Barlow Condensed, Plus Jakarta Sans, JetBrains Mono)</p>
           <p>• Emblemas SVG, texturas Canvas2D y audio Web Audio API generados proceduralmente.</p>
-          <p class="pt-1.5 text-[10px] text-slate-500">Proyecto independiente sin afiliación oficial con Gimnasia y Esgrima de Jujuy, AFA ni Mercado Pago.</p>
+          <p class="pt-1.5 text-[10px] text-slate-500">Videojuego independiente desarrollado por JLopezJuy. No es un producto oficial ni está patrocinado o respaldado por clubes deportivos, AFA ni Mercado Pago. Consultas o reclamos de derechos: contacto@vendora.ar.</p>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Modular Game Scripts (compatible with both file:// and HTTP) -->
-  <script src="js/afa_fixture.js?v=10"></script>
-  <script src="js/club_badges.js?v=10"></script>
-  <script src="js/creator_config.js?v=10"></script>
-  <script src="js/audio_engine.js?v=10"></script>
-  <script src="js/match_state.js?v=10"></script>
-  <script src="js/input_controller.js?v=10"></script>
-  <script src="js/physics_engine.js?v=10"></script>
-  <script src="js/tactical_ai.js?v=10"></script>
-  <script src="js/player_renderer.js?v=10"></script>
-  <script src="js/crowd_system.js?v=10"></script>
-  <script src="js/goal_celebration_director.js?v=10"></script>
-  <script src="js/stadium_builder.js?v=10"></script>
-  <script src="js/game_engine.js?v=12"></script>
+  <script src="js/brand_registry.js?v=13"></script>
+  <script src="js/afa_fixture.js?v=13"></script>
+  <script src="js/club_badges.js?v=13"></script>
+  <script src="js/creator_config.js?v=13"></script>
+  <script src="js/audio_engine.js?v=13"></script>
+  <script src="js/match_state.js?v=13"></script>
+  <script src="js/input_controller.js?v=13"></script>
+  <script src="js/physics_engine.js?v=13"></script>
+  <script src="js/tactical_ai.js?v=13"></script>
+  <script src="js/player_renderer.js?v=13"></script>
+  <script src="js/crowd_system.js?v=13"></script>
+  <script src="js/goal_celebration_director.js?v=13"></script>
+  <script src="js/stadium_builder.js?v=13"></script>
+  <script src="js/game_engine.js?v=13"></script>
   <script>
     (function () {
       const game = new window.GameEngine();
@@ -686,10 +687,10 @@
       function renderLobbyCard(fixture) {
         selectedFixture = fixture;
         const kit = window.AFA_DATA.resolveKitColors(fixture.opponent);
-        document.getElementById('lobby-afa-badge').textContent = fixture.labelBadge || 'PARTIDO OFICIAL AFA';
+        document.getElementById('lobby-afa-badge').textContent = fixture.labelBadge || 'COPA DEL NORTE';
         document.getElementById('lobby-match-date').textContent = `${fixture.date} • ${fixture.kickoff} hs`;
         document.getElementById('lobby-match-round').textContent = fixture.round;
-        document.getElementById('lobby-home-badge').innerHTML = window.ClubBadges.getSvg('gye', null, 56);
+        document.getElementById('lobby-home-badge').innerHTML = window.ClubBadges.getSvg('ssc', null, 56);
         document.getElementById('lobby-away-name').textContent = fixture.opponent.name;
         document.getElementById('lobby-away-meta').textContent = `${fixture.opponent.formation} • DT ${fixture.opponent.coach}`;
         document.getElementById('lobby-away-badge').innerHTML = window.ClubBadges.getSvg(fixture.opponent.id, kit.hex, 56);

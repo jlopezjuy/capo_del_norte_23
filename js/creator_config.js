@@ -6,14 +6,14 @@
   'use strict';
 
   const creatorInfo = Object.freeze({
-    name: 'Juan Manuel Lopez',
+    name: 'JLopezJuy',
     email: 'contacto@vendora.ar',
     phoneDisplay: '3884537959',
     whatsappNumber: '543884537959',
     donationUrl: 'https://mpago.la/1KpZh99'
   });
 
-  const whatsappMessage = 'Hola Juan Manuel, estuve jugando El Lobo Jujeño y me gustaría consultarte por un desarrollo de software.';
+  const whatsappMessage = 'Hola Juan Manuel, estuve jugando Pasión de Tribuna y me gustaría consultarte por un desarrollo de software.';
   const whatsappUrl = `https://wa.me/${creatorInfo.whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
   const emailUrl = `mailto:${creatorInfo.email}`;
 
@@ -51,7 +51,6 @@
     if (pref.hidden) return false;
     pref.matchesCompleted = (pref.matchesCompleted || 0) + 1;
     _writePref(pref);
-    // Mostrar en el 1er partido y luego cada 2 partidos completados (frecuencia razonable)
     return pref.matchesCompleted === 1 || pref.matchesCompleted % 2 === 1;
   }
 

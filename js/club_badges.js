@@ -1,19 +1,16 @@
 /**
- * ClubBadges — Emblemas vectoriales SVG reutilizables (provisionales originales estilizados para web)
- * Usados en Lobby, Marcador HUD, Banner de Gol, Presentación y Estadísticas.
- * Nota: Son emblemas originales estilizados de referencia cromática, no escudos oficiales registrados.
+ * ClubBadges — Emblemas vectoriales SVG originales para clubes ficticios (Escenario A).
  */
 (function (global) {
   'use strict';
 
   const CLUB_STYLES = {
-    gye: { label: 'GYE', bg1: '#1ea7fd', bg2: '#f8fafc', text: '#06101f', pattern: 'stripes', accent: '#38bdf8' },
-    mad: { label: 'MAD', bg1: '#facc15', bg2: '#0f172a', text: '#ffffff', pattern: 'stripes', accent: '#facc15' },
-    'mad-ida': { label: 'MAD', bg1: '#facc15', bg2: '#0f172a', text: '#ffffff', pattern: 'stripes', accent: '#facc15' },
-    smt: { label: 'SMT', bg1: '#dc2626', bg2: '#f8fafc', text: '#0f172a', pattern: 'stripes', accent: '#dc2626' },
-    tem: { label: 'TEM', bg1: '#38bdf8', bg2: '#f8fafc', text: '#0f172a', pattern: 'band', accent: '#0284c7' },
-    qui: { label: 'QUI', bg1: '#f8fafc', bg2: '#1e3a8a', text: '#1e3a8a', pattern: 'half', accent: '#1e3a8a' },
-    fer: { label: 'FER', bg1: '#16a34a', bg2: '#f8fafc', text: '#064e3b', pattern: 'band', accent: '#16a34a' }
+    ssc: { label: 'SSC', bg1: '#1ea7fd', bg2: '#f8fafc', text: '#0b1320', pattern: 'stripes', accent: '#38bdf8' },
+    gnf: { label: 'GNF', bg1: '#facc15', bg2: '#0f172a', text: '#ffffff', pattern: 'stripes', accent: '#facc15' },
+    tuc: { label: 'TUC', bg1: '#dc2626', bg2: '#f8fafc', text: '#0f172a', pattern: 'stripes', accent: '#dc2626' },
+    zsc: { label: 'ZSC', bg1: '#38bdf8', bg2: '#f8fafc', text: '#0f172a', pattern: 'band', accent: '#0284c7' },
+    rib: { label: 'RIB', bg1: '#f8fafc', bg2: '#1e3a8a', text: '#1e3a8a', pattern: 'half', accent: '#1e3a8a' },
+    est: { label: 'EST', bg1: '#16a34a', bg2: '#f8fafc', text: '#064e3b', pattern: 'band', accent: '#16a34a' }
   };
 
   const _svgCache = new Map();
@@ -23,8 +20,8 @@
     const cacheKey = `${clubId}|${overrideHex || ''}|${size}`;
     if (_svgCache.has(cacheKey)) return _svgCache.get(cacheKey);
 
-    const st = CLUB_STYLES[clubId] || { label: 'RIV', bg1: overrideHex || '#facc15', bg2: '#0f172a', text: '#ffffff', pattern: 'stripes', accent: '#facc15' };
-    const primary = overrideHex && clubId !== 'gye' ? overrideHex : st.bg1;
+    const st = CLUB_STYLES[clubId] || { label: 'NOR', bg1: overrideHex || '#facc15', bg2: '#0f172a', text: '#ffffff', pattern: 'stripes', accent: '#facc15' };
+    const primary = overrideHex && clubId !== 'ssc' ? overrideHex : st.bg1;
     const secondary = st.bg2;
     const uid = `badge-${clubId}-${++_uidCounter}`;
 
@@ -67,9 +64,9 @@
   }
 
   function getLoboEmblemSvg(size = 44) {
-    const cacheKey = `lobo|${size}`;
+    const cacheKey = `emblem|${size}`;
     if (_svgCache.has(cacheKey)) return _svgCache.get(cacheKey);
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64" class="shrink-0" aria-label="El Lobo Jujeño">
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64" class="shrink-0" aria-label="Pasión de Tribuna">
       <path d="M10 8h44v24c0 14-22 24-22 24S10 46 10 32V8z" fill="#0b1320" stroke="#1ea7fd" stroke-width="2.6"/>
       <path d="M19 19l7 8 6-4 6 4 7-8-2 15-6 9-5 4-5-4-6-9z" fill="#1ea7fd" stroke="#f8fafc" stroke-width="1.8" stroke-linejoin="round"/>
       <polygon points="24,29 29,31 25,33" fill="#f8fafc"/>

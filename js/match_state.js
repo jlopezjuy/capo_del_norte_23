@@ -30,7 +30,7 @@
       this.lastTouchTeam = 'home';
       this.lastTouchPlayerId = null;
 
-      this.activeHomeIndex = 9; // O. Bianchi (#9) default
+      this.activeHomeIndex = 9; // T. Cardozo (#9) default
 
       this.setPiece = null; // { type: 'THROW_IN' | 'CORNER' | 'GOAL_KICK', team, x, z, timer }
 

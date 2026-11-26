@@ -546,11 +546,13 @@
       const prevHome = this.matchState.scoreHome;
       const prevAway = this.matchState.scoreAway;
 
+      const brand = global.BrandRegistry ? global.BrandRegistry.getActiveBrand() : null;
+      const homeName = brand ? brand.homeClub.name : 'Atlético Los Cerros';
       if (scoringTeam === 'home') {
         this.matchState.scoreHome += 1;
         this.audio.playGoalRoar();
         this.audio.playWhistle('short');
-        this._setCommentary(`¡GOOOOL DE GIMNASIA Y ESGRIMA DE JUJUY! Explota la Popular Lobo Norte (${this.matchState.scoreHome} - ${this.matchState.scoreAway}).`);
+        this._setCommentary(`¡GOOOOL DE ${homeName.toUpperCase()}! Explota la Popular Norte (${this.matchState.scoreHome} - ${this.matchState.scoreAway}).`);
       } else {
         this.matchState.scoreAway += 1;
         this.crowdFrustrationTimer = 2.4;
@@ -575,7 +577,7 @@
         const isDecisive = Math.abs(this.matchState.scoreHome - this.matchState.scoreAway) <= 1;
         const cel = this.celebrationDirector.start({
           isHomeGoal: scoringTeam === 'home',
-          teamName: scoringTeam === 'home' ? 'Gimnasia (J)' : this.currentFixture.opponent.name,
+          teamName: scoringTeam === 'home' ? (global.BrandRegistry ? global.BrandRegistry.getActiveBrand().homeClub.name : 'Atlético Los Cerros') : this.currentFixture.opponent.name,
           awayId: this.currentFixture.opponent.id,
           awayShort: this.currentFixture.opponent.shortName,
           awayHex: this.kitInfo ? this.kitInfo.hex : '#facc15',
@@ -616,7 +618,8 @@
             type = 'CORNER';
             rx = info.x >= 0 ? 34.4 : -34.4;
             rz = -51.8;
-            this._setCommentary(`Tiro de esquina para ${restartTeam === 'home' ? 'Gimnasia' : this.currentFixture.opponent.name}.`);
+            const homeName = global.BrandRegistry ? global.BrandRegistry.getActiveBrand().homeClub.name : 'Los Cerros';
+            this._setCommentary(`Tiro de esquina para ${restartTeam === 'home' ? homeName : this.currentFixture.opponent.name}.`);
           } else {
             type = 'GOAL_KICK';
             rx = info.x >= 0 ? 5.5 : -5.5;
@@ -634,11 +637,13 @@
             type = 'GOAL_KICK';
             rx = info.x >= 0 ? 5.5 : -5.5;
             rz = 47.5;
-            this._setCommentary('Saque de arco para Milton Álvarez.');
+            const gkName = global.AFA_DATA && global.AFA_DATA.GYE_SQUAD ? global.AFA_DATA.GYE_SQUAD[0].name : 'el arquero';
+            this._setCommentary(`Saque de arco para ${gkName}.`);
           }
         }
       } else {
-        this._setCommentary(`Lateral para ${restartTeam === 'home' ? 'Gimnasia' : this.currentFixture.opponent.name}.`);
+        const homeName = global.BrandRegistry ? global.BrandRegistry.getActiveBrand().homeClub.name : 'Los Cerros';
+        this._setCommentary(`Lateral para ${restartTeam === 'home' ? homeName : this.currentFixture.opponent.name}.`);
       }
 
       this.audio.playWhistle('short');
@@ -1024,10 +1029,11 @@
         gk.rotY = 0;
       }
       const hintEl = document.getElementById('pen-turn-hint');
+      const homeShort = global.BrandRegistry ? global.BrandRegistry.getActiveBrand().homeClub.shortName : 'ALC';
       if (hintEl) {
         hintEl.textContent = ms.penalties.turn === 'home'
-          ? `Ronda ${ms.penalties.round} • Patea Gimnasia (${kicker ? kicker.name : 'Lobo'})`
-          : `Ronda ${ms.penalties.round} • Ataja Gimnasia (Elegí adónde tirarte)`;
+          ? `Ronda ${ms.penalties.round} • Patea ${homeShort} (${kicker ? kicker.name : 'Delantero'})`
+          : `Ronda ${ms.penalties.round} • Ataja ${homeShort} (Elegí adónde tirarte)`;
       }
     }
 
@@ -1374,7 +1380,7 @@
       const targetLook = new THREE.Vector3();
 
       if (ms.phase === 'LOBBY') {
-        // Gentle scenic orbit over Estadio 23 de Agosto
+        // Gentle scenic orbit over Estadio de los Cerros
         const ang = elapsed * 0.08;
         targetPos.set(Math.cos(ang) * 72, 34, Math.sin(ang) * 72);
         targetLook.set(0, 2, 0);
@@ -1494,7 +1500,7 @@
     _updateScoreboard(isGoalBanner) {
       const ms = this.matchState;
       const clk = ms.getDisplayClock();
-      const opp = this.currentFixture ? this.currentFixture.opponent : { shortName: 'MAD', name: 'Deportivo Madryn' };
+      const opp = this.currentFixture ? this.currentFixture.opponent : { shortName: 'GNF', name: 'Golfo Nuevo FC' };
       global.StadiumBuilder.updateScoreboardCanvas(isGoalBanner, {
         scoreHome: ms.scoreHome,
         scoreAway: ms.scoreAway,
@@ -1520,9 +1526,10 @@
 
       const opp = this.currentFixture.opponent;
       document.getElementById('hud-away-short').textContent = opp.shortName;
+      const homeId = global.BrandRegistry ? global.BrandRegistry.getActiveBrand().homeClub.id : 'alc';
       const homeBadge = document.getElementById('hud-home-badge');
       if (homeBadge && global.ClubBadges) {
-        homeBadge.innerHTML = global.ClubBadges.getSvg('gye', null, 24);
+        homeBadge.innerHTML = global.ClubBadges.getSvg(homeId, null, 24);
       }
       const awayBadge = document.getElementById('hud-away-badge');
       if (awayBadge && global.ClubBadges) {
@@ -1544,13 +1551,14 @@
       const homeAcc = ms.stats.homePasses > 0 ? Math.round((ms.stats.homePassesCompleted / ms.stats.homePasses) * 100) : 100;
       const awayAcc = ms.stats.awayPasses > 0 ? Math.round((ms.stats.awayPassesCompleted / ms.stats.awayPasses) * 100) : 100;
 
+      const homeBrand = global.BrandRegistry ? global.BrandRegistry.getActiveBrand().homeClub : { id: 'alc', shortName: 'ALC' };
       document.getElementById('stats-title').textContent =
         customHeadline || (type === 'halftime' ? 'ENTRETIEMPO' : 'FINAL DEL PARTIDO');
       document.getElementById('stats-score-line').textContent =
-        `GYE ${ms.scoreHome} - ${ms.scoreAway} ${this.currentFixture.opponent.shortName}`;
+        `${homeBrand.shortName} ${ms.scoreHome} - ${ms.scoreAway} ${this.currentFixture.opponent.shortName}`;
       const shBadge = document.getElementById('stats-home-badge');
       const saBadge = document.getElementById('stats-away-badge');
-      if (shBadge && global.ClubBadges) shBadge.innerHTML = global.ClubBadges.getSvg('gye', null, 34);
+      if (shBadge && global.ClubBadges) shBadge.innerHTML = global.ClubBadges.getSvg(homeBrand.id, null, 34);
       if (saBadge && global.ClubBadges) saBadge.innerHTML = global.ClubBadges.getSvg(this.currentFixture.opponent.id, this.kitInfo ? this.kitInfo.hex : null, 34);
 
       document.getElementById('stat-poss-home').textContent = `${poss.home}%`;
@@ -1591,7 +1599,8 @@
       this._hideAllModals();
       this._setupKickoff('away');
       this.audio.playWhistle('double');
-      this._setCommentary('¡Comienza el segundo tiempo en el Estadio 23 de Agosto!');
+      const stad = global.BrandRegistry ? global.BrandRegistry.getActiveBrand().stadiumName : 'Estadio de los Cerros';
+      this._setCommentary(`¡Comienza el segundo tiempo en el ${stad}!`);
     }
 
     togglePause() {

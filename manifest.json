@@ -1,12 +1,12 @@
 {
-  "name": "Estadio 23 de Agosto 3D — Gimnasia de Jujuy",
-  "short_name": "Lobo 3D",
-  "description": "Videojuego de fútbol 3D en el Estadio 23 de Agosto con el fixture oficial AFA de Gimnasia y Esgrima de Jujuy.",
+  "name": "Pasión de Tribuna 3D — Fútbol del Norte",
+  "short_name": "Pasión 3D",
+  "description": "Videojuego arcade de fútbol 3D en el Estadio de los Cerros, inspirado en la cultura futbolera del norte argentino.",
   "start_url": "/index.html",
   "display": "standalone",
   "orientation": "landscape",
-  "background_color": "#06101f",
-  "theme_color": "#0284c7",
+  "background_color": "#0b1320",
+  "theme_color": "#1ea7fd",
   "icons": [
     {
       "src": "/favicon.svg",
