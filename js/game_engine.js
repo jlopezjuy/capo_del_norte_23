@@ -358,7 +358,7 @@
       this.audio.playWhistle('double');
 
       this._updateScoreboard(false);
-      this._setCommentary(`¡Arranca el partido en el 23 de Agosto! Gimnasia vs. ${fixture.opponent.name} (${fixture.round}).`);
+      this._setCommentary(`¡Sacás vos! Movete con WASD o Flechas hacia la izquierda (←) • ESPACIO = Pase • L = Remate al arco`);
       this._showHudForMatch();
     }
 
@@ -658,8 +658,8 @@
             ms.activeHomeIndex = ms.players.indexOf(target);
           }
         } else if (frame.shootTriggered) {
-          // Aim toward North goal (-52.5) blended with player's lateral input
-          const aimX = Math.max(-4.5, Math.min(4.5, dirX * 4.2));
+          // Aim toward North goal (-52.5) blended with player's lateral input, kept inside posts (±3.2m)
+          const aimX = Math.max(-3.2, Math.min(3.2, dirX * 3.1));
           const dx = aimX - ms.ball.x;
           const dz = -52.5 - ms.ball.z;
           const dist = Math.max(1, Math.hypot(dx, dz));
@@ -1175,6 +1175,10 @@
         atkEl.classList.toggle('hidden', !inAttack);
         defEl.classList.toggle('hidden', inAttack);
       }
+      const tPass = document.getElementById('touch-btn-pass');
+      const tShoot = document.getElementById('touch-btn-shoot');
+      if (tPass) tPass.textContent = inAttack ? 'PASE' : 'QUITAR';
+      if (tShoot) tShoot.textContent = inAttack ? 'REMATE' : 'BARRIDA';
       if (dirEl) {
         dirEl.textContent = this.cameraMode === 'pro' ? 'Arco ↑ Adelante' : 'Arco ← Izq';
       }

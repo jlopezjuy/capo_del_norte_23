@@ -4,6 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Estadio 23 de Agosto 3D — Gimnasia y Esgrima de Jujuy</title>
+  <meta name="description" content="Videojuego de fútbol 3D en el Estadio 23 de Agosto enfrentando al rival oficial de la semana AFA de Gimnasia y Esgrima de Jujuy." />
+  <meta name="theme-color" content="#0284c7" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta property="og:title" content="Estadio 23 de Agosto 3D — Gimnasia y Esgrima de Jujuy" />
+  <meta property="og:description" content="Jugá el Partido de la Semana AFA en el Estadio 23 de Agosto en 3D." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="manifest.json" />
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,8 +42,22 @@
       border: 1px solid rgba(148, 213, 255, 0.18);
       box-shadow: 0 12px 32px rgba(2, 8, 20, 0.65);
     }
-    .btn-tactile { transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease; }
-    .btn-tactile:active { transform: scale(0.96); }
+    .kbd-key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
+      height: 20px;
+      padding: 0 5px;
+      border-radius: 5px;
+      background: rgba(30, 41, 59, 0.95);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      border-bottom-width: 2px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
   </style>
 </head>
 <body>
@@ -134,21 +157,21 @@
 
       <!-- Controls summary & Start Button -->
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        <div class="grid grid-cols-3 gap-2 text-[11px] flex-1">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] flex-1">
           <div class="rounded-xl bg-slate-900/80 border border-slate-800 px-3 py-2">
-            <div class="font-bold text-sky-300 uppercase text-[10px] mb-1">Movimiento</div>
-            <div class="text-slate-200"><span class="font-mono-tech bg-slate-800 px-1 rounded">WASD</span> / Flechas</div>
-            <div class="text-slate-400 mt-0.5"><span class="font-mono-tech bg-slate-800 px-1 rounded">Shift</span> Correr • <span class="font-mono-tech bg-slate-800 px-1 rounded">C</span> Cámara</div>
+            <div class="font-bold text-sky-300 uppercase text-[10px] mb-1.5">1. Moverse</div>
+            <div class="flex items-center gap-1 text-slate-200"><span class="kbd-key">W</span><span class="kbd-key">A</span><span class="kbd-key">S</span><span class="kbd-key">D</span> <span class="text-slate-400">o Flechas</span></div>
+            <div class="text-slate-400 mt-1"><span class="kbd-key">Shift</span> Correr • <span class="kbd-key">C</span> Cámara</div>
           </div>
           <div class="rounded-xl bg-slate-900/80 border border-slate-800 px-3 py-2">
-            <div class="font-bold text-emerald-400 uppercase text-[10px] mb-1">Con Pelota</div>
-            <div class="text-slate-200"><span class="font-mono-tech bg-slate-800 px-1 rounded">Espacio</span> Pase • <span class="font-mono-tech bg-slate-800 px-1 rounded">K</span> Centro</div>
-            <div class="text-slate-400 mt-0.5"><span class="font-mono-tech bg-slate-800 px-1 rounded">L</span> o <span class="font-mono-tech bg-slate-800 px-1 rounded">F</span> Remate</div>
+            <div class="font-bold text-emerald-400 uppercase text-[10px] mb-1.5">2. Con Pelota (Atacar ←)</div>
+            <div class="text-slate-200"><span class="kbd-key">Espacio</span> Pase • <span class="kbd-key">K</span> Centro</div>
+            <div class="text-slate-300 mt-1"><span class="kbd-key">L</span> o <span class="kbd-key">F</span> Remate al arco</div>
           </div>
           <div class="rounded-xl bg-slate-900/80 border border-slate-800 px-3 py-2">
-            <div class="font-bold text-amber-300 uppercase text-[10px] mb-1">Sin Pelota</div>
-            <div class="text-slate-200"><span class="font-mono-tech bg-slate-800 px-1 rounded">Espacio</span> Quitar • <span class="font-mono-tech bg-slate-800 px-1 rounded">Q</span> Cambiar</div>
-            <div class="text-slate-400 mt-0.5"><span class="font-mono-tech bg-slate-800 px-1 rounded">L</span> o <span class="font-mono-tech bg-slate-800 px-1 rounded">F</span> Barrida</div>
+            <div class="font-bold text-amber-300 uppercase text-[10px] mb-1.5">3. Sin Pelota (Defender)</div>
+            <div class="text-slate-200"><span class="kbd-key">Q</span> Cambiar • <span class="kbd-key">Espacio</span> Quitar</div>
+            <div class="text-slate-300 mt-1"><span class="kbd-key">L</span> o <span class="kbd-key">F</span> Barrida</div>
           </div>
         </div>
         <button id="btn-play-match" class="btn-tactile w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-display text-xl font-black uppercase tracking-wide shadow-lg shadow-sky-500/30 shrink-0">
@@ -254,22 +277,22 @@
     </div>
 
     <!-- Bottom Right: Live Context-Aware Controls Cheat Sheet -->
-    <div id="hud-controls-card" class="hidden md:block fixed bottom-3 right-3 hud-glass rounded-2xl p-3 w-64 pointer-events-auto">
-      <div class="flex items-center justify-between mb-1.5">
+    <div id="hud-controls-card" class="hidden sm:block fixed bottom-3 right-3 hud-glass rounded-2xl p-3 w-64 pointer-events-auto">
+      <div class="flex items-center justify-between mb-2 pb-1 border-b border-slate-800">
         <span id="hud-ctrl-mode" class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">EN ATAQUE • CON PELOTA</span>
         <span id="hud-attack-dir" class="text-[10px] font-bold text-sky-300">Arco ← Izq</span>
       </div>
-      <div id="hud-ctrl-attack" class="space-y-1 text-[11px] text-slate-200">
-        <div class="flex justify-between"><span class="text-slate-400">Mover / Correr</span><span class="font-mono-tech font-bold">WASD / Shift</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Pase corto</span><span class="font-mono-tech font-bold text-sky-300">Espacio / J</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Centro / Filtrado</span><span class="font-mono-tech font-bold text-amber-300">K / X</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Remate (mantener)</span><span class="font-mono-tech font-bold text-rose-300">L / F</span></div>
+      <div id="hud-ctrl-attack" class="space-y-1.5 text-[11px] text-slate-200">
+        <div class="flex items-center justify-between"><span class="text-slate-300">Mover / Correr</span><span><span class="kbd-key">WASD</span> <span class="kbd-key">Shift</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Pase al pie</span><span><span class="kbd-key">Espacio</span> <span class="text-slate-500">/</span> <span class="kbd-key">J</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Centro / Largo</span><span><span class="kbd-key">K</span> <span class="text-slate-500">/</span> <span class="kbd-key">X</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Remate al arco</span><span><span class="kbd-key">L</span> <span class="text-slate-500">/</span> <span class="kbd-key">F</span></span></div>
       </div>
-      <div id="hud-ctrl-defense" class="hidden space-y-1 text-[11px] text-slate-200">
-        <div class="flex justify-between"><span class="text-slate-400">Mover / Correr</span><span class="font-mono-tech font-bold">WASD / Shift</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Cambiar jugador</span><span class="font-mono-tech font-bold text-sky-300">Q / E</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Presionar / Quitar</span><span class="font-mono-tech font-bold text-emerald-300">Espacio / J</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Barrida</span><span class="font-mono-tech font-bold text-rose-300">L / F</span></div>
+      <div id="hud-ctrl-defense" class="hidden space-y-1.5 text-[11px] text-slate-200">
+        <div class="flex items-center justify-between"><span class="text-slate-300">Mover / Correr</span><span><span class="kbd-key">WASD</span> <span class="kbd-key">Shift</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Cambiar jugador</span><span><span class="kbd-key">Q</span> <span class="text-slate-500">/</span> <span class="kbd-key">E</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Presionar / Quitar</span><span><span class="kbd-key">Espacio</span> <span class="text-slate-500">/</span> <span class="kbd-key">J</span></span></div>
+        <div class="flex items-center justify-between"><span class="text-slate-300">Barrida</span><span><span class="kbd-key">L</span> <span class="text-slate-500">/</span> <span class="kbd-key">F</span></span></div>
       </div>
     </div>
 
@@ -280,11 +303,11 @@
         <div id="touch-stick-knob" class="w-12 h-12 rounded-full bg-sky-400/80 shadow-lg pointer-events-none"></div>
       </div>
       <!-- Action Buttons -->
-      <div class="grid grid-cols-2 gap-2 pointer-events-auto">
+      <div class="grid grid-cols-2 gap-2.5 pointer-events-auto">
         <button data-touch-btn="switchPlayer" class="w-14 h-14 rounded-full hud-glass text-[10px] font-bold text-slate-200">CAMBIAR</button>
         <button data-touch-btn="lob" class="w-14 h-14 rounded-full hud-glass text-[10px] font-bold text-amber-300">CENTRO</button>
-        <button data-touch-btn="pass" class="w-14 h-14 rounded-full bg-sky-500/80 border border-sky-300 text-[10px] font-extrabold text-white">PASE</button>
-        <button data-touch-btn="shoot" class="w-14 h-14 rounded-full bg-rose-500/80 border border-rose-300 text-[10px] font-extrabold text-white">REMATE</button>
+        <button id="touch-btn-pass" data-touch-btn="pass" class="w-16 h-16 rounded-full bg-sky-500/85 border-2 border-sky-300 text-[11px] font-extrabold text-white shadow-lg">PASE</button>
+        <button id="touch-btn-shoot" data-touch-btn="shoot" class="w-16 h-16 rounded-full bg-rose-500/85 border-2 border-rose-300 text-[11px] font-extrabold text-white shadow-lg">REMATE</button>
       </div>
     </div>
   </div>
@@ -372,7 +395,7 @@
   <script src="js/physics_engine.js?v=3"></script>
   <script src="js/tactical_ai.js?v=3"></script>
   <script src="js/stadium_builder.js?v=3"></script>
-  <script src="js/game_engine.js?v=5"></script>
+  <script src="js/game_engine.js?v=7"></script>
   <script>
     (function () {
       const game = new window.GameEngine();
@@ -468,6 +491,7 @@
         }
         stickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
         game.input.setTouchStick(dx / maxR, dy / maxR);
+        game.input.touchSprint = dist > maxR * 0.82;
       };
 
       stickBase.addEventListener('pointerdown', (e) => {
@@ -482,6 +506,7 @@
         stickActive = false;
         stickKnob.style.transform = 'translate(0px, 0px)';
         game.input.setTouchStick(0, 0);
+        game.input.touchSprint = false;
       };
       stickBase.addEventListener('pointerup', resetStick);
       stickBase.addEventListener('pointercancel', resetStick);
