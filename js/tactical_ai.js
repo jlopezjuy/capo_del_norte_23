@@ -121,6 +121,96 @@
     }
 
     /**
+     * Safe long goalkeeper clearance / punt:
+     * Never rolls/chips a weak ball into pressers inside the box.
+     * Picks an unmarked teammate >= 18m upfield, or punts high & wide past midfield.
+     */
+    executeGoalkeeperDistribution(matchState, gk) {
+      const b = matchState.ball;
+      const players = matchState.players;
+      const isHome = gk.team === 'home';
+      const towardFieldZ = isHome ? -1 : 1;
+      const goalLineZ = isHome ? 52.5 : -52.5;
+
+      // Score field teammates that are safely outside the box & open
+      let bestTarget = null;
+      let bestScore = -Infinity;
+
+      for (const p of players) {
+        if (p.team !== gk.team || p.role === 'GK') continue;
+        const distFromGoal = Math.abs(p.z - goalLineZ);
+        if (distFromGoal < 19) continue; // Never pass short inside/near our own penalty box
+
+        const dx = p.x - gk.x;
+        const dz = p.z - gk.z;
+        const dist = Math.hypot(dx, dz);
+        if (dist < 18 || dist > 62) continue;
+
+        // Check closest opponent to this teammate
+        let minOppDist = 99;
+        for (const opp of players) {
+          if (opp.team === gk.team) continue;
+          const dOpp = Math.hypot(opp.x - p.x, opp.z - p.z);
+          if (dOpp < minOppDist) minOppDist = dOpp;
+        }
+        if (minOppDist < 4.8) continue; // Too tightly marked
+
+        // Prefer wide flanks & mid-long targets with lots of open space
+        const widthBonus = Math.abs(p.x) * 0.08;
+        const spaceBonus = Math.min(14, minOppDist) * 0.45;
+        const distBonus = -Math.abs(dist - 36) * 0.06;
+        const score = spaceBonus + widthBonus + distBonus;
+        if (score > bestScore) {
+          bestScore = score;
+          bestTarget = p;
+        }
+      }
+
+      let tx;
+      let tz;
+      if (bestTarget) {
+        tx = bestTarget.x + (bestTarget.vx || 0) * 0.35;
+        tz = bestTarget.z + (bestTarget.vz || 0) * 0.35 + towardFieldZ * 2.5;
+      } else {
+        // Fallback: clear high & wide past midfield toward the less crowded flank
+        let leftOpps = 0;
+        let rightOpps = 0;
+        for (const opp of players) {
+          if (opp.team === gk.team) continue;
+          if (opp.x < 0) leftOpps += 1;
+          else rightOpps += 1;
+        }
+        const safeFlank = leftOpps <= rightOpps ? -1 : 1;
+        tx = safeFlank * (16 + Math.random() * 10);
+        tz = towardFieldZ * 6; // Clearly past halfway line
+      }
+
+      tx = Math.max(-31, Math.min(31, tx));
+      tz = Math.max(-46, Math.min(46, tz));
+
+      const dx = tx - b.x;
+      const dz = tz - b.z;
+      const dist = Math.max(20, Math.hypot(dx, dz));
+      const nx = dx / dist;
+      const nz = dz / dist;
+
+      // Launch high from goalkeeper punt height so nearby strikers can NEVER block it point-blank
+      b.y = 1.25;
+      b.gkPuntGraceTimer = 0.28;
+      gk.rotY = Math.atan2(nx, nz);
+      gk.kickPower = 0.95;
+      gk.kickAnimTimer = 0.34;
+      gk.pickupCooldown = 0.55;
+
+      const speed = Math.min(31, Math.max(23.5, dist * 0.62 + 6.5));
+      const vy = Math.min(13.0, Math.max(9.8, dist * 0.24 + 2.0));
+      this.physics.kickBall(matchState, gk, nx * speed, vy, nz * speed, false);
+
+      if (gk.team === 'home') matchState.stats.homePasses += 1;
+      else matchState.stats.awayPasses += 1;
+    }
+
+    /**
      * Updates all AI-controlled players (10 Gimnasia teammates + 11 Away players).
      */
     update(matchState, dt, opponentMeta) {
@@ -133,9 +223,14 @@
         : null;
 
       // Determine closest non-GK pressers per team (honoring tuning.pressCount!)
-      const awayPressers = this._findClosestFieldPlayers(players, 'away', b.x, b.z, tuning.pressCount || 1);
+      const ownerIsGK = !!(owner && owner.role === 'GK');
+      const awayPressers = ownerIsGK && owner.team === 'home'
+        ? []
+        : this._findClosestFieldPlayers(players, 'away', b.x, b.z, tuning.pressCount || 1);
       const awayPresserIds = new Set(awayPressers.map((p) => p.id));
-      const closestHomeSupport = this._findClosestFieldPlayer(players, 'home', b.x, b.z, activeHome ? activeHome.id : -1);
+      const closestHomeSupport = ownerIsGK && owner.team === 'away'
+        ? null
+        : this._findClosestFieldPlayer(players, 'home', b.x, b.z, activeHome ? activeHome.id : -1);
       const ballIsLoose = matchState.ownerPlayerId === null;
 
       const awayAggression = opponentMeta ? opponentMeta.aggression || 0.72 : 0.72;
@@ -184,26 +279,37 @@
 
         if (teamHasBall) {
           // Attacking phase: shift formation toward ball & make runs
-          const ballAdvance = b.z * 0.42;
-          targetX = p.baseX + (b.x - p.baseX) * 0.22;
-          targetZ = p.baseZ + ballAdvance * 0.45 + attackDirZ * 10;
-
-          if (p.role === 'FW') {
-            p.aiState = 'MAKE_RUN';
-            targetZ += attackDirZ * 8;
-            sprint = Math.abs(b.z - p.z) < 28;
-            if (isHome && owner && owner.team === 'home' && Math.hypot(b.x - p.x, b.z - p.z) > 10 && Math.random() < 0.018) {
-              p.callingPassTimer = 0.85;
-            }
-          } else {
+          if (ownerIsGK && owner.team === p.team) {
+            // Spread wide and push upfield to give the GK clean long distribution targets!
             p.aiState = 'SUPPORT_ATTACK';
+            targetX = p.baseX * 1.15;
+            targetZ = p.baseZ + attackDirZ * 14;
+            sprint = false;
+          } else {
+            const ballAdvance = b.z * 0.42;
+            targetX = p.baseX + (b.x - p.baseX) * 0.22;
+            targetZ = p.baseZ + ballAdvance * 0.45 + attackDirZ * 10;
+
+            if (p.role === 'FW') {
+              p.aiState = 'MAKE_RUN';
+              targetZ += attackDirZ * 8;
+              sprint = Math.abs(b.z - p.z) < 28;
+              if (isHome && owner && owner.team === 'home' && Math.hypot(b.x - p.x, b.z - p.z) > 10 && Math.random() < 0.018) {
+                p.callingPassTimer = 0.85;
+              }
+            } else {
+              p.aiState = 'SUPPORT_ATTACK';
+            }
           }
         } else {
           // Defending or loose ball phase: closest pressers on EACH team contest the ball!
+          // NEVER press or camp in front of an opposing GK holding the ball — retreat outside the box!
           const distToBall = Math.hypot(b.x - p.x, b.z - p.z);
           const isPrimaryPresser =
-            (!isHome && awayPresserIds.has(p.id)) ||
-            (isHome && closestHomeSupport && closestHomeSupport.id === p.id && ballIsLoose && distToBall < 18);
+            !ownerIsGK && (
+              (!isHome && awayPresserIds.has(p.id)) ||
+              (isHome && closestHomeSupport && closestHomeSupport.id === p.id && ballIsLoose && distToBall < 18)
+            );
 
           if (isPrimaryPresser) {
             p.aiState = 'PRESS_BALL';
@@ -215,6 +321,14 @@
             // Compact defensive block shifted toward ball
             targetX = p.baseX * 0.78 + b.x * 0.28;
             targetZ = p.baseZ * 0.65 + b.z * 0.35 - attackDirZ * 6;
+            if (ownerIsGK && owner.team !== p.team) {
+              // Respect the penalty area when opposing GK holds the ball (retreat >= 18m from their goal line)
+              if (owner.team === 'home') {
+                targetZ = Math.min(targetZ, 30.0);
+              } else {
+                targetZ = Math.max(targetZ, -30.0);
+              }
+            }
           }
         }
 
@@ -268,13 +382,16 @@
       const goalLineZ = isHome ? 50.8 : -50.8;
       const towardFieldZ = isHome ? -1 : 1;
 
-      // If GK owns the ball, clear / pass to a teammate after brief hold
+      // If GK owns the ball, hold safely (unstealable), face upfield, and punt long past pressers
       if (matchState.ownerPlayerId === gk.id) {
         gk.aiState = 'IDLE';
+        gk.vx = 0;
+        gk.vz = 0;
+        gk.stealCooldown = Math.max(gk.stealCooldown || 0, 0.5);
+        gk.rotY = isHome ? Math.PI : 0;
         if (gk.aiDecisionTimer <= 0) {
-          const target = this.findPassTarget(gk, matchState.players, 0, towardFieldZ);
-          this.executePass(matchState, gk, target, true);
-          gk.aiDecisionTimer = 0.6;
+          this.executeGoalkeeperDistribution(matchState, gk);
+          gk.aiDecisionTimer = 0.65;
         }
         return;
       }

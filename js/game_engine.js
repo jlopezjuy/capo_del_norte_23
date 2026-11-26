@@ -741,13 +741,26 @@
       this.matchState.ball = { x: rx, y: 0.34, z: rz, vx: 0, vy: 0, vz: 0 };
       this.matchState.setPiece = { type, team: restartTeam, x: rx, z: rz, timer: 1.0 };
 
-      // Position taker
+      // Position taker (and clear opposing strikers out of the penalty area on GOAL_KICK!)
       const taker = this._findNearestPlayerOfTeam(restartTeam, rx, rz, type === 'GOAL_KICK');
+      if (type === 'GOAL_KICK') {
+        this.matchState.players.forEach((p) => {
+          if (p.team !== restartTeam) {
+            if (restartTeam === 'home' && p.z > 30) p.z = 30;
+            if (restartTeam === 'away' && p.z < -30) p.z = -30;
+          }
+        });
+      }
       if (taker) {
         taker.x = rx;
         taker.z = rz;
         if (restartTeam === 'home') {
-          this.matchState.activeHomeIndex = this.matchState.players.indexOf(taker);
+          if (taker.role !== 'GK') {
+            this.matchState.activeHomeIndex = this.matchState.players.indexOf(taker);
+          } else {
+            const outfield = this.matchState.players.find((p) => p.team === 'home' && p.role !== 'GK');
+            if (outfield) this.matchState.activeHomeIndex = this.matchState.players.indexOf(outfield);
+          }
         }
       }
     }
@@ -801,8 +814,12 @@
           const sp = ms.setPiece;
           const taker = this._findNearestPlayerOfTeam(sp.team, sp.x, sp.z, sp.type === 'GOAL_KICK');
           if (taker) {
-            const target = this.ai.findPassTarget(taker, ms.players, 0, sp.team === 'home' ? -1 : 1);
-            this.ai.executePass(ms, taker, target, sp.type === 'CORNER' || sp.type === 'GOAL_KICK');
+            if (sp.type === 'GOAL_KICK' && this.ai.executeGoalkeeperDistribution) {
+              this.ai.executeGoalkeeperDistribution(ms, taker);
+            } else {
+              const target = this.ai.findPassTarget(taker, ms.players, 0, sp.team === 'home' ? -1 : 1);
+              this.ai.executePass(ms, taker, target, sp.type === 'CORNER');
+            }
           }
           ms.setPiece = null;
           ms.phase = 'PLAYING';
@@ -858,6 +875,9 @@
       this.ai.update(ms, dt, this.currentFixture ? this.currentFixture.opponent : null);
 
       // Ball physics & player collisions
+      if (ms.ball.gkPuntGraceTimer > 0) {
+        ms.ball.gkPuntGraceTimer = Math.max(0, ms.ball.gkPuntGraceTimer - dt);
+      }
       this.physics.stepBall(ms, dt);
       this.physics.resolvePlayerCollisions(ms.players);
 
@@ -1175,6 +1195,11 @@
         const reach = p.role === 'GK' ? (p.diveTimer > 0 ? 1.85 : 1.55) : (p.tackleTimer > 0 ? 1.55 : 1.05);
         const dist = Math.hypot(p.x - b.x, p.z - b.z);
         if (dist < reach) {
+          // Rule of football: nobody can steal the ball from a GK holding it in their hands!
+          if (currentOwner && currentOwner.role === 'GK') continue;
+          // Grace window right off a GK punt so opponents cannot magnet-block it point-blank
+          if (!currentOwner && b.gkPuntGraceTimer > 0 && p.team !== ms.lastTouchTeam) continue;
+
           // Steal if opponent owns it (respect stealCooldown unless slide tackling)
           if (currentOwner && currentOwner.team === p.team) continue;
           if (currentOwner && currentOwner.team !== p.team) {
@@ -1203,8 +1228,8 @@
           ms.possessionTeam = p.team;
           ms.lastTouchTeam = p.team;
           ms.lastTouchPlayerId = p.id;
-          p.stealCooldown = 0.55;
-          p.aiDecisionTimer = p.role === 'GK' ? 0.85 : 0.22;
+          p.stealCooldown = p.role === 'GK' ? 1.5 : 0.55;
+          p.aiDecisionTimer = p.role === 'GK' ? 0.72 : 0.22;
 
           if (p.team === 'home' && p.role !== 'GK') {
             ms.activeHomeIndex = i;
