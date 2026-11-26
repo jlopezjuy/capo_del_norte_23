@@ -163,6 +163,8 @@
       document.getElementById('goal-banner-sub').textContent = cel.subtitle;
       const keysEl = document.getElementById('goal-interactive-keys');
       if (keysEl) keysEl.classList.toggle('hidden', !ctx.isHomeGoal);
+      const playerCard = document.getElementById('hud-player-card');
+      if (playerCard) playerCard.classList.add('opacity-0');
       banner.classList.remove('hidden');
     }
 
@@ -179,6 +181,8 @@
       this.wolfTotem.visible = false;
       const banner = document.getElementById('goal-banner-overlay');
       if (banner) banner.classList.add('hidden');
+      const playerCard = document.getElementById('hud-player-card');
+      if (playerCard) playerCard.classList.remove('opacity-0');
     }
 
     update(dt, elapsed, scorerPos) {

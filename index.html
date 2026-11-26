@@ -215,81 +215,83 @@
   <!-- ======================================================================= -->
   <div id="match-hud" class="hidden fixed inset-0 z-20 pointer-events-none">
     <!-- Top Broadcast Bar -->
-    <div class="flex flex-wrap items-center justify-between gap-2 p-2 sm:p-3">
-      <div class="flex items-center gap-2 min-w-0 pointer-events-auto">
-        <!-- Scorebug -->
-        <div class="hud-glass rounded-xl px-2.5 py-1 flex items-center gap-2.5">
-          <div class="flex items-center gap-1.5">
-            <span id="hud-home-badge" class="inline-flex items-center"></span>
-            <span class="font-display text-lg font-black text-white">SSC</span>
+    <div class="flex flex-col gap-1.5 p-2 sm:p-3">
+      <div class="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2">
+        <div class="flex items-center gap-2 min-w-0 pointer-events-auto">
+          <!-- Scorebug -->
+          <div class="hud-glass rounded-xl px-2.5 py-1 flex items-center gap-2 sm:gap-2.5">
+            <div class="flex items-center gap-1.5">
+              <span id="hud-home-badge" class="inline-flex items-center"></span>
+              <span class="font-display text-base sm:text-lg font-black text-white">SSC</span>
+            </div>
+            <div class="font-mono-tech text-base sm:text-lg font-extrabold bg-[#060c16] px-2 sm:px-2.5 py-0.5 rounded-md border border-slate-700/80 flex items-center gap-1.5">
+              <span id="hud-score-home">0</span>
+              <span class="text-slate-500">-</span>
+              <span id="hud-score-away">0</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span id="hud-away-short" class="font-display text-base sm:text-lg font-black text-white">MAD</span>
+              <span id="hud-away-badge" class="inline-flex items-center"></span>
+            </div>
+            <div class="pl-2 border-l border-slate-700/80 flex items-center gap-1.5">
+              <span id="hud-half" class="text-[11px] font-bold text-sky-400">1°T</span>
+              <span id="hud-clock" class="font-mono-tech text-xs sm:text-sm font-bold text-emerald-400">00:00</span>
+            </div>
           </div>
-          <div class="font-mono-tech text-lg font-extrabold bg-[#060c16] px-2.5 py-0.5 rounded-md border border-slate-700/80 flex items-center gap-1.5">
-            <span id="hud-score-home">0</span>
-            <span class="text-slate-500">-</span>
-            <span id="hud-score-away">0</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span id="hud-away-short" class="font-display text-lg font-black text-white">MAD</span>
-            <span id="hud-away-badge" class="inline-flex items-center"></span>
-          </div>
-          <div class="pl-2 border-l border-slate-700/80 flex items-center gap-1.5">
-            <span id="hud-half" class="text-[11px] font-bold text-sky-400">1°T</span>
-            <span id="hud-clock" class="font-mono-tech text-sm font-bold text-emerald-400">00:00</span>
+
+          <!-- Live Commentary -->
+          <div class="hidden xl:flex hud-glass rounded-xl px-3 py-1.5 max-w-md min-w-0">
+            <span id="hud-commentary" class="text-xs font-medium text-slate-200 truncate">Estadio de los Cerros • En vivo</span>
           </div>
         </div>
 
-        <!-- Live Commentary -->
-        <div class="hidden xl:flex hud-glass rounded-xl px-3 py-1.5 max-w-md min-w-0">
-          <span id="hud-commentary" class="text-xs font-medium text-slate-200 truncate">Estadio de los Cerros • En vivo</span>
+        <!-- Top Right Controls -->
+        <div class="flex items-center gap-1.5 shrink-0 pointer-events-auto">
+          <button id="btn-hud-cam" class="hud-glass btn-tactile px-2 sm:px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold text-sky-200 flex items-center gap-1.5" title="Cambiar Cámara (Tecla C)">
+            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span id="hud-cam-label" class="max-w-[92px] sm:max-w-none truncate">TV Broadcast</span>
+          </button>
+          <button id="btn-hud-help" class="hidden sm:inline-flex hud-glass btn-tactile px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white" title="Mostrar/Ocultar guía de controles">
+            Teclas
+          </button>
+          <button id="btn-hud-touch" class="hud-glass btn-tactile px-2 sm:px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white" title="Mostrar/Ocultar controles táctiles">
+            Táctil
+          </button>
+          <button id="btn-hud-audio" class="hud-glass btn-tactile p-1.5 rounded-lg text-sky-300" title="Sonido Estadio">
+            <svg id="hud-audio-on" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+            <svg id="hud-audio-off" class="w-4 h-4 hidden text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>
+          </button>
+          <button id="btn-hud-pause" class="hud-glass btn-tactile px-2 sm:px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold text-white" title="Pausa (Esc)">
+            Pausa
+          </button>
         </div>
       </div>
 
-      <!-- Top Right Controls -->
-      <div class="flex items-center gap-1.5 shrink-0 pointer-events-auto">
-        <button id="btn-hud-cam" class="hud-glass btn-tactile px-2.5 py-1.5 rounded-lg text-xs font-semibold text-sky-200 flex items-center gap-1.5" title="Cambiar Cámara (Tecla C)">
-          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <span id="hud-cam-label" class="max-w-[95px] sm:max-w-none truncate">TV Broadcast</span>
-        </button>
-        <button id="btn-hud-help" class="hidden sm:inline-flex hud-glass btn-tactile px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white" title="Mostrar/Ocultar guía de controles">
-          Teclas
-        </button>
-        <button id="btn-hud-touch" class="hud-glass btn-tactile px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white" title="Mostrar/Ocultar controles táctiles">
-          Táctil
-        </button>
-        <button id="btn-hud-audio" class="hud-glass btn-tactile p-1.5 rounded-lg text-sky-300" title="Sonido Estadio">
-          <svg id="hud-audio-on" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-          <svg id="hud-audio-off" class="w-4 h-4 hidden text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>
-        </button>
-        <button id="btn-hud-pause" class="hud-glass btn-tactile px-2.5 py-1.5 rounded-lg text-xs font-bold text-white" title="Pausa (Esc)">
-          Pausa
-        </button>
-      </div>
-    </div>
-
-    <!-- Bottom Left: Active Player Card + Stamina & Power -->
-    <div id="hud-player-card" class="fixed top-16 left-2 sm:top-auto sm:bottom-3 sm:left-3 hud-glass rounded-xl p-2 sm:p-2.5 w-44 sm:w-52 pointer-events-auto">
-      <div class="flex items-center justify-between mb-1">
-        <div class="flex items-center gap-1.5 min-w-0">
-          <span id="hud-player-num" class="font-mono-tech text-[11px] font-extrabold px-1.5 py-0.5 rounded bg-sky-500 text-slate-950">#9</span>
-          <span id="hud-player-name" class="font-display text-base font-bold uppercase text-white truncate">T. Cardozo</span>
+      <!-- Active Player Card (in flow below top bar on mobile; fixed bottom-left on desktop) -->
+      <div id="hud-player-card" class="self-start sm:fixed sm:bottom-3 sm:left-3 hud-glass rounded-xl px-2.5 py-1.5 sm:p-2.5 w-44 sm:w-52 pointer-events-auto">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span id="hud-player-num" class="font-mono-tech text-[10px] sm:text-[11px] font-extrabold px-1.5 py-0.5 rounded bg-sky-500 text-slate-950">#9</span>
+            <span id="hud-player-name" class="font-display text-sm sm:text-base font-bold uppercase text-white truncate">T. Cardozo</span>
+          </div>
+          <span class="text-[10px] font-bold text-sky-400 shrink-0">SSC</span>
         </div>
-        <span class="text-[10px] font-bold text-sky-400 shrink-0">SSC</span>
-      </div>
-      <div class="space-y-1">
-        <div>
-          <div class="flex justify-between text-[9px] font-bold uppercase text-slate-400 mb-0.5">
-            <span>Energía</span><span>Shift</span>
+        <div class="space-y-1">
+          <div>
+            <div class="flex justify-between text-[9px] font-bold uppercase text-slate-400 mb-0.5">
+              <span>Energía</span><span class="hidden sm:inline">Shift</span>
+            </div>
+            <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+              <div id="hud-stamina-fill" class="h-full bg-sky-400 transition-all duration-75" style="width: 100%"></div>
+            </div>
           </div>
-          <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden">
-            <div id="hud-stamina-fill" class="h-full bg-sky-400 transition-all duration-75" style="width: 100%"></div>
-          </div>
-        </div>
-        <div>
-          <div class="flex justify-between text-[9px] font-bold uppercase text-slate-400 mb-0.5">
-            <span>Remate</span><span>L / F</span>
-          </div>
-          <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden">
-            <div id="hud-power-fill" class="h-full bg-amber-400 transition-all duration-75" style="width: 0%"></div>
+          <div>
+            <div class="flex justify-between text-[9px] font-bold uppercase text-slate-400 mb-0.5">
+              <span>Remate</span><span class="hidden sm:inline">L / F</span>
+            </div>
+            <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+              <div id="hud-power-fill" class="h-full bg-amber-400 transition-all duration-75" style="width: 0%"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -370,26 +372,28 @@
   <!-- ======================================================================= -->
   <!-- GOAL CELEBRATION CINEMATIC BANNER (Non-blocking top/bottom strip)       -->
   <!-- ======================================================================= -->
-  <div id="goal-banner-overlay" class="hidden fixed inset-x-0 top-14 z-30 flex justify-center px-3 pointer-events-none">
-    <div class="hud-glass hud-accent-top rounded-2xl px-5 py-3 text-center max-w-xl w-full pointer-events-auto">
-      <div class="flex items-center justify-between gap-3">
-        <div id="goal-banner-badge" class="shrink-0"></div>
-        <div class="min-w-0 flex-1 text-left">
-          <div id="goal-banner-title" class="font-display text-3xl sm:text-4xl font-black uppercase text-sky-300 leading-none tracking-wide truncate">EL GRITO DEL LOBO</div>
-          <div id="goal-banner-scorer" class="font-display text-lg font-bold uppercase text-white mt-0.5 truncate">#9 T. Cardozo • 23'</div>
+  <div id="goal-banner-overlay" class="hidden fixed inset-x-0 top-24 sm:top-14 z-40 flex justify-center px-2.5 sm:px-3 pointer-events-none">
+    <div class="hud-glass hud-accent-top rounded-2xl px-3.5 py-2.5 sm:px-5 sm:py-3 text-center max-w-xl w-full pointer-events-auto">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+          <div id="goal-banner-badge" class="shrink-0"></div>
+          <div class="min-w-0 flex-1 text-left">
+            <div id="goal-banner-title" class="font-display text-2xl sm:text-4xl font-black uppercase text-sky-300 leading-tight tracking-wide break-words">EL GRITO DEL LOBO</div>
+            <div id="goal-banner-scorer" class="font-display text-base sm:text-lg font-bold uppercase text-white mt-0.5">#9 T. Cardozo • 23'</div>
+          </div>
         </div>
-        <div id="goal-banner-score" class="font-mono-tech text-xl sm:text-2xl font-extrabold text-amber-300 bg-[#070d18] px-3 py-1 rounded-lg border border-slate-700 shrink-0">SSC 1 - 0 GNF</div>
+        <div id="goal-banner-score" class="self-start sm:self-center font-mono-tech text-base sm:text-2xl font-extrabold text-amber-300 bg-[#070d18] px-2.5 py-1 rounded-lg border border-slate-700 shrink-0">SSC 1 - 0 GNF</div>
       </div>
       <div class="flex flex-wrap items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-800 text-[11px]">
-        <span id="goal-banner-sub" class="text-slate-300 font-medium truncate">¡Explota el Estadio de los Cerros!</span>
-        <div class="flex items-center gap-1.5 shrink-0">
+        <span id="goal-banner-sub" class="text-slate-300 font-medium">¡Explota el Estadio de los Cerros!</span>
+        <div class="flex items-center gap-1.5 shrink-0 ml-auto">
           <div id="goal-interactive-keys" class="hidden sm:flex items-center gap-1 text-[10px] text-sky-300">
             <button data-celeb-key="1" class="btn-tactile px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700">1 Solo</button>
             <button data-celeb-key="2" class="btn-tactile px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700">2 Baile</button>
             <button data-celeb-key="3" class="btn-tactile px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700">3 Hinchada</button>
             <button data-celeb-key="4" class="btn-tactile px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700">4 Sorpresa</button>
           </div>
-          <button id="btn-skip-celebration" class="btn-tactile px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 font-bold text-slate-100 border border-slate-600">Omitir (Espacio)</button>
+          <button id="btn-skip-celebration" class="btn-tactile px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 font-bold text-slate-100 border border-slate-600">Omitir <span class="hidden sm:inline">(Espacio)</span></button>
         </div>
       </div>
     </div>

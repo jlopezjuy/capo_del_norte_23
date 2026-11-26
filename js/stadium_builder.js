@@ -885,7 +885,7 @@
     }
 
     function populatePlateaSpectators(group) {
-      const count = 780;
+      const count = 1200;
       const geo = createSpectatorGeometry();
       const mat = new THREE.MeshLambertMaterial({ color: 0xffffff });
       plateaCrowdMesh = new THREE.InstancedMesh(geo, mat, count);
@@ -984,7 +984,7 @@
     }
 
     function populateBowlSpectatorsAndFlags(group, startAngle, endAngle) {
-      const totalFans = 1800;
+      const totalFans = 3000;
       const fanGeo = createSpectatorGeometry();
       const fanMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
       bowlCrowdMesh = new THREE.InstancedMesh(fanGeo, fanMat, totalFans);
@@ -1220,23 +1220,56 @@
       }
 
       const houseColors = [0x94a3b8, 0xb89b7a, 0xcbd5e1, 0x8d6e63, 0x64748b];
+      const winCanvas = document.createElement('canvas');
+      winCanvas.width = 128;
+      winCanvas.height = 128;
+      const wctx = winCanvas.getContext('2d');
+      wctx.fillStyle = '#e2e8f0';
+      wctx.fillRect(0, 0, 128, 128);
+      for (let wy = 10; wy < 118; wy += 22) {
+        for (let wx = 10; wx < 118; wx += 22) {
+          const lit = ((wx + wy) % 44 === 0);
+          wctx.fillStyle = lit ? '#fef08a' : '#1e293b';
+          wctx.fillRect(wx, wy, 12, 14);
+        }
+      }
+      const winTex = new THREE.CanvasTexture(winCanvas);
+      winTex.wrapS = THREE.RepeatWrapping;
+      winTex.wrapT = THREE.RepeatWrapping;
+
+      const housePalette = houseColors.map((c) => new THREE.Color(c));
+      const bldgPositions = [];
       for (let b = 0; b < 90; b++) {
         const angle = (b / 90) * Math.PI * 2;
         const dist = 108 + (b % 5) * 24;
         const bx = Math.cos(angle) * dist;
         const bz = Math.sin(angle) * dist;
         if (bx > 62 && bx < 95) continue;
-
-        const w = 8 + (b % 4) * 4;
-        const d = 8 + (b % 3) * 4;
-        const h = 4 + (b % 5) * 3.2;
-        const bldg = new THREE.Mesh(
-          new THREE.BoxGeometry(w, h, d),
-          new THREE.MeshLambertMaterial({ color: houseColors[b % houseColors.length] })
-        );
-        bldg.position.set(bx, h / 2, bz);
-        cityGroup.add(bldg);
+        bldgPositions.push({
+          x: bx,
+          z: bz,
+          w: 8 + (b % 4) * 4,
+          d: 8 + (b % 3) * 4,
+          h: 4 + (b % 5) * 3.2,
+          color: housePalette[b % housePalette.length]
+        });
       }
+      const bldgMesh = new THREE.InstancedMesh(
+        new THREE.BoxGeometry(1, 1, 1),
+        new THREE.MeshLambertMaterial({ color: 0xffffff, map: winTex }),
+        bldgPositions.length
+      );
+      const bDummy = new THREE.Object3D();
+      bldgPositions.forEach((bp, idx) => {
+        bDummy.position.set(bp.x, bp.h / 2, bp.z);
+        bDummy.scale.set(bp.w, bp.h, bp.d);
+        bDummy.updateMatrix();
+        bldgMesh.setMatrixAt(idx, bDummy.matrix);
+        bldgMesh.setColorAt(idx, bp.color);
+      });
+      bldgMesh.instanceMatrix.needsUpdate = true;
+      if (bldgMesh.instanceColor) bldgMesh.instanceColor.needsUpdate = true;
+      cityGroup.add(bldgMesh);
 
       scene.add(cityGroup);
     }

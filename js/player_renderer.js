@@ -150,8 +150,10 @@
 
   function createPlayerFigure(opts) {
     const {
-      primaryColor,
+      primaryColor = 0x1ea7fd,
       secondaryColor = 0xffffff,
+      shortsColor,
+      sockColor,
       striped = false,
       isGK = false,
       number = 10,
@@ -172,8 +174,10 @@
     const shirtBaseMat = new THREE.MeshLambertMaterial({ color: primaryColor });
     const shirtFrontMat = new THREE.MeshLambertMaterial({ map: makeJerseyTexture(primaryColor, secondaryColor, number, striped && !isGK, false) });
     const shirtBackMat = new THREE.MeshLambertMaterial({ map: makeJerseyTexture(primaryColor, secondaryColor, number, striped && !isGK, true) });
-    const shortsMat = new THREE.MeshLambertMaterial({ color: isGK ? 0x0f172a : (striped ? 0xf8fafc : 0x0f172a) });
-    const sockMat = new THREE.MeshLambertMaterial({ color: isGK ? 0x10b981 : primaryColor });
+    const resolvedShorts = shortsColor !== undefined ? shortsColor : (isGK ? 0x0f172a : (striped ? 0xf8fafc : 0x0f172a));
+    const resolvedSocks = sockColor !== undefined ? sockColor : (isGK ? 0x10b981 : primaryColor);
+    const shortsMat = new THREE.MeshLambertMaterial({ color: resolvedShorts });
+    const sockMat = new THREE.MeshLambertMaterial({ color: resolvedSocks });
     const bootMat = new THREE.MeshLambertMaterial({ color: (number % 3 === 0) ? 0x0ea5e9 : (number % 3 === 1 ? 0xf8fafc : 0x111827) });
 
     // Torso (box with front/back distinct materials: +x, -x, +y, -y, +z front, -z back)

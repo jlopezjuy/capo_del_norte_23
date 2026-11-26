@@ -267,10 +267,10 @@
       global.AFA_DATA.GYE_SQUAD.forEach((sq) => {
         const isGK = sq.role === 'GK';
         const fig = global.PlayerRenderer.createPlayerFigure({
-          primaryColor: isGK ? global.AFA_DATA.GYE_CLUB.gkColor : global.AFA_DATA.GYE_CLUB.primaryColor,
+          primaryColor: isGK ? global.AFA_DATA.GYE_CLUB.gkColor : global.AFA_DATA.GYE_CLUB.shirtColor,
           secondaryColor: isGK ? 0x064e3b : global.AFA_DATA.GYE_CLUB.secondaryColor,
           shortsColor: global.AFA_DATA.GYE_CLUB.shortsColor,
-          sockColor: 0x0284c7,
+          sockColor: global.AFA_DATA.GYE_CLUB.sockColor || 0x0284c7,
           number: sq.number,
           role: sq.role,
           striped: !isGK
@@ -401,7 +401,7 @@
       this._setCommentary(
         this.isTraining
           ? 'MODO ENTRENAMIENTO • Practicá pases y remates al arco sin reloj • Volvé al Lobby cuando quieras.'
-          : `¡Sacás vos! Movete con WASD o Flechas hacia la izquierda (←) • ESPACIO = Pase • L = Remate al arco`
+          : `¡Sacás vos! WASD/Flechas = Mover • ESPACIO = Pase • L = Remate`
       );
       this._showHudForMatch();
     }
@@ -1388,13 +1388,33 @@
         targetPos.set(0, 3.1, -33.8);
         targetLook.set(0, 1.35, -52.5);
       } else if (ms.phase === 'GOAL_CELEBRATION') {
-        // Tribuna celebration angle behind the scored goal!
-        const celebSec = ms.lastGoalTeam === 'away'
-          ? global.StadiumBuilder.STADIUM_SECTORS.popular_sur
-          : global.StadiumBuilder.STADIUM_SECTORS.popular_norte;
-        const secPos = this._getSectorCameraPos(celebSec);
-        targetPos.set(secPos.x, secPos.y + 3, secPos.z);
-        targetLook.set(ms.ball.x, 1.5, ms.ball.z);
+        const scorer = ms.players.find((p) => p.name === ms.lastScorerName)
+          || ms.players.find((p) => p.team === ms.lastGoalTeam && p.role === 'FW')
+          || ms.players[9];
+        const celActive = this.celebrationDirector && this.celebrationDirector.active;
+        const inSlowReplay = celActive && this.celebrationDirector.slowMoTimer > 0;
+        if (inSlowReplay) {
+          // Low-angle dramatic goal-mouth replay framing ball & scorer
+          const goalZ = ms.lastGoalTeam === 'home' ? -52.5 : 52.5;
+          const dir = ms.lastGoalTeam === 'home' ? 1 : -1;
+          targetPos.set(ms.ball.x * 0.4 + 7.5, 2.6, goalZ + dir * 9.5);
+          targetLook.set(ms.ball.x * 0.5, 1.1, goalZ);
+        } else if (scorer) {
+          // Close-up dynamic orbit around the celebrating goal scorer
+          const orbitAng = elapsed * 0.55;
+          const radius = 6.2;
+          const clampedX = Math.max(-32, Math.min(32, scorer.x + Math.cos(orbitAng) * radius));
+          const clampedZ = Math.max(-50, Math.min(50, scorer.z + Math.sin(orbitAng) * radius));
+          targetPos.set(clampedX, 2.5, clampedZ);
+          targetLook.set(scorer.x, 1.3, scorer.z);
+        } else {
+          const celebSec = ms.lastGoalTeam === 'away'
+            ? global.StadiumBuilder.STADIUM_SECTORS.popular_sur
+            : global.StadiumBuilder.STADIUM_SECTORS.popular_norte;
+          const secPos = this._getSectorCameraPos(celebSec);
+          targetPos.set(secPos.x, secPos.y + 3, secPos.z);
+          targetLook.set(ms.ball.x, 1.5, ms.ball.z);
+        }
       } else if (this.cameraMode === 'broadcast') {
         // TV Broadcast with smooth look-ahead along ball velocity
         const nearBox = Math.max(0, (Math.abs(ms.ball.z) - 24) / 28);
