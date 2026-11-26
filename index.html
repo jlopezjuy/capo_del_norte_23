@@ -66,8 +66,8 @@
   <!-- ======================================================================= -->
   <!-- MATCHDAY LOBBY OVERLAY                                                  -->
   <!-- ======================================================================= -->
-  <div id="lobby-overlay" class="fixed inset-0 z-30 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
-    <div class="hud-glass rounded-3xl w-full max-w-3xl p-6 sm:p-8 border border-sky-400/25">
+  <div id="lobby-overlay" class="fixed inset-0 z-30 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
+    <div class="hud-glass rounded-3xl w-full max-w-4xl p-5 sm:p-8 border border-sky-400/25 my-auto">
       <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/30">
@@ -120,8 +120,8 @@
       </div>
 
       <!-- Configuration Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-        <div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+        <div class="sm:col-span-2">
           <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Fixture AFA</label>
           <select id="sel-fixture" class="w-full h-9 bg-slate-900 border border-slate-700 rounded-xl px-3 text-xs font-semibold text-white truncate"></select>
         </div>
@@ -152,22 +152,22 @@
       </div>
 
       <!-- Controls summary & Start Button -->
-      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] flex-1">
-          <div class="rounded-xl bg-slate-900/80 border border-slate-800 px-3 py-2">
-            <div class="font-bold text-sky-300 uppercase text-[10px] mb-1.5">1. Moverse</div>
-            <div class="flex items-center gap-1 text-slate-200"><span class="kbd-key">W</span><span class="kbd-key">A</span><span class="kbd-key">S</span><span class="kbd-key">D</span> <span class="text-slate-400">o Flechas</span></div>
-            <div class="text-slate-400 mt-1"><span class="kbd-key">Shift</span> Correr • <span class="kbd-key">C</span> Cámara</div>
+      <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-[11px] flex-1">
+          <div class="rounded-xl bg-slate-900/80 border border-slate-800 px-3 py-2.5 space-y-1.5">
+            <div class="font-bold text-sky-300 uppercase text-[10px]">1. Moverse</div>
+            <div class="flex flex-wrap items-center gap-1 text-slate-200"><span class="kbd-key">W</span><span class="kbd-key">A</span><span class="kbd-key">S</span><span class="kbd-key">D</span><span class="text-slate-400 text-[10px]">o Flechas</span></div>
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-300"><span><span class="kbd-key">Shift</span> Correr</span><span><span class="kbd-key">C</span> Cámara</span></div>
           </div>
-          <div class="rounded-xl bg-slate-900/80 border border-slate-800 px-3 py-2">
-            <div class="font-bold text-emerald-400 uppercase text-[10px] mb-1.5">2. Con Pelota (Atacar ←)</div>
-            <div class="text-slate-200"><span class="kbd-key">Espacio</span> Pase • <span class="kbd-key">K</span> Centro</div>
-            <div class="text-slate-300 mt-1"><span class="kbd-key">L</span> o <span class="kbd-key">F</span> Remate al arco</div>
+          <div class="rounded-xl bg-slate-900/80 border border-slate-800 px-3 py-2.5 space-y-1.5">
+            <div class="font-bold text-emerald-400 uppercase text-[10px]">2. Con Pelota (←)</div>
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-200"><span><span class="kbd-key">Espacio</span> Pase</span><span><span class="kbd-key">K</span> Centro</span></div>
+            <div class="text-slate-300"><span class="kbd-key">L</span> o <span class="kbd-key">F</span> Remate al arco</div>
           </div>
-          <div class="rounded-xl bg-slate-900/80 border border-slate-800 px-3 py-2">
-            <div class="font-bold text-amber-300 uppercase text-[10px] mb-1.5">3. Sin Pelota (Defender)</div>
-            <div class="text-slate-200"><span class="kbd-key">Q</span> Cambiar • <span class="kbd-key">Espacio</span> Quitar</div>
-            <div class="text-slate-300 mt-1"><span class="kbd-key">L</span> o <span class="kbd-key">F</span> Barrida</div>
+          <div class="rounded-xl bg-slate-900/80 border border-slate-800 px-3 py-2.5 space-y-1.5">
+            <div class="font-bold text-amber-300 uppercase text-[10px]">3. Sin Pelota</div>
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-200"><span><span class="kbd-key">Q</span> Cambiar</span><span><span class="kbd-key">Espacio</span> Quitar</span></div>
+            <div class="text-slate-300"><span class="kbd-key">L</span> o <span class="kbd-key">F</span> Barrida</div>
           </div>
         </div>
         <div class="flex flex-col gap-2 shrink-0">
@@ -189,7 +189,7 @@
   <!-- ======================================================================= -->
   <div id="match-hud" class="hidden fixed inset-0 z-20 pointer-events-none">
     <!-- Top Broadcast Bar -->
-    <div class="flex items-center justify-between gap-2 p-3">
+    <div class="flex flex-wrap items-center justify-between gap-2 p-2 sm:p-3">
       <div class="flex items-center gap-2 min-w-0 pointer-events-auto">
         <!-- Scorebug -->
         <div class="hud-glass rounded-xl px-3 py-1.5 flex items-center gap-3">
@@ -220,9 +220,9 @@
 
       <!-- Top Right Controls -->
       <div class="flex items-center gap-1.5 shrink-0 pointer-events-auto">
-        <button id="btn-hud-cam" class="hud-glass btn-tactile px-3 py-1.5 rounded-xl text-xs font-semibold text-sky-200 flex items-center gap-1.5" title="Cambiar Cámara (Tecla C)">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <span id="hud-cam-label">TV Broadcast</span>
+        <button id="btn-hud-cam" class="hud-glass btn-tactile px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-sky-200 flex items-center gap-1.5" title="Cambiar Cámara (Tecla C)">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span id="hud-cam-label" class="max-w-[95px] sm:max-w-none truncate">TV Broadcast</span>
         </button>
         <button id="btn-hud-touch" class="hud-glass btn-tactile px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white" title="Mostrar/Ocultar controles táctiles">
           Táctil
@@ -238,7 +238,7 @@
     </div>
 
     <!-- Bottom Left: Active Player Card + Stamina & Power -->
-    <div class="fixed bottom-3 left-3 hud-glass rounded-2xl p-3 w-56 pointer-events-auto">
+    <div id="hud-player-card" class="fixed top-28 left-3 sm:top-auto sm:bottom-3 hud-glass rounded-2xl p-2.5 sm:p-3 w-48 sm:w-56 pointer-events-auto">
       <div class="flex items-center justify-between mb-1.5">
         <div class="flex items-center gap-2">
           <span id="hud-player-num" class="font-mono-tech text-xs font-extrabold px-1.5 py-0.5 rounded bg-sky-500 text-slate-950">#9</span>
@@ -300,7 +300,7 @@
     </div>
 
     <!-- Touch Controls Overlay (Auto on touch or toggled) -->
-    <div id="touch-controls" class="hidden fixed inset-x-0 bottom-24 sm:bottom-4 px-4 flex items-end justify-between pointer-events-none">
+    <div id="touch-controls" class="hidden fixed inset-x-0 bottom-4 px-4 flex items-end justify-between pointer-events-none">
       <!-- Virtual Stick -->
       <div id="touch-stick-base" class="w-28 h-28 rounded-full bg-slate-900/60 border-2 border-sky-400/40 relative pointer-events-auto flex items-center justify-center">
         <div id="touch-stick-knob" class="w-12 h-12 rounded-full bg-sky-400/80 shadow-lg pointer-events-none"></div>
@@ -553,11 +553,23 @@
 
       // Touch controls toggle & virtual joystick
       const touchControls = document.getElementById('touch-controls');
+      const syncTouchOverlayLayout = () => {
+        const touchVisible = !touchControls.classList.contains('hidden');
+        const ctrlCard = document.getElementById('hud-controls-card');
+        const playerCard = document.getElementById('hud-player-card');
+        if (ctrlCard) ctrlCard.classList.toggle('sm:hidden', touchVisible);
+        if (playerCard) {
+          playerCard.classList.toggle('sm:top-24', touchVisible);
+          playerCard.classList.toggle('sm:bottom-3', !touchVisible);
+        }
+      };
       if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
         touchControls.classList.remove('hidden');
+        syncTouchOverlayLayout();
       }
       document.getElementById('btn-hud-touch').addEventListener('click', () => {
         touchControls.classList.toggle('hidden');
+        syncTouchOverlayLayout();
       });
 
       const stickBase = document.getElementById('touch-stick-base');
