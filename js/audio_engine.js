@@ -11,6 +11,16 @@
       this.crowdGain = null;
       this.crowdFilter = null;
       this.baseCrowdLevel = 0.18;
+      this.volumes = { crowd: 0.8, sfx: 0.9 };
+    }
+
+    setCategoryVolume(cat, val) {
+      if (cat in this.volumes) {
+        this.volumes[cat] = Math.max(0, Math.min(1, Number(val)));
+        if (cat === 'crowd' && this.enabled && this.ctx && this.crowdGain) {
+          this.crowdGain.gain.setTargetAtTime(this.baseCrowdLevel * this.volumes.crowd, this.ctx.currentTime, 0.15);
+        }
+      }
     }
 
     ensureContext() {
@@ -77,7 +87,7 @@
     setCrowdDanger(danger) {
       if (!this.enabled || !this.ctx || !this.crowdGain) return;
       const clamped = Math.max(0, Math.min(1, danger));
-      const targetGain = this.baseCrowdLevel + clamped * 0.22;
+      const targetGain = (this.baseCrowdLevel + clamped * 0.22) * this.volumes.crowd;
       const targetFreq = 410 + clamped * 340;
       this.crowdGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.2);
       this.crowdFilter.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.2);
@@ -168,10 +178,26 @@
     playGoalRoar() {
       if (!this.enabled || !this.ensureContext() || !this.crowdGain) return;
       const now = this.ctx.currentTime;
-      this.crowdGain.gain.setTargetAtTime(0.62, now, 0.12);
+      const vol = this.volumes.crowd;
+      this.crowdGain.gain.setTargetAtTime(0.62 * vol, now, 0.12);
       this.crowdFilter.frequency.setTargetAtTime(780, now, 0.15);
-      this.crowdGain.gain.setTargetAtTime(this.baseCrowdLevel, now + 3.8, 0.9);
+      this.crowdGain.gain.setTargetAtTime(this.baseCrowdLevel * vol, now + 3.8, 0.9);
       this.crowdFilter.frequency.setTargetAtTime(420, now + 3.8, 0.9);
+
+      // Fanfarria sintética de gol (acorde albiceleste)
+      const sfxVol = 0.08 * this.volumes.sfx;
+      [261.63, 329.63, 392.0, 523.25].forEach((freq, i) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + i * 0.06);
+        gain.gain.setValueAtTime(sfxVol, now + i * 0.06);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9 + i * 0.06);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + i * 0.06);
+        osc.stop(now + 1.0 + i * 0.06);
+      });
     }
   }
 

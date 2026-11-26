@@ -90,9 +90,7 @@
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
           <!-- Home: Gimnasia -->
           <div class="flex items-center gap-3.5 w-full sm:w-5/12 justify-center sm:justify-start">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-b from-sky-400 to-white p-0.5 shrink-0 shadow-md">
-              <div class="w-full h-full rounded-[14px] bg-slate-950 flex items-center justify-center font-display text-xl font-black text-sky-400">GYE</div>
-            </div>
+            <div id="lobby-home-badge" class="shrink-0"></div>
             <div class="text-center sm:text-left">
               <div class="font-display text-2xl font-black uppercase text-white leading-tight">Gimnasia (J)</div>
               <div class="text-xs text-sky-300 font-semibold">4-3-3 • DT H. Pellerano</div>
@@ -112,9 +110,7 @@
               <div id="lobby-away-name" class="font-display text-2xl font-black uppercase text-white leading-tight">Deportivo Madryn</div>
               <div id="lobby-away-meta" class="text-xs text-amber-300 font-semibold">4-4-2 • DT Luis García</div>
             </div>
-            <div id="lobby-away-crest" class="w-14 h-14 rounded-2xl p-0.5 shrink-0 shadow-md order-1 sm:order-2 bg-amber-400">
-              <div id="lobby-away-short" class="w-full h-full rounded-[14px] bg-slate-950 flex items-center justify-center font-display text-xl font-black text-amber-300">MAD</div>
-            </div>
+            <div id="lobby-away-badge" class="shrink-0 order-1 sm:order-2"></div>
           </div>
         </div>
         <div class="mt-3 pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
@@ -174,9 +170,16 @@
             <div class="text-slate-300 mt-1"><span class="kbd-key">L</span> o <span class="kbd-key">F</span> Barrida</div>
           </div>
         </div>
-        <button id="btn-play-match" class="btn-tactile w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-display text-xl font-black uppercase tracking-wide shadow-lg shadow-sky-500/30 shrink-0">
-          Jugar Partido de la Semana
-        </button>
+        <div class="flex flex-col gap-2 shrink-0">
+          <button id="btn-play-match" class="btn-tactile w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-display text-xl font-black uppercase tracking-wide shadow-lg shadow-sky-500/30">
+            Jugar Partido de la Semana
+          </button>
+          <div class="grid grid-cols-3 gap-1.5">
+            <button id="btn-training-mode" class="btn-tactile px-2.5 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-[11px] font-bold text-emerald-300 border border-slate-700">Entrenamiento</button>
+            <button id="btn-explore-stadium" class="btn-tactile px-2.5 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-[11px] font-bold text-sky-300 border border-slate-700">Estadio 3D</button>
+            <button id="btn-open-settings" class="btn-tactile px-2.5 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-[11px] font-bold text-slate-200 border border-slate-700">Ajustes</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -338,6 +341,65 @@
   </div>
 
   <!-- ======================================================================= -->
+  <!-- GOAL CELEBRATION CINEMATIC BANNER                                       -->
+  <!-- ======================================================================= -->
+  <div id="goal-banner-overlay" class="hidden fixed inset-x-0 top-20 z-30 flex justify-center px-4 pointer-events-none">
+    <div class="hud-glass rounded-3xl px-7 py-4 border-2 border-sky-400/60 text-center max-w-lg w-full shadow-2xl pointer-events-auto">
+      <div id="goal-banner-title" class="font-display text-4xl sm:text-5xl font-black uppercase text-sky-300 leading-none tracking-wide">EL GRITO DEL LOBO</div>
+      <div id="goal-banner-scorer" class="font-display text-xl font-bold uppercase text-white mt-1">#9 O. Bianchi • 23'</div>
+      <div id="goal-banner-score" class="font-mono-tech text-2xl font-extrabold text-amber-300 my-1">GYE 1 - 0 MAD</div>
+      <div class="flex items-center justify-between gap-3 mt-2 pt-2 border-t border-slate-800">
+        <span id="goal-banner-sub" class="text-xs text-slate-300 font-medium">¡Explota el Estadio 23 de Agosto!</span>
+        <button id="btn-skip-celebration" class="btn-tactile px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-bold text-slate-200 border border-slate-600">Omitir (Espacio)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================= -->
+  <!-- EXPLORE STADIUM HUD                                                     -->
+  <!-- ======================================================================= -->
+  <div id="explore-hud" class="hidden fixed top-4 inset-x-0 z-30 flex justify-center px-4">
+    <div class="hud-glass rounded-2xl px-4 py-2.5 flex items-center gap-3">
+      <span class="font-display text-lg font-black uppercase text-sky-300">Estadio 23 de Agosto</span>
+      <button id="btn-explore-next" class="btn-tactile px-3 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-xs font-bold text-white">Siguiente Tribuna</button>
+      <button id="btn-explore-back" class="btn-tactile px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200">Volver al Menú</button>
+    </div>
+  </div>
+
+  <!-- ======================================================================= -->
+  <!-- SETTINGS MODAL                                                          -->
+  <!-- ======================================================================= -->
+  <div id="modal-settings" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div class="hud-glass rounded-3xl p-6 w-full max-w-md">
+      <h2 class="font-display text-3xl font-black uppercase text-white mb-4">Configuración</h2>
+      <div class="space-y-4 text-xs mb-6">
+        <div>
+          <label class="block font-bold uppercase text-slate-400 mb-1">Calidad Gráfica</label>
+          <select id="set-quality" class="w-full h-9 bg-slate-900 border border-slate-700 rounded-xl px-3 font-semibold text-white">
+            <option value="auto" selected>Automático (Recomendado)</option>
+            <option value="low">Bajo (Máximos FPS)</option>
+            <option value="medium">Medio</option>
+            <option value="high">Alto (Estadio lleno + VFX)</option>
+          </select>
+        </div>
+        <div>
+          <div class="flex justify-between font-bold uppercase text-slate-400 mb-1"><span>Volumen Hinchada</span><span id="val-vol-crowd">80%</span></div>
+          <input id="set-vol-crowd" type="range" min="0" max="1" step="0.05" value="0.8" class="w-full accent-sky-400" />
+        </div>
+        <div>
+          <div class="flex justify-between font-bold uppercase text-slate-400 mb-1"><span>Volumen Efectos / Silbato</span><span id="val-vol-sfx">90%</span></div>
+          <input id="set-vol-sfx" type="range" min="0" max="1" step="0.05" value="0.9" class="w-full accent-sky-400" />
+        </div>
+        <label class="flex items-center justify-between bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2.5 cursor-pointer">
+          <span class="font-semibold text-slate-200">Reducir movimiento (sin vibración/flashes)</span>
+          <input id="set-reduce-motion" type="checkbox" class="w-4 h-4 accent-sky-400" />
+        </label>
+      </div>
+      <button id="btn-close-settings" class="btn-tactile w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-400 font-bold text-white">Guardar y Cerrar</button>
+    </div>
+  </div>
+
+  <!-- ======================================================================= -->
   <!-- PAUSE MODAL                                                             -->
   <!-- ======================================================================= -->
   <div id="modal-pause" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4">
@@ -388,14 +450,18 @@
   </div>
 
   <!-- Modular Game Scripts (compatible with both file:// and HTTP) -->
-  <script src="js/afa_fixture.js?v=3"></script>
-  <script src="js/audio_engine.js?v=3"></script>
-  <script src="js/match_state.js?v=3"></script>
-  <script src="js/input_controller.js?v=3"></script>
-  <script src="js/physics_engine.js?v=3"></script>
-  <script src="js/tactical_ai.js?v=3"></script>
-  <script src="js/stadium_builder.js?v=3"></script>
-  <script src="js/game_engine.js?v=7"></script>
+  <script src="js/afa_fixture.js?v=8"></script>
+  <script src="js/club_badges.js?v=8"></script>
+  <script src="js/audio_engine.js?v=8"></script>
+  <script src="js/match_state.js?v=8"></script>
+  <script src="js/input_controller.js?v=8"></script>
+  <script src="js/physics_engine.js?v=8"></script>
+  <script src="js/tactical_ai.js?v=8"></script>
+  <script src="js/player_renderer.js?v=8"></script>
+  <script src="js/crowd_system.js?v=8"></script>
+  <script src="js/goal_celebration_director.js?v=8"></script>
+  <script src="js/stadium_builder.js?v=8"></script>
+  <script src="js/game_engine.js?v=8"></script>
   <script>
     (function () {
       const game = new window.GameEngine();
@@ -420,11 +486,10 @@
         document.getElementById('lobby-afa-badge').textContent = fixture.labelBadge || 'PARTIDO OFICIAL AFA';
         document.getElementById('lobby-match-date').textContent = `${fixture.date} • ${fixture.kickoff} hs`;
         document.getElementById('lobby-match-round').textContent = fixture.round;
+        document.getElementById('lobby-home-badge').innerHTML = window.ClubBadges.getSvg('gye', null, 56);
         document.getElementById('lobby-away-name').textContent = fixture.opponent.name;
         document.getElementById('lobby-away-meta').textContent = `${fixture.opponent.formation} • DT ${fixture.opponent.coach}`;
-        document.getElementById('lobby-away-short').textContent = fixture.opponent.shortName;
-        document.getElementById('lobby-away-short').style.color = kit.hex;
-        document.getElementById('lobby-away-crest').style.backgroundColor = kit.hex;
+        document.getElementById('lobby-away-badge').innerHTML = window.ClubBadges.getSvg(fixture.opponent.id, kit.hex, 56);
         document.getElementById('lobby-tournament').textContent = fixture.tournament;
         document.getElementById('lobby-agg-note').textContent = fixture.aggNote || fixture.stadium;
         document.getElementById('lobby-kit-note').classList.toggle('hidden', !kit.usedAlt);
@@ -453,6 +518,28 @@
       }
 
       document.getElementById('btn-play-match').addEventListener('click', launchSelectedMatch);
+      document.getElementById('btn-training-mode').addEventListener('click', () => game.startTraining(selectedFixture));
+      document.getElementById('btn-explore-stadium').addEventListener('click', () => game.startExploreStadium());
+      document.getElementById('btn-explore-next').addEventListener('click', () => game.cycleCameraMode());
+      document.getElementById('btn-explore-back').addEventListener('click', () => game.exitExploreStadium());
+      document.getElementById('btn-open-settings').addEventListener('click', () => document.getElementById('modal-settings').classList.remove('hidden'));
+      document.getElementById('btn-close-settings').addEventListener('click', () => document.getElementById('modal-settings').classList.add('hidden'));
+      document.getElementById('set-quality').addEventListener('change', (e) => game.applyGraphicsQuality(e.target.value));
+      document.getElementById('set-vol-crowd').addEventListener('input', (e) => {
+        game.audio.setCategoryVolume('crowd', e.target.value);
+        document.getElementById('val-vol-crowd').textContent = `${Math.round(e.target.value * 100)}%`;
+      });
+      document.getElementById('set-vol-sfx').addEventListener('input', (e) => {
+        game.audio.setCategoryVolume('sfx', e.target.value);
+        document.getElementById('val-vol-sfx').textContent = `${Math.round(e.target.value * 100)}%`;
+      });
+      document.getElementById('set-reduce-motion').addEventListener('change', (e) => game.setReduceMotion(e.target.checked));
+      document.getElementById('btn-skip-celebration').addEventListener('click', () => game.skipGoalCelebration());
+      window.addEventListener('keydown', (e) => {
+        if ((e.code === 'Space' || e.code === 'Enter') && game.matchState.phase === 'GOAL_CELEBRATION') {
+          game.skipGoalCelebration();
+        }
+      });
       document.getElementById('btn-hud-cam').addEventListener('click', () => game.cycleCameraMode());
       document.getElementById('btn-hud-audio').addEventListener('click', () => game.toggleAudio());
       document.getElementById('btn-hud-pause').addEventListener('click', () => game.togglePause());

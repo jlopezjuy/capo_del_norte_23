@@ -21,10 +21,26 @@
       this.physics = new global.PhysicsEngine({
         onGoal: (team) => this._handleGoal(team),
         onOut: (info) => this._handleOutOfBounds(info),
-        onPostHit: () => this.audio.playPostHit(),
-        onKick: (power) => this.audio.playKick(power)
+        onPostHit: () => {
+          this.audio.playPostHit();
+          this._triggerMicroShake(0.42);
+        },
+        onKick: (power, isShot) => {
+          this.audio.playKick(power);
+          if (isShot && power > 0.72) this._triggerMicroShake(0.18);
+        }
       });
       this.ai = new global.TacticalAI(this.physics);
+      this.crowdSystem = global.CrowdSystem ? new global.CrowdSystem() : null;
+      this.celebrationDirector = null;
+
+      this.graphicsQuality = 'auto';
+      this.reduceMotion = false;
+      this.isTraining = false;
+      this.microShakeTimer = 0;
+      this.microShakeAmp = 0;
+      this.lastCelebrationResult = { done: true, timeScale: 1, shakeOffset: { x: 0, y: 0 }, wave: false };
+      this.fpsCounter = { frames: 0, lastTime: performance.now(), fps: 60 };
 
       this.currentFixture = null;
       this.kitInfo = null;
@@ -114,6 +130,15 @@
         sunLight: this.sunLight
       });
 
+      if (this.crowdSystem) {
+        this.crowdSystem.registerInstancedCrowd(this.stadiumRefs.bowlCrowdMesh);
+        this.crowdSystem.registerInstancedCrowd(this.stadiumRefs.plateaCrowdMesh);
+        this.applyGraphicsQuality('auto');
+      }
+      if (global.GoalCelebrationDirector) {
+        this.celebrationDirector = new global.GoalCelebrationDirector(this.scene);
+      }
+
       this._createBallAndIndicators();
 
       window.addEventListener('resize', () => this._onResize());
@@ -149,10 +174,22 @@
       const ballTex = new THREE.CanvasTexture(bCanvas);
 
       this.ballMesh = new THREE.Mesh(
-        new THREE.SphereGeometry(0.34, 16, 16),
+        new THREE.SphereGeometry(0.35, 16, 16),
         new THREE.MeshLambertMaterial({ map: ballTex })
       );
       this.matchGroup.add(this.ballMesh);
+
+      // Ball trail VFX for high-power shots
+      this.ballTrailPoints = [];
+      for (let i = 0; i < 6; i++) {
+        const dot = new THREE.Mesh(
+          new THREE.SphereGeometry(0.24 - i * 0.03, 8, 8),
+          new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.45 - i * 0.06, depthWrite: false })
+        );
+        dot.visible = false;
+        this.matchGroup.add(dot);
+        this.ballTrailPoints.push(dot);
+      }
 
       this.ballShadowMesh = new THREE.Mesh(
         new THREE.CircleGeometry(0.46, 14),
@@ -202,55 +239,20 @@
 
       this.kitInfo = global.AFA_DATA.resolveKitColors(fixture.opponent);
       this.matchState.players = [];
-
-      // Shared geometries for 60 FPS
-      const torsoGeo = new THREE.BoxGeometry(0.62, 0.80, 0.36);
-      const shortsGeo = new THREE.BoxGeometry(0.56, 0.36, 0.34);
-      const headGeo = new THREE.SphereGeometry(0.24, 10, 10);
-      const legGeo = new THREE.BoxGeometry(0.18, 0.56, 0.18);
-      const armGeo = new THREE.BoxGeometry(0.14, 0.58, 0.16);
-      const shadowGeo = new THREE.CircleGeometry(0.52, 14);
-      shadowGeo.rotateX(-Math.PI / 2);
-      const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.36, depthWrite: false });
-      const skinMat = new THREE.MeshLambertMaterial({ color: 0xf1c27d });
-
-      const homeShirtMat = new THREE.MeshLambertMaterial({ color: global.AFA_DATA.GYE_CLUB.primaryColor });
-      const homeGkMat = new THREE.MeshLambertMaterial({ color: global.AFA_DATA.GYE_CLUB.gkColor });
-      const homeShortsMat = new THREE.MeshLambertMaterial({ color: global.AFA_DATA.GYE_CLUB.shortsColor });
-
-      const awayShirtMat = new THREE.MeshLambertMaterial({ color: this.kitInfo.shirt });
-      const awayGkMat = new THREE.MeshLambertMaterial({ color: this.kitInfo.gk });
-      const awayShortsMat = new THREE.MeshLambertMaterial({ color: this.kitInfo.shorts });
-
-      const createFigure = (shirtMat, shortsMat) => {
-        const group = new THREE.Group();
-        const shadow = new THREE.Mesh(shadowGeo, shadowMat);
-        shadow.position.y = 0.025;
-        const torso = new THREE.Mesh(torsoGeo, shirtMat);
-        torso.position.y = 1.24;
-        const armL = new THREE.Mesh(armGeo, shirtMat);
-        armL.position.set(-0.39, 1.22, 0);
-        const armR = new THREE.Mesh(armGeo, shirtMat);
-        armR.position.set(0.39, 1.22, 0);
-        const shorts = new THREE.Mesh(shortsGeo, shortsMat);
-        shorts.position.y = 0.72;
-        const head = new THREE.Mesh(headGeo, skinMat);
-        head.position.y = 1.86;
-        const legL = new THREE.Mesh(legGeo, skinMat);
-        legL.position.set(-0.15, 0.32, 0);
-        const legR = new THREE.Mesh(legGeo, skinMat);
-        legR.position.set(0.15, 0.32, 0);
-        group.add(shadow, torso, armL, armR, shorts, head, legL, legR);
-        group.scale.set(1.16, 1.16, 1.16);
-        return { group, legL, legR };
-      };
-
       let idCounter = 0;
 
-      // 11 Gimnasia players
+      // 11 Gimnasia players (camiseta albiceleste a bastones + dorsal)
       global.AFA_DATA.GYE_SQUAD.forEach((sq) => {
-        const mat = sq.role === 'GK' ? homeGkMat : homeShirtMat;
-        const fig = createFigure(mat, homeShortsMat);
+        const isGK = sq.role === 'GK';
+        const fig = global.PlayerRenderer.createPlayerFigure({
+          primaryColor: isGK ? global.AFA_DATA.GYE_CLUB.gkColor : global.AFA_DATA.GYE_CLUB.primaryColor,
+          secondaryColor: isGK ? 0x064e3b : global.AFA_DATA.GYE_CLUB.secondaryColor,
+          shortsColor: global.AFA_DATA.GYE_CLUB.shortsColor,
+          sockColor: 0x0284c7,
+          number: sq.number,
+          role: sq.role,
+          striped: !isGK
+        });
         fig.group.position.set(sq.baseX, 0, sq.baseZ);
         this.matchGroup.add(fig.group);
         this.playerMeshes.push(fig);
@@ -278,10 +280,18 @@
         });
       });
 
-      // 11 Opponent players
+      // 11 Opponent players (colores reales + anti-choque)
       fixture.opponent.squad.forEach((sq) => {
-        const mat = sq.role === 'GK' ? awayGkMat : awayShirtMat;
-        const fig = createFigure(mat, awayShortsMat);
+        const isGK = sq.role === 'GK';
+        const fig = global.PlayerRenderer.createPlayerFigure({
+          primaryColor: isGK ? this.kitInfo.gk : this.kitInfo.shirt,
+          secondaryColor: isGK ? 0x0f172a : this.kitInfo.secondary,
+          shortsColor: this.kitInfo.shorts,
+          sockColor: isGK ? this.kitInfo.gk : this.kitInfo.shirt,
+          number: sq.number,
+          role: sq.role,
+          striped: !isGK
+        });
         fig.group.position.set(sq.baseX, 0, sq.baseZ);
         this.matchGroup.add(fig.group);
         this.playerMeshes.push(fig);
@@ -310,9 +320,15 @@
       });
 
       // Referee
-      const refShirt = new THREE.MeshLambertMaterial({ color: 0xf97316 });
-      const refShorts = new THREE.MeshLambertMaterial({ color: 0x0f172a });
-      this.refMesh = createFigure(refShirt, refShorts);
+      this.refMesh = global.PlayerRenderer.createPlayerFigure({
+        primaryColor: 0xf97316,
+        secondaryColor: 0x0f172a,
+        shortsColor: 0x0f172a,
+        sockColor: 0x0f172a,
+        number: 0,
+        role: 'REF',
+        striped: false
+      });
       this.refMesh.group.position.set(6, 0, 0);
       this.matchGroup.add(this.refMesh.group);
 
@@ -358,8 +374,87 @@
       this.audio.playWhistle('double');
 
       this._updateScoreboard(false);
-      this._setCommentary(`¡Sacás vos! Movete con WASD o Flechas hacia la izquierda (←) • ESPACIO = Pase • L = Remate al arco`);
+      this.isTraining = !!options.isTraining;
+      this._setCommentary(
+        this.isTraining
+          ? 'MODO ENTRENAMIENTO • Practicá pases y remates al arco sin reloj • Volvé al Lobby cuando quieras.'
+          : `¡Sacás vos! Movete con WASD o Flechas hacia la izquierda (←) • ESPACIO = Pase • L = Remate al arco`
+      );
       this._showHudForMatch();
+    }
+
+    _triggerMicroShake(amp = 0.2) {
+      if (this.reduceMotion) return;
+      this.microShakeTimer = 0.16;
+      this.microShakeAmp = amp;
+    }
+
+    skipGoalCelebration() {
+      if (this.matchState.phase !== 'GOAL_CELEBRATION') return;
+      if (this.celebrationDirector) this.celebrationDirector.skip();
+      this.matchState.celebrationTimer = 0;
+    }
+
+    applyGraphicsQuality(profile) {
+      let resolved = profile;
+      if (profile === 'auto') {
+        const cores = navigator.hardwareConcurrency || 4;
+        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+        resolved = isMobile || cores <= 2 ? 'low' : cores >= 6 ? 'high' : 'medium';
+      }
+      this.graphicsQuality = resolved;
+      if (this.renderer) {
+        const dpr = resolved === 'low' ? 1 : resolved === 'medium' ? Math.min(window.devicePixelRatio || 1, 1.5) : Math.min(window.devicePixelRatio || 1, 2);
+        this.renderer.setPixelRatio(dpr);
+      }
+      if (this.crowdSystem) {
+        this.crowdSystem.applyQuality(resolved);
+      }
+      if (this.stadiumRefs && this.stadiumRefs.smokeSystem) {
+        this.stadiumRefs.smokeSystem.visible = resolved !== 'low';
+      }
+      return resolved;
+    }
+
+    setReduceMotion(val) {
+      this.reduceMotion = !!val;
+      if (this.celebrationDirector) this.celebrationDirector.reduceMotion = this.reduceMotion;
+    }
+
+    startTraining(fixture) {
+      this.startMatch(fixture, { difficulty: 'amateur', halfDurationRealSec: 99999, isTraining: true });
+      // Move striker closer to attack for instant shooting practice
+      const striker = this.matchState.players[this.matchState.activeHomeIndex];
+      if (striker) {
+        striker.x = 0;
+        striker.z = -18;
+        this.matchState.ball = { x: 0, y: 0.35, z: -18.7, vx: 0, vy: 0, vz: 0 };
+        this.matchState.ownerPlayerId = striker.id;
+      }
+    }
+
+    startExploreStadium() {
+      this.matchState.phase = 'LOBBY';
+      this.cameraMode = 'tribuna';
+      document.getElementById('lobby-overlay').classList.add('hidden');
+      document.getElementById('match-hud').classList.add('hidden');
+      document.getElementById('explore-hud').classList.remove('hidden');
+    }
+
+    exitExploreStadium() {
+      document.getElementById('explore-hud').classList.add('hidden');
+      document.getElementById('lobby-overlay').classList.remove('hidden');
+      this.cameraMode = 'broadcast';
+    }
+
+    getPerfStats() {
+      const info = this.renderer && this.renderer.info ? this.renderer.info.render : { calls: 0, triangles: 0 };
+      return {
+        fps: this.fpsCounter.fps,
+        calls: info.calls,
+        triangles: info.triangles,
+        quality: this.graphicsQuality
+      };
     }
 
     _setupKickoff(team) {
@@ -398,7 +493,6 @@
     _handleGoal(scoringTeam) {
       if (this.matchState.phase !== 'PLAYING') return;
       this.matchState.phase = 'GOAL_CELEBRATION';
-      this.matchState.celebrationTimer = 4.6;
       this.matchState.lastGoalTeam = scoringTeam;
       this.matchState.ownerPlayerId = null;
 
@@ -411,6 +505,32 @@
         this.matchState.scoreAway += 1;
         this.audio.playWhistle('short');
         this._setCommentary(`Gol de ${this.currentFixture.opponent.name}. El marcador queda ${this.matchState.scoreHome} - ${this.matchState.scoreAway}.`);
+      }
+
+      const scorer = this.matchState.players.find((p) => p.id === this.matchState.lastTouchPlayerId && p.team === scoringTeam)
+        || this.matchState.players.find((p) => p.team === scoringTeam && p.role === 'FW')
+        || this.matchState.players[9];
+      this.matchState.lastScorerName = scorer ? scorer.name : 'Jugador';
+
+      // Tag players for celebration vs frustration poses
+      this.matchState.players.forEach((p) => { p.celebratingTeam = scoringTeam; });
+
+      if (this.celebrationDirector) {
+        const clk = this.matchState.getDisplayClock();
+        const cel = this.celebrationDirector.start({
+          isHomeGoal: scoringTeam === 'home',
+          teamName: scoringTeam === 'home' ? 'Gimnasia (J)' : this.currentFixture.opponent.name,
+          awayShort: this.currentFixture.opponent.shortName,
+          scorerName: scorer ? scorer.name : 'Jugador',
+          scorerNumber: scorer ? scorer.number : 9,
+          minute: Math.max(1, clk.mins),
+          scoreHome: this.matchState.scoreHome,
+          scoreAway: this.matchState.scoreAway,
+          shotDistance: scorer ? Math.hypot(scorer.x, (scoringTeam === 'home' ? -52.5 : 52.5) - scorer.z) : 14
+        });
+        this.matchState.celebrationTimer = cel.duration;
+      } else {
+        this.matchState.celebrationTimer = 4.2;
       }
 
       this._updateScoreboard(true);
@@ -646,18 +766,21 @@
         const dirZ = moveMag > 0.1 ? frame.moveZ / moveMag : Math.cos(p.rotY);
 
         if (frame.passPressed) {
+          if (this.playerMeshes[ms.activeHomeIndex]) this.playerMeshes[ms.activeHomeIndex].kickTimer = 0.25;
           const target = this.ai.findPassTarget(p, ms.players, dirX, dirZ);
           this.ai.executePass(ms, p, target, false);
           if (target && target.team === 'home') {
             ms.activeHomeIndex = ms.players.indexOf(target);
           }
         } else if (frame.lobPressed) {
+          if (this.playerMeshes[ms.activeHomeIndex]) this.playerMeshes[ms.activeHomeIndex].kickTimer = 0.28;
           const target = this.ai.findPassTarget(p, ms.players, dirX, dirZ);
           this.ai.executePass(ms, p, target, true);
           if (target && target.team === 'home') {
             ms.activeHomeIndex = ms.players.indexOf(target);
           }
         } else if (frame.shootTriggered) {
+          if (this.playerMeshes[ms.activeHomeIndex]) this.playerMeshes[ms.activeHomeIndex].kickTimer = 0.34;
           // Aim toward North goal (-52.5) blended with player's lateral input, kept inside posts (±3.2m)
           const aimX = Math.max(-3.2, Math.min(3.2, dirX * 3.1));
           const dx = aimX - ms.ball.x;
@@ -935,18 +1058,35 @@
     _startLoop() {
       const tick = (now) => {
         requestAnimationFrame(tick);
-        const dt = Math.min(0.05, (now - this.lastFrameTime) / 1000);
+        const rawDt = Math.min(0.05, (now - this.lastFrameTime) / 1000);
         this.lastFrameTime = now;
         const elapsed = now * 0.001;
 
-        this.simAccum += dt;
+        // FPS telemetry
+        this.fpsCounter.frames += 1;
+        if (now - this.fpsCounter.lastTime >= 1000) {
+          this.fpsCounter.fps = this.fpsCounter.frames;
+          this.fpsCounter.frames = 0;
+          this.fpsCounter.lastTime = now;
+        }
+
+        // Celebration Director slow-motion & wave
+        if (this.matchState.phase === 'GOAL_CELEBRATION' && this.celebrationDirector) {
+          const scorer = this.matchState.players.find((p) => p.id === this.matchState.lastTouchPlayerId) || this.matchState.players[9];
+          this.lastCelebrationResult = this.celebrationDirector.update(rawDt, elapsed, scorer);
+        } else {
+          this.lastCelebrationResult = { done: true, timeScale: 1, shakeOffset: { x: 0, y: 0 }, wave: false };
+        }
+
+        const simDt = rawDt * (this.lastCelebrationResult.timeScale || 1);
+        this.simAccum += simDt;
         while (this.simAccum >= FIXED_DT) {
           this._stepSimulation(FIXED_DT);
           this.simAccum -= FIXED_DT;
         }
 
-        this._syncVisuals(dt, elapsed);
-        this._updateCamera(dt, elapsed);
+        this._syncVisuals(rawDt, elapsed);
+        this._updateCamera(rawDt, elapsed);
         this._updateHUD();
         this.renderer.render(this.scene, this.camera);
       };
@@ -961,13 +1101,12 @@
         this.stadiumRefs.ledBoardTexture.offset.x += dt * 0.08;
       }
 
-      // Crowd jump
+      // Crowd GPU shader update (excitement + Ola Celeste wave)
       const isGoal = ms.phase === 'GOAL_CELEBRATION';
-      if (this.stadiumRefs.bowlCrowdMesh) {
-        this.stadiumRefs.bowlCrowdMesh.position.y = Math.abs(Math.sin(elapsed * (isGoal ? 11 : 4.2))) * (isGoal ? 0.42 : 0.08);
-      }
-      if (this.stadiumRefs.plateaCrowdMesh) {
-        this.stadiumRefs.plateaCrowdMesh.position.y = isGoal ? Math.abs(Math.sin(elapsed * 9.5)) * 0.28 : 0;
+      const distToAnyGoal = Math.min(Math.abs(ms.ball.z + 52.5), Math.abs(ms.ball.z - 52.5));
+      const excitement = ms.phase === 'PLAYING' ? Math.max(0.1, 1 - distToAnyGoal / 36) : 0.15;
+      if (this.crowdSystem) {
+        this.crowdSystem.update(elapsed, excitement, isGoal, !!this.lastCelebrationResult.wave);
       }
 
       // Smoke & confetti
@@ -1022,21 +1161,31 @@
         this.dropRingMesh.position.set(drop.x, 0.05, drop.z);
       }
 
-      // Players & active cursor
+      // Ball trail VFX on fast shots
+      const ballSpeed = Math.hypot(ms.ball.vx, ms.ball.vy, ms.ball.vz);
+      if (this.ballTrailPoints) {
+        const showTrail = ballSpeed > 16.5 && !this.reduceMotion;
+        this.ballTrailPoints.forEach((dot, idx) => {
+          dot.visible = showTrail;
+          if (showTrail) {
+            const backT = (idx + 1) * 0.022;
+            dot.position.set(
+              ms.ball.x - ms.ball.vx * backT,
+              Math.max(0.25, ms.ball.y - ms.ball.vy * backT),
+              ms.ball.z - ms.ball.vz * backT
+            );
+          }
+        });
+      }
+
+      // Players & active cursor (PlayerRenderer animated poses with smooth blending)
+      const celStyle = (this.celebrationDirector && this.celebrationDirector.current && this.celebrationDirector.current.style) || 'dance';
       ms.players.forEach((p, idx) => {
         const fig = this.playerMeshes[idx];
         if (!fig) return;
-        fig.group.position.set(p.x, p.tackleTimer > 0 ? -0.35 : 0, p.z);
+        fig.group.position.set(p.x, 0, p.z);
         fig.group.rotation.y = p.rotY;
-        const speed = Math.hypot(p.vx, p.vz);
-        if (speed > 0.4) {
-          const stride = Math.sin(elapsed * 12 + idx) * Math.min(0.65, speed * 0.07);
-          fig.legL.rotation.x = stride;
-          fig.legR.rotation.x = -stride;
-        } else {
-          fig.legL.rotation.x *= 0.8;
-          fig.legR.rotation.x *= 0.8;
-        }
+        global.PlayerRenderer.updatePose(fig, p, dt, elapsed, ms.phase, celStyle);
 
         if (idx === ms.activeHomeIndex) {
           this.activeRingMesh.position.set(p.x, 0.05, p.z);
@@ -1136,6 +1285,17 @@
         this.camLook.lerp(targetLook, Math.min(1, dt * 6.0));
       }
       this.camera.position.copy(this.camPos);
+      if (!this.reduceMotion) {
+        if (this.microShakeTimer > 0) {
+          this.microShakeTimer -= dt;
+          this.camera.position.x += (Math.random() - 0.5) * this.microShakeAmp;
+          this.camera.position.y += (Math.random() - 0.5) * this.microShakeAmp;
+        }
+        if (this.lastCelebrationResult && this.lastCelebrationResult.shakeOffset) {
+          this.camera.position.x += this.lastCelebrationResult.shakeOffset.x;
+          this.camera.position.y += this.lastCelebrationResult.shakeOffset.y;
+        }
+      }
       this.camera.lookAt(this.camLook);
     }
 
