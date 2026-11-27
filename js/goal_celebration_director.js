@@ -30,7 +30,8 @@
       mascotBoost: false,
       smokeBoost: 1.0,
       replay: false,
-      audioCue: 'wolf_howl'
+      audioCue: 'murga',
+      lobitoPose: 'murga'
     },
     {
       id: 'terremoto_tribuna',
@@ -105,7 +106,8 @@
       mascotBoost: false,
       smokeBoost: 1.0,
       replay: false,
-      audioCue: 'carnival'
+      audioCue: 'carnavalito',
+      lobitoPose: 'carnavalito'
     },
     {
       id: 'ola_celeste',
@@ -155,7 +157,8 @@
       mascotBoost: true,
       smokeBoost: 1.2,
       replay: false,
-      audioCue: 'wolf_howl'
+      audioCue: 'murga',
+      lobitoPose: 'murga'
     },
     {
       id: 'golazo_cinematografico',
@@ -205,7 +208,8 @@
       mascotBoost: false,
       smokeBoost: 1.15,
       replay: false,
-      audioCue: 'carnival'
+      audioCue: 'carnavalito',
+      lobitoPose: 'carnavalito'
     },
     {
       id: 'arquero_incredulo',
@@ -355,7 +359,8 @@
       mascotBoost: false,
       smokeBoost: 1.1,
       replay: false,
-      audioCue: 'carnival'
+      audioCue: 'carnavalito',
+      lobitoPose: 'carnavalito'
     },
     {
       id: 'fiesta_tribuna',
@@ -380,7 +385,8 @@
       mascotBoost: false,
       smokeBoost: 1.6,
       replay: false,
-      audioCue: 'carnival'
+      audioCue: 'carnavalito',
+      lobitoPose: 'carnavalito'
     },
     {
       id: 'celebracion_sorpresa',
@@ -405,7 +411,8 @@
       mascotBoost: false,
       smokeBoost: 1.25,
       replay: false,
-      audioCue: 'arcade'
+      audioCue: 'carnavalito',
+      lobitoPose: 'torpe'
     }
   ];
 
@@ -1453,6 +1460,7 @@
         confettiIntensity: this.current.confetti || 0,
         flashAlpha,
         mascotBoost: !!this.current.mascotBoost,
+        lobitoPose: this._isHomeGoal ? (this.current.lobitoPose || (this.current.mascotBoost ? 'estrella' : null)) : null,
         elapsedInCel
       };
     }

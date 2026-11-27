@@ -984,6 +984,8 @@
     const scarfMat = new THREE.MeshLambertMaterial({ color: 0x0ea5e9 });
     const jerseyMat = new THREE.MeshLambertMaterial({ map: createWolfJerseyTexture() });
 
+    const bodyPivot = new THREE.Group();
+
     // Torso (celeste-white striped mascot jersey) & shorts
     const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.34, 0.86, 12), jerseyMat);
     torso.scale.set(1.12, 1.0, 0.82);
@@ -993,18 +995,25 @@
     shorts.scale.set(1.1, 1.0, 0.85);
     shorts.position.y = 0.68;
 
-    // Legs & cleats
+    // Hip-pivoted articulated legs & cleats
     const legGeo = new THREE.CylinderGeometry(0.11, 0.095, 0.56, 8);
-    const legL = new THREE.Mesh(legGeo, furMat);
-    legL.position.set(-0.18, 0.34, 0);
-    const legR = new THREE.Mesh(legGeo, furMat);
-    legR.position.set(0.18, 0.34, 0);
-
     const bootGeo = new THREE.BoxGeometry(0.20, 0.14, 0.34);
+
+    const legLPivot = new THREE.Group();
+    legLPivot.position.set(-0.18, 0.62, 0);
+    const legL = new THREE.Mesh(legGeo, furMat);
+    legL.position.set(0, -0.28, 0);
     const bootL = new THREE.Mesh(bootGeo, noseMat);
-    bootL.position.set(-0.18, 0.07, 0.06);
+    bootL.position.set(0, -0.55, 0.06);
+    legLPivot.add(legL, bootL);
+
+    const legRPivot = new THREE.Group();
+    legRPivot.position.set(0.18, 0.62, 0);
+    const legR = new THREE.Mesh(legGeo, furMat);
+    legR.position.set(0, -0.28, 0);
     const bootR = new THREE.Mesh(bootGeo, noseMat);
-    bootR.position.set(0.18, 0.07, 0.06);
+    bootR.position.set(0, -0.55, 0.06);
+    legRPivot.add(legR, bootR);
 
     // Flowing Celeste Scarf around neck + 2 fluttering scarf tails
     const scarfCollar = new THREE.Mesh(new THREE.TorusGeometry(0.30, 0.085, 8, 16), scarfMat);
@@ -1091,9 +1100,29 @@
     earRIn.position.set(0, -0.02, 0.055);
     earR.add(earROut, earRIn);
 
+    // Comedy Prop 1: Cool star-style visor sunglasses on headPivot (default hidden)
+    const sunglasses = new THREE.Group();
+    sunglasses.position.set(0, 0.09, 0.36);
+    const visorMat = new THREE.MeshLambertMaterial({ color: 0x090d16 });
+    const frameMat = new THREE.MeshLambertMaterial({ color: 0x38bdf8 });
+    const lensL = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.09, 0.04), visorMat);
+    lensL.position.set(-0.13, 0, 0);
+    lensL.rotation.z = 0.08;
+    const lensR = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.09, 0.04), visorMat);
+    lensR.position.set(0.13, 0, 0);
+    lensR.rotation.z = -0.08;
+    const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.03, 0.035), frameMat);
+    bridge.position.set(0, 0.02, 0);
+    const starAccentL = new THREE.Mesh(new THREE.OctahedronGeometry(0.032, 0), frameMat);
+    starAccentL.position.set(-0.21, 0.045, 0.015);
+    const starAccentR = new THREE.Mesh(new THREE.OctahedronGeometry(0.032, 0), frameMat);
+    starAccentR.position.set(0.21, 0.045, 0.015);
+    sunglasses.add(lensL, lensR, bridge, starAccentL, starAccentR);
+    sunglasses.visible = false;
+
     headPivot.add(
       cranium, cheekL, cheekR, muzzle, snoutTop, nose, jaw,
-      eyeL, eyeR, pupilL, pupilR, browL, browR, earL, earR
+      eyeL, eyeR, pupilL, pupilR, browL, browR, earL, earR, sunglasses
     );
 
     // Shoulder-pivoted articulated arms with sculpted paws
@@ -1113,6 +1142,22 @@
     const armL = makeArm(-1);
     const armR = makeArm(1);
 
+    // Comedy Prop 2: Oversized celeste-white waving flag on a tall pole attached to armR (default hidden)
+    const giantFlag = new THREE.Group();
+    giantFlag.position.set(0, -0.58, 0.06);
+    const poleMat = new THREE.MeshLambertMaterial({ color: 0xe2e8f0 });
+    const flagPole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.036, 2.75, 8), poleMat);
+    flagPole.position.set(0, 1.15, 0);
+    const flagClothTop = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.34, 0.025), scarfMat);
+    flagClothTop.position.set(0.68, 2.32, 0);
+    const flagClothMid = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.34, 0.025), furLightMat);
+    flagClothMid.position.set(0.68, 1.98, 0);
+    const flagClothBot = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.34, 0.025), scarfMat);
+    flagClothBot.position.set(0.68, 1.64, 0);
+    giantFlag.add(flagPole, flagClothTop, flagClothMid, flagClothBot);
+    giantFlag.visible = false;
+    armR.add(giantFlag);
+
     // Bushy wagging wolf tail pivot
     const tailPivot = new THREE.Group();
     tailPivot.position.set(0, 0.78, -0.28);
@@ -1124,10 +1169,38 @@
     tailTip.position.set(0, 0.28, -0.52);
     tailPivot.add(tailBase, tailTip);
 
-    grp.add(torso, shorts, legL, legR, bootL, bootR, scarfCollar, scarfL, scarfR, headPivot, armL, armR, tailPivot);
-    grp.position.set(-8.5, 0, -55.4);
-    grp.scale.set(1.32, 1.32, 1.32);
-    grp.userData = { armL, armR, tail: tailPivot, head: headPivot, scarfL, scarfR, earL, earR };
+    // Comedy Prop 3: Celeste-white juggle ball attached to grp for jueguitos (default hidden)
+    const juggleBall = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 10), jerseyMat);
+    juggleBall.position.set(0.32, 0.24, 0.52);
+    juggleBall.visible = false;
+
+    bodyPivot.add(
+      torso, shorts, legLPivot, legRPivot, scarfCollar, scarfL, scarfR,
+      headPivot, armL, armR, tailPivot
+    );
+    grp.add(bodyPivot, juggleBall);
+    grp.position.set(-35.8, 0, -14.0);
+    grp.scale.set(1.72, 1.72, 1.72);
+    grp.userData = {
+      bodyPivot,
+      armL,
+      armR,
+      legL: legLPivot,
+      legR: legRPivot,
+      tail: tailPivot,
+      head: headPivot,
+      scarfL,
+      scarfR,
+      earL,
+      earR,
+      jaw,
+      browL,
+      browR,
+      sunglasses,
+      juggleBall,
+      giantFlag,
+      homePos: { x: -35.8, y: 0, z: -14.0 }
+    };
     scene.add(grp);
     wolfMascot = grp;
   }

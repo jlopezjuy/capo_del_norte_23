@@ -1,0 +1,10 @@
+# 02 — Problemas de Gameplay y Oportunidades Detectadas
+
+| # | Situación Observada | Evidencia en Código / Captura | Por qué afecta la diversión | Solución Concreta |
+|---|---|---|---|---|
+| 1 | **Mascota estática sin personalidad** | `docs/fun-audit/before/06-mascot-before.png`: Lobito está clavado en `(-8.5, -55.4)` sin mover piernas ni salir en descansos. | Se desperdicia el mayor elemento de humor y carisma familiar del estadio. | Rig articulado completo (piernas, cabeza, orejas, cola, lentes, pelota, bandera) + `MascotController` + `MascotEventDirector`. |
+| 2 | **Entrenamiento sin objetivo ni reto** | `docs/fun-audit/before/04-training-before.png`: `startTraining()` solo ubica al delantero sin puntaje, blancos ni reloj. | Quien entra buscando tiros rápidos se aburre en 20 segundos. | Minijuego vertical **"Desafío del Lobito"** (60s, blancos 3D, Desafío del Travesaño, Lobito Arquero, combos y récord). |
+| 3 | **Barrera de precisión para chicos** | `game_engine.js` dispara estrictamente según `dirX`; jugadores jóvenes fallan muchos tiros. | Frustración temprana en los primeros 2 minutos. | **Modo Sencillo (Familiar):** asistencia suave de apuntado hacia el arco y menor presión rival. |
+| 4 | **Entretiempo y previa sin sorpresas** | `HALFTIME` solo abre un modal estático (`#modal-stats`). | Se pierde la oportunidad de generar risas entre tiempos. | Eventos automáticos de **Lobito** en entretiempo/previa/goles (murga, carnavalito, tropiezo cómico, lentes estrella). |
+| 5 | **Audio sin identidad folklórica/murga** | `audio_engine.js` solo tiene acordes simples + pista única. | Los festejos de carnaval/murga no suenan a estadio del norte argentino. | Síntesis Web Audio original de **bombo + redoblante** (murga) y **quena + charango** (carnavalito). |
+| 6 | **Sin reconocimiento de logros** | No hay medallas por goles o puntería. | Menos incentivo sano para intentar un golazo o superar un récord. | 5 **Medallas de Habilidad** locales (cero streaks diarios, cero loot boxes, cero presión). |

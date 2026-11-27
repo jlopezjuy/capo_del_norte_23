@@ -37,12 +37,21 @@
       this.ai = new global.TacticalAI(this.physics);
       this.crowdSystem = global.CrowdSystem ? new global.CrowdSystem() : null;
       this.celebrationDirector = null;
+      this.mascotController = null;
+      this.mascotDirector = null;
+      this.arcadeChallenge = null;
 
       this.graphicsQuality = 'auto';
+      this.assistMode = 'standard'; // 'easy' | 'standard'
       this.reduceMotion = false;
       this.noFlash = false;
       this.showPerfHud = false;
       this.isTraining = false;
+      this.challengeModeActive = false;
+      this._challengeBallPrevZ = 0;
+      this._challengeResetTimer = 0;
+      this._lastMascotEventId = null;
+      this._mascotEventsSeen = 0;
       this.microShakeTimer = 0;
       this.microShakeAmp = 0;
       this.lastCelebrationResult = { done: true, timeScale: 1, shakeOffset: { x: 0, y: 0 }, wave: false };
@@ -173,10 +182,17 @@
         if (this.stadiumRefs.crowdFlags) {
           this.crowdSystem.setAwayFlags(this.stadiumRefs.crowdFlags.filter((f) => f.isAway));
         }
-        if (this.stadiumRefs.wolfMascot) {
+        if (this.stadiumRefs.wolfMascot && global.MascotController && global.MascotEventDirector) {
+          this.mascotController = new global.MascotController(this.stadiumRefs.wolfMascot);
+          this.mascotDirector = new global.MascotEventDirector();
+          this.crowdSystem.setMascot(null);
+        } else if (this.stadiumRefs.wolfMascot) {
           this.crowdSystem.setMascot(this.stadiumRefs.wolfMascot);
         }
         this.applyGraphicsQuality('auto');
+      }
+      if (global.ArcadeChallengeManager) {
+        this.arcadeChallenge = new global.ArcadeChallengeManager(this.scene, this.audio);
       }
       if (this.physics) {
         this.physics.onNetHit = (goalZ, ix, iy, strength) => {
@@ -495,6 +511,15 @@
     setReduceMotion(val) {
       this.reduceMotion = !!val;
       if (this.celebrationDirector) this.celebrationDirector.reduceMotion = this.reduceMotion;
+      if (this.mascotController) this.mascotController.reduceMotion = this.reduceMotion;
+    }
+
+    setAssistMode(mode) {
+      this.assistMode = mode === 'easy' ? 'easy' : 'standard';
+    }
+
+    setMascotFrequency(freq) {
+      if (this.mascotDirector) this.mascotDirector.setFrequency(freq);
     }
 
     setNoFlash(val) {
@@ -526,6 +551,7 @@
     }
 
     startTraining(fixture) {
+      this.stopChallenge();
       this.startMatch(fixture, { difficulty: 'amateur', halfDurationRealSec: 99999, isTraining: true });
       // Move striker closer to attack for instant shooting practice
       const striker = this.matchState.players[this.matchState.activeHomeIndex];
@@ -535,6 +561,76 @@
         this.matchState.ball = { x: 0, y: 0.35, z: -18.7, vx: 0, vy: 0, vz: 0 };
         this.matchState.ownerPlayerId = striker.id;
       }
+    }
+
+    startChallenge(fixture, challengeType = 'targets') {
+      this.startMatch(fixture, {
+        difficulty: this.assistMode === 'easy' ? 'amateur' : 'nacional',
+        halfDurationRealSec: 99999,
+        isTraining: true
+      });
+      this.challengeModeActive = true;
+      this.cameraMode = 'pro';
+      this._updateCameraLabel();
+      this._challengeResetTimer = 0;
+
+      // Clear outfield clutter: keep only active home striker + away GK (Lobito Arquero joins!)
+      const striker = this.matchState.players[this.matchState.activeHomeIndex] || this.matchState.players[9];
+      const awayGK = this.matchState.players.find((p) => p.team === 'away' && p.role === 'GK');
+      this.matchState.players.forEach((p, idx) => {
+        if (p !== striker && p !== awayGK) {
+          p.x = 42;
+          p.z = 0;
+          if (this.playerMeshes[idx]) this.playerMeshes[idx].group.visible = false;
+        }
+      });
+      if (this.refMesh) this.refMesh.group.visible = false;
+      this._resetChallengeShot();
+
+      if (this.arcadeChallenge) {
+        this.arcadeChallenge.start(challengeType);
+      }
+      const hud = document.getElementById('challenge-hud');
+      if (hud) hud.classList.remove('hidden');
+      const endModal = document.getElementById('modal-challenge-end');
+      if (endModal) endModal.classList.add('hidden');
+      this._setCommentary(
+        challengeType === 'crossbar'
+          ? '¡DESAFÍO DEL TRAVESAÑO! Apuntá al travesaño brillante para sumar 400 pts × combo.'
+          : '¡DESAFÍO DEL LOBITO! Pegale a los blancos del arco mientras Lobito intenta atajar.'
+      );
+    }
+
+    _resetChallengeShot() {
+      const striker = this.matchState.players[this.matchState.activeHomeIndex];
+      if (striker) {
+        striker.x = (Math.random() - 0.5) * 6.0;
+        striker.z = -18.5;
+        striker.vx = 0;
+        striker.vz = 0;
+        striker.rotY = Math.PI;
+        this.matchState.ownerPlayerId = striker.id;
+        this.matchState.possessionTeam = 'home';
+        this.matchState.ball = { x: striker.x, y: 0.34, z: striker.z - 0.72, vx: 0, vy: 0, vz: 0, spinY: 0 };
+        this._challengeBallPrevZ = this.matchState.ball.z;
+      }
+      const awayGK = this.matchState.players.find((p) => p.team === 'away' && p.role === 'GK');
+      if (awayGK) {
+        awayGK.x = 0;
+        awayGK.z = -51.4;
+      }
+      this.matchState.phase = 'PLAYING';
+    }
+
+    stopChallenge() {
+      this.challengeModeActive = false;
+      if (this.arcadeChallenge) this.arcadeChallenge.stop();
+      const hud = document.getElementById('challenge-hud');
+      if (hud) hud.classList.add('hidden');
+      const endModal = document.getElementById('modal-challenge-end');
+      if (endModal) endModal.classList.add('hidden');
+      this.playerMeshes.forEach((pm) => { if (pm && pm.group) pm.group.visible = true; });
+      if (this.refMesh) this.refMesh.group.visible = true;
     }
 
     startExploreStadium() {
@@ -598,6 +694,17 @@
 
     _handleGoal(scoringTeam) {
       if (this.matchState.phase !== 'PLAYING') return;
+      if (this.challengeModeActive) {
+        // In Desafío del Lobito, goals count as hits & quickly reset for next shot without 4s celebration!
+        if (this.arcadeChallenge) {
+          const hit = this.arcadeChallenge.checkBallShot(this.matchState.ball, this._challengeBallPrevZ);
+          if (hit) {
+            this._setCommentary(`🎯 ¡${hit.label}! +${hit.pointsAwarded} pts (Combo x${hit.combo})`);
+          }
+        }
+        this._challengeResetTimer = 0.75;
+        return;
+      }
       this.matchState.phase = 'GOAL_CELEBRATION';
       this.matchState.lastGoalTeam = scoringTeam;
       this.matchState.ownerPlayerId = null;
@@ -614,6 +721,10 @@
         this.matchState.scoreHome += 1;
         this.audio.playWhistle('short');
         this._setCommentary(`¡GOOOOL DE ${homeName.toUpperCase()}! Explota la Popular Norte (${this.matchState.scoreHome} - ${this.matchState.scoreAway}).`);
+        if (this.arcadeChallenge) {
+          this.arcadeChallenge.unlockMedal('first_goal');
+          if (this.matchState.scoreHome >= 3) this.arcadeChallenge.unlockMedal('hat_trick');
+        }
       } else {
         this.matchState.scoreAway += 1;
         this.crowdFrustrationTimer = 2.4;
@@ -674,6 +785,14 @@
         this.matchState.celebrationTimer = cel.duration;
         this.matchState.celebrationStyle = cel.style;
         this.audio.playGoalRoar(scoringTeam === 'home', cel.audioCue || 'stadium');
+        if (scoringTeam === 'home' && this.mascotDirector && (cel.lobitoPose || cel.mascotBoost)) {
+          this.mascotDirector.triggerEvent(cel.lobitoPose || 'estrella', {
+            phase: 'GOAL_CELEBRATION',
+            celebrationActive: true,
+            challengeActive: false,
+            force: true
+          });
+        }
       } else {
         this.matchState.celebrationTimer = 4.2;
         this.audio.playGoalRoar(scoringTeam === 'home', 'stadium');
@@ -784,6 +903,18 @@
     _stepSimulation(dt) {
       const ms = this.matchState;
 
+      if (this.mascotDirector) {
+        const realSec = (ms.phase === 'LOBBY' || ms.phase === 'HALFTIME')
+          ? (typeof performance !== 'undefined' ? performance.now() * 0.001 : ms.elapsedRealSec)
+          : ms.elapsedRealSec;
+        this.mascotDirector.update(dt, {
+          phase: ms.phase,
+          elapsedRealSec: realSec,
+          celebrationActive: ms.phase === 'GOAL_CELEBRATION',
+          challengeActive: this.challengeModeActive
+        });
+      }
+
       if (ms.phase === 'LOBBY' || ms.phase === 'PAUSED' || ms.phase === 'HALFTIME' || ms.phase === 'FULLTIME') {
         return;
       }
@@ -866,6 +997,31 @@
       this.audio.setCrowdDanger(danger);
       if (ms.ball.z < -18 && this.audio.playCrowdChantPulse) {
         this.audio.playCrowdChantPulse(Math.max(0, 1 - Math.abs(ms.ball.z + 52.5) / 34));
+      }
+
+      // Challenge mode fast-shot loop
+      if (this.challengeModeActive && this.arcadeChallenge) {
+        this._challengeBallPrevZ = ms.ball.z;
+        this._stepHumanPlayer(dt);
+        // Only update away GK in challenge mode
+        const awayGK = ms.players.find((p) => p.team === 'away' && p.role === 'GK');
+        if (awayGK) this.ai._updateGoalkeeper(ms, awayGK, dt, this.ai.getTuning('amateur'));
+        this.physics.stepBall(ms, dt);
+        if (this.arcadeChallenge.active) {
+          const hit = this.arcadeChallenge.checkBallShot(ms.ball, this._challengeBallPrevZ);
+          if (hit) {
+            this._setCommentary(`🎯 ¡${hit.label}! +${hit.pointsAwarded} pts (Combo x${hit.combo})`);
+            if (this._challengeResetTimer <= 0) this._challengeResetTimer = 0.7;
+          } else if (ms.ownerPlayerId === null && (ms.ball.z < -53.2 || Math.abs(ms.ball.x) > 35)) {
+            this.arcadeChallenge.onMiss();
+            if (this._challengeResetTimer <= 0) this._challengeResetTimer = 0.7;
+          }
+          if (this._challengeResetTimer > 0) {
+            this._challengeResetTimer -= dt;
+            if (this._challengeResetTimer <= 0) this._resetChallengeShot();
+          }
+        }
+        return;
       }
 
       // Process human input
@@ -1091,12 +1247,20 @@
         } else if (frame.shootTriggered) {
           if (this.playerMeshes[ms.activeHomeIndex]) this.playerMeshes[ms.activeHomeIndex].kickTimer = 0.34;
           p.kickPower = frame.shootPower;
-          const aimX = Math.max(-3.2, Math.min(3.2, dirX * 3.1));
+          let aimX = Math.max(-3.2, Math.min(3.2, dirX * 3.1));
+          if (this.assistMode === 'easy') {
+            // Kid/family assist: steer shot gently away from the opposing GK toward the open corner!
+            const oppGK = ms.players.find((pl) => pl.team === 'away' && pl.role === 'GK');
+            const openCorner = oppGK && oppGK.x >= 0 ? -2.45 : 2.45;
+            aimX = aimX * 0.45 + openCorner * 0.55;
+          }
           const dx = aimX - ms.ball.x;
           const dz = -52.5 - ms.ball.z;
           const dist = Math.max(1, Math.hypot(dx, dz));
           const speed = 19.5 + frame.shootPower * 15.5;
-          const vy = 1.6 + frame.shootPower * 5.2;
+          const vy = this.assistMode === 'easy'
+            ? (1.3 + frame.shootPower * 3.6)
+            : (1.6 + frame.shootPower * 5.2);
           ms.ball.spinY = dirX * frame.shootPower * 1.45;
           this.physics.kickBall(ms, p, (dx / dist) * speed, vy, (dz / dist) * speed, true);
           if (frame.shootPower > 0.72 && !this.reduceMotion) {
@@ -1544,7 +1708,121 @@
       const excitement = ms.phase === 'PLAYING' ? Math.max(0.1, 1 - distToAnyGoal / 36) : 0.15;
       if (this.crowdFrustrationTimer > 0) this.crowdFrustrationTimer = Math.max(0, this.crowdFrustrationTimer - dt);
       if (this.crowdSystem) {
-        this.crowdSystem.update(elapsed, excitement, isGoal, isHomeGoal && !!this.lastCelebrationResult.wave, this.crowdFrustrationTimer > 0 ? 1.0 : 0.0, goalTeam);
+        const waveOn = (isHomeGoal && !!this.lastCelebrationResult.wave) || !!(this.mascotDirector && this.mascotDirector.active && this.mascotDirector.active.wave);
+        this.crowdSystem.update(elapsed, excitement, isGoal, waveOn, this.crowdFrustrationTimer > 0 ? 1.0 : 0.0, goalTeam);
+      }
+
+      // Lobito Mascot & MascotEventDirector update
+      if (this.mascotController) {
+        const mEvt = this.mascotDirector ? this.mascotDirector.active : null;
+        if (mEvt && mEvt.id !== this._lastMascotEventId) {
+          this._lastMascotEventId = mEvt.id;
+          this._mascotEventsSeen += 1;
+          if (this._mascotEventsSeen >= 3 && this.arcadeChallenge) {
+            this.arcadeChallenge.unlockMedal('lobito_friend');
+          }
+          if (this.audio) {
+            if (mEvt.audioCue === 'murga' && this.audio.playMurgaRhythm) this.audio.playMurgaRhythm(2.6);
+            else if (mEvt.audioCue === 'carnavalito' && this.audio.playCarnavalitoMotif) this.audio.playCarnavalitoMotif(2.6);
+            else if (mEvt.audioCue === 'torpe' && this.audio.playLobitoReaction) this.audio.playLobitoReaction('torpe');
+            else if (this.audio.playLobitoReaction) this.audio.playLobitoReaction('happy');
+          }
+        } else if (!mEvt) {
+          this._lastMascotEventId = null;
+        }
+
+        const pill = document.getElementById('lobito-event-pill');
+        if (pill) {
+          if (mEvt && ms.phase !== 'GOAL_CELEBRATION' && ms.phase !== 'LOBBY') {
+            pill.textContent = `🐺 ${mEvt.title} — ${mEvt.subtitle}`;
+            pill.classList.remove('hidden');
+          } else {
+            pill.classList.add('hidden');
+          }
+        }
+
+        let mascotPose = 'idle';
+        let targetX = -35.8;
+        let targetZ = Math.max(-42, Math.min(42, ms.ball.z * 0.72));
+        let targetRot = Math.atan2(ms.ball.x - targetX, ms.ball.z - targetZ);
+
+        if (this.challengeModeActive) {
+          mascotPose = (this.arcadeChallenge && this.arcadeChallenge.hits > 0 && (elapsed % 3 < 0.9)) ? 'celebrate' : 'arquero';
+          targetX = 4.6;
+          targetZ = -50.8;
+          targetRot = -0.35;
+        } else if (isHomeGoal) {
+          mascotPose = (this.lastCelebrationResult && this.lastCelebrationResult.lobitoPose) || 'celebrate';
+          if (this.lastCelebrationResult && this.lastCelebrationResult.cameraStyle === 'mascot_closeup') {
+            targetX = 0;
+            targetZ = -54.5;
+            targetRot = 0;
+          } else {
+            const scorer = ms.players.find((p) => p.id === this.celebrationScorerId);
+            if (scorer) {
+              targetX = Math.max(-29, Math.min(29, scorer.x + 2.2));
+              targetZ = Math.max(-49, Math.min(45, scorer.z - 1.6));
+              targetRot = Math.atan2(-targetX * 0.15, 1);
+            }
+          }
+        } else if (isGoal && !isHomeGoal) {
+          mascotPose = 'frustrated';
+        } else if (this.crowdFrustrationTimer > 0) {
+          mascotPose = 'shock';
+        } else if (mEvt && mEvt.allowPitchEntry && ms.phase !== 'PLAYING') {
+          mascotPose = mEvt.pose || 'murga';
+          targetX = 0;
+          targetZ = ms.phase === 'LOBBY' ? -8.0 : 0.0;
+          targetRot = 0;
+        } else {
+          // Non-intrusive sideline cheers during active match (never invades pitch!)
+          mascotPose = excitement > 0.65 ? 'clap' : (excitement > 0.4 ? 'celebrate' : 'idle');
+        }
+
+        const curPos = this.mascotController.group.position;
+        const dxM = targetX - curPos.x;
+        const dzM = targetZ - curPos.z;
+        const distM = Math.hypot(dxM, dzM);
+        if (distM > 14.0 && (isHomeGoal || this.challengeModeActive || ms.phase === 'LOBBY' || ms.phase === 'KICKOFF')) {
+          this.mascotController.moveTo(targetX, targetZ, targetRot);
+          curPos.x = targetX;
+          curPos.z = targetZ;
+        } else if (distM > 0.35) {
+          const moveSpd = Math.min(11.0, distM * 3.0);
+          this.mascotController.moveTo(
+            curPos.x + (dxM / distM) * moveSpd * dt,
+            curPos.z + (dzM / distM) * moveSpd * dt,
+            Math.atan2(dxM, dzM)
+          );
+          if (distM > 2.2) mascotPose = 'run';
+        } else {
+          this.mascotController.moveTo(targetX, targetZ, targetRot);
+        }
+        this.mascotController.update(dt, elapsed, { pose: mascotPose });
+      }
+
+      // Challenge HUD update
+      if (this.challengeModeActive && this.arcadeChallenge) {
+        const ch = this.arcadeChallenge.update(dt, elapsed);
+        const cScore = document.getElementById('ch-score');
+        const cCombo = document.getElementById('ch-combo');
+        const cTime = document.getElementById('ch-time');
+        const cBest = document.getElementById('ch-best');
+        if (cScore) cScore.textContent = String(ch.score);
+        if (cCombo) cCombo.textContent = `x${ch.combo}`;
+        if (cTime) cTime.textContent = `${Math.ceil(ch.timeLeft)}s`;
+        if (cBest) cBest.textContent = String(ch.best);
+        if (ch.done) {
+          this.challengeModeActive = false;
+          this.matchState.phase = 'PAUSED';
+          const endModal = document.getElementById('modal-challenge-end');
+          const endScore = document.getElementById('ch-end-score');
+          const endBest = document.getElementById('ch-end-best');
+          if (endScore) endScore.textContent = String(ch.score);
+          if (endBest) endBest.textContent = String(ch.best);
+          if (endModal) endModal.classList.remove('hidden');
+          if (this.audio) this.audio.playWhistle('fulltime');
+        }
       }
       if (global.StadiumBuilder && global.StadiumBuilder.relaxGoalNets) {
         global.StadiumBuilder.relaxGoalNets(dt);
@@ -1763,8 +2041,13 @@
       if (ms.phase === 'LOBBY') {
         // Gentle scenic orbit over Estadio de los Cerros
         const ang = elapsed * 0.08;
-        targetPos.set(Math.cos(ang) * 72, 34, Math.sin(ang) * 72);
-        targetLook.set(0, 2, 0);
+        targetPos.set(Math.cos(ang) * 60, 26, Math.sin(ang) * 60);
+        targetLook.set(0, 2, -6);
+      } else if (ms.phase === 'HALFTIME') {
+        // Halftime show spotlighting Lobito in the center circle
+        const ang = elapsed * 0.35;
+        targetPos.set(Math.sin(ang) * 7.5, 3.0, Math.cos(ang) * 7.5);
+        targetLook.set(0, 1.5, 0);
       } else if (ms.phase === 'PENALTIES') {
         targetPos.set(0, 3.1, -33.8);
         targetLook.set(0, 1.35, -52.5);
@@ -2063,6 +2346,10 @@
     }
 
     returnToLobby() {
+      this.stopChallenge();
+      if (this.mascotDirector) this.mascotDirector.cancel();
+      const pill = document.getElementById('lobito-event-pill');
+      if (pill) pill.classList.add('hidden');
       this.matchState.phase = 'LOBBY';
       this._hideAllModals();
       document.getElementById('match-hud').classList.add('hidden');

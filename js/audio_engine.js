@@ -18,6 +18,7 @@
       this._lastDrumTime = 0;
       this._drumStep = 0;
       this._lastWhooshTime = 0;
+      this._lastMascotAudioTime = 0;
       this._sfxNoiseBuffer = null;
 
       // Dynamic ducking state for background track
@@ -587,6 +588,445 @@
       osc.stop(startTime + duration + 0.02);
     }
 
+    _playMurgaBombo(startTime, volume, jitter = 1) {
+      if (!this.ctx || volume <= 0.001) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(75 * jitter, startTime);
+      osc.frequency.exponentialRampToValueAtTime(38 * jitter, startTime + 0.16);
+
+      gain.gain.setValueAtTime(0.001, startTime);
+      gain.gain.linearRampToValueAtTime(volume, startTime + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.22);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + 0.24);
+
+      if (this._sfxNoiseBuffer) {
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = this._sfxNoiseBuffer;
+        const lp = this.ctx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.setValueAtTime(250 * jitter, startTime);
+        const nGain = this.ctx.createGain();
+        nGain.gain.setValueAtTime(0.001, startTime);
+        nGain.gain.linearRampToValueAtTime(volume * 0.42, startTime + 0.004);
+        nGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.06);
+
+        noise.connect(lp);
+        lp.connect(nGain);
+        nGain.connect(this.ctx.destination);
+        noise.start(startTime);
+        noise.stop(startTime + 0.07);
+      }
+    }
+
+    _playRedoblanteHit(startTime, volume, accent = 1.0, isRollGhost = false) {
+      if (!this.ctx || volume <= 0.001) return;
+      const hitVol = volume * accent;
+      const decay = isRollGhost ? 0.045 : 0.085;
+
+      if (this._sfxNoiseBuffer) {
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = this._sfxNoiseBuffer;
+        const hp = this.ctx.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.setValueAtTime(isRollGhost ? 2100 : 1650, startTime);
+        hp.Q.value = 0.85;
+
+        const nGain = this.ctx.createGain();
+        nGain.gain.setValueAtTime(0.001, startTime);
+        nGain.gain.linearRampToValueAtTime(hitVol, startTime + 0.003);
+        nGain.gain.exponentialRampToValueAtTime(0.001, startTime + decay);
+
+        noise.connect(hp);
+        hp.connect(nGain);
+        nGain.connect(this.ctx.destination);
+        noise.start(startTime);
+        noise.stop(startTime + decay + 0.015);
+      }
+
+      if (!isRollGhost) {
+        const shell = this.ctx.createOscillator();
+        const sGain = this.ctx.createGain();
+        shell.type = 'triangle';
+        shell.frequency.setValueAtTime(195 * this._jitter(0.04), startTime);
+        shell.frequency.exponentialRampToValueAtTime(118, startTime + 0.045);
+
+        sGain.gain.setValueAtTime(0.001, startTime);
+        sGain.gain.linearRampToValueAtTime(hitVol * 0.35, startTime + 0.003);
+        sGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.05);
+
+        shell.connect(sGain);
+        sGain.connect(this.ctx.destination);
+        shell.start(startTime);
+        shell.stop(startTime + 0.06);
+      }
+    }
+
+    /**
+     * Original procedural Argentine stadium murga percussion groove (bombo + redoblante).
+     */
+    playMurgaRhythm(duration = 2.6, options = {}) {
+      if (!this._canPlayAudio() || this.volumes.music <= 0.01) return;
+      const nowMs = this._nowMs();
+      if (!options.force && nowMs - this._lastMascotAudioTime < 1200) return;
+      this._lastMascotAudioTime = nowMs;
+
+      const dur = Math.max(0.8, Math.min(6.0, Number(duration) || 2.6));
+      if (!options.skipDuck) {
+        this._duckBgTrack(0.24, Math.round(dur * 1000), 650);
+      }
+
+      try {
+        const now = this.ctx.currentTime;
+        const musicVol = this.volumes.music;
+        const bomboVol = 0.24 * musicVol;
+        const snareVol = 0.13 * musicVol;
+        const stepSec = 0.114; // ~132 BPM 16th-note grid
+
+        // 16-step syncopated murga bombo accents
+        const bomboPattern = {
+          0: 1.0,
+          3: 0.78,
+          6: 0.88,
+          8: 0.96,
+          11: 0.75,
+          14: 0.85
+        };
+
+        // 16-step redoblante roll + rim accents
+        const snarePattern = {
+          2: { acc: 0.85, ghost: false },
+          4: { acc: 0.95, ghost: false },
+          5: { acc: 0.42, ghost: true },
+          7: { acc: 0.75, ghost: false },
+          9: { acc: 0.40, ghost: true },
+          10: { acc: 0.80, ghost: false },
+          12: { acc: 1.0, ghost: false },
+          13: { acc: 0.55, ghost: true },
+          15: { acc: 0.72, ghost: true }
+        };
+
+        const totalSteps = Math.floor(dur / stepSec);
+        for (let step = 0; step < totalSteps; step++) {
+          const t = now + step * stepSec;
+          const idx = step % 16;
+
+          if (bomboPattern[idx]) {
+            this._playMurgaBombo(t, bomboVol * bomboPattern[idx], this._jitter(0.035));
+          }
+          if (snarePattern[idx]) {
+            const s = snarePattern[idx];
+            this._playRedoblanteHit(t, snareVol, s.acc, s.ghost);
+          }
+        }
+      } catch (_) {}
+    }
+
+    _playQuenaNote(freq, startTime, noteDur, volume) {
+      if (!this.ctx || volume <= 0.001) return;
+      const osc = this.ctx.createOscillator();
+      const harm = this.ctx.createOscillator();
+      const lfo = this.ctx.createOscillator();
+      const lfoGain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      harm.type = 'triangle';
+      harm.frequency.setValueAtTime(freq, startTime);
+
+      // Gentle Andean flute vibrato
+      lfo.type = 'sine';
+      lfo.frequency.setValueAtTime(5.4, startTime);
+      lfoGain.gain.setValueAtTime(freq * 0.011, startTime);
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+      lfoGain.connect(harm.frequency);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(2600, startTime);
+
+      const hGain = this.ctx.createGain();
+      hGain.gain.setValueAtTime(0.32, startTime);
+
+      const atk = Math.min(0.038, noteDur * 0.25);
+      gain.gain.setValueAtTime(0.001, startTime);
+      gain.gain.linearRampToValueAtTime(volume, startTime + atk);
+      gain.gain.setValueAtTime(volume * 0.88, startTime + Math.max(atk, noteDur - 0.05));
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + noteDur);
+
+      osc.connect(filter);
+      harm.connect(hGain);
+      hGain.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(startTime);
+      harm.start(startTime);
+      lfo.start(startTime);
+      osc.stop(startTime + noteDur + 0.02);
+      harm.stop(startTime + noteDur + 0.02);
+      lfo.stop(startTime + noteDur + 0.02);
+
+      // Subtle breath air transient
+      if (this._sfxNoiseBuffer) {
+        const breath = this.ctx.createBufferSource();
+        breath.buffer = this._sfxNoiseBuffer;
+        const bp = this.ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(Math.min(3400, freq * 1.9), startTime);
+        bp.Q.value = 2.4;
+
+        const bGain = this.ctx.createGain();
+        bGain.gain.setValueAtTime(0.001, startTime);
+        bGain.gain.linearRampToValueAtTime(volume * 0.09, startTime + atk);
+        bGain.gain.exponentialRampToValueAtTime(0.001, startTime + Math.min(noteDur, 0.14));
+
+        breath.connect(bp);
+        bp.connect(bGain);
+        bGain.connect(this.ctx.destination);
+        breath.start(startTime);
+        breath.stop(startTime + Math.min(noteDur, 0.15));
+      }
+    }
+
+    _playCharangoPluck(freqs, startTime, volume) {
+      if (!this.ctx || volume <= 0.001) return;
+      freqs.forEach((f, idx) => {
+        const t = startTime + idx * 0.016;
+        const osc = this.ctx.createOscillator();
+        const hp = this.ctx.createBiquadFilter();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(f, t);
+
+        hp.type = 'highpass';
+        hp.frequency.setValueAtTime(340, t);
+
+        gain.gain.setValueAtTime(0.001, t);
+        gain.gain.linearRampToValueAtTime(volume, t + 0.005);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+
+        osc.connect(hp);
+        hp.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.145);
+      });
+    }
+
+    /**
+     * Original procedural Carnavalito jujeno pentatonic motif (quena + charango + bombo).
+     */
+    playCarnavalitoMotif(duration = 2.6, options = {}) {
+      if (!this._canPlayAudio() || this.volumes.music <= 0.01) return;
+      const nowMs = this._nowMs();
+      if (!options.force && nowMs - this._lastMascotAudioTime < 1200) return;
+      this._lastMascotAudioTime = nowMs;
+
+      const dur = Math.max(0.8, Math.min(6.0, Number(duration) || 2.6));
+      if (!options.skipDuck) {
+        this._duckBgTrack(0.24, Math.round(dur * 1000), 650);
+      }
+
+      try {
+        const now = this.ctx.currentTime;
+        const musicVol = this.volumes.music;
+        const quenaVol = 0.13 * musicVol;
+        const charangoVol = 0.055 * musicVol;
+        const bomboVol = 0.19 * musicVol;
+
+        // D minor / F major Andean pentatonic scale: D5, F5, G5, A5, C6
+        const D5 = 587.33;
+        const F5 = 698.46;
+        const G5 = 783.99;
+        const A5 = 880.0;
+        const C6 = 1046.5;
+
+        const phrase = [
+          { f: D5, offset: 0.0, len: 0.18 },
+          { f: F5, offset: 0.18, len: 0.16 },
+          { f: G5, offset: 0.34, len: 0.18 },
+          { f: A5, offset: 0.52, len: 0.28 },
+          { f: G5, offset: 0.82, len: 0.16 },
+          { f: F5, offset: 0.98, len: 0.18 },
+          { f: D5, offset: 1.16, len: 0.24 },
+          { f: F5, offset: 1.42, len: 0.16 },
+          { f: G5, offset: 1.58, len: 0.16 },
+          { f: A5, offset: 1.74, len: 0.18 },
+          { f: C6, offset: 1.92, len: 0.28 },
+          { f: A5, offset: 2.22, len: 0.16 },
+          { f: G5, offset: 2.38, len: 0.18 },
+          { f: D5, offset: 2.56, len: 0.32 }
+        ];
+
+        const phraseLen = 2.88;
+        const cycles = Math.ceil(dur / phraseLen);
+        for (let c = 0; c < cycles; c++) {
+          const base = c * phraseLen;
+          phrase.forEach((n) => {
+            const rel = base + n.offset;
+            if (rel < dur - 0.08) {
+              const clampedLen = Math.min(n.len, dur - rel);
+              this._playQuenaNote(n.f * this._jitter(0.008), now + rel, clampedLen, quenaVol);
+            }
+          });
+        }
+
+        // Charango rhythmic strums every 0.24s (alternating Dm and F/C triads)
+        const chords = [
+          [293.66, 440.0, 587.33], // Dm
+          [349.23, 523.25, 698.46] // F/C
+        ];
+        const strumStep = 0.24;
+        const numStrums = Math.floor((dur - 0.08) / strumStep);
+        for (let i = 0; i < numStrums; i++) {
+          const t = now + i * strumStep;
+          const chord = chords[Math.floor(i / 2) % chords.length];
+          const accent = i % 2 === 0 ? 1.0 : 0.72;
+          this._playCharangoPluck(chord, t, charangoVol * accent);
+        }
+
+        // Steady carnavalito bombo pulse every 0.48s
+        const bomboStep = 0.48;
+        const numBombos = Math.floor((dur - 0.06) / bomboStep);
+        for (let b = 0; b < numBombos; b++) {
+          this._playMurgaBombo(now + b * bomboStep, bomboVol, this._jitter(0.03));
+        }
+      } catch (_) {}
+    }
+
+    /**
+     * Playful comedic synth reactions for Lobito mascot events & goalkeeper dives.
+     */
+    playLobitoReaction(kind = 'happy') {
+      if (!this._canPlayAudio() || this.volumes.sfx <= 0.01) return;
+      try {
+        const now = this.ctx.currentTime;
+        const sfxVol = this.volumes.sfx;
+        const jitter = this._jitter(0.05);
+
+        if (kind === 'torpe' || kind === 'slip') {
+          // Classic cartoon slide-whistle down + comedic soft boing
+          const slide = this.ctx.createOscillator();
+          const sGain = this.ctx.createGain();
+          slide.type = 'sine';
+          slide.frequency.setValueAtTime(1120 * jitter, now);
+          slide.frequency.exponentialRampToValueAtTime(235 * jitter, now + 0.34);
+
+          sGain.gain.setValueAtTime(0.001, now);
+          sGain.gain.linearRampToValueAtTime(0.12 * sfxVol, now + 0.02);
+          sGain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+
+          slide.connect(sGain);
+          sGain.connect(this.ctx.destination);
+          slide.start(now);
+          slide.stop(now + 0.38);
+
+          // Soft comedic boing
+          const boing = this.ctx.createOscillator();
+          const bGain = this.ctx.createGain();
+          const boingStart = now + 0.28;
+          boing.type = 'triangle';
+          boing.frequency.setValueAtTime(155 * jitter, boingStart);
+          boing.frequency.linearRampToValueAtTime(290 * jitter, boingStart + 0.08);
+          boing.frequency.exponentialRampToValueAtTime(175 * jitter, boingStart + 0.24);
+
+          bGain.gain.setValueAtTime(0.001, boingStart);
+          bGain.gain.linearRampToValueAtTime(0.14 * sfxVol, boingStart + 0.015);
+          bGain.gain.exponentialRampToValueAtTime(0.001, boingStart + 0.26);
+
+          boing.connect(bGain);
+          bGain.connect(this.ctx.destination);
+          boing.start(boingStart);
+          boing.stop(boingStart + 0.28);
+        } else if (kind === 'save') {
+          // Bouncy comic spring sound for Lobito Arquero dive
+          const spring = this.ctx.createOscillator();
+          const lfo = this.ctx.createOscillator();
+          const lfoGain = this.ctx.createGain();
+          const gain = this.ctx.createGain();
+
+          spring.type = 'triangle';
+          spring.frequency.setValueAtTime(220 * jitter, now);
+          spring.frequency.linearRampToValueAtTime(460 * jitter, now + 0.14);
+          spring.frequency.exponentialRampToValueAtTime(280 * jitter, now + 0.30);
+
+          lfo.type = 'sine';
+          lfo.frequency.setValueAtTime(18, now);
+          lfoGain.gain.setValueAtTime(42, now);
+          lfo.connect(lfoGain);
+          lfoGain.connect(spring.frequency);
+
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.linearRampToValueAtTime(0.15 * sfxVol, now + 0.015);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+
+          spring.connect(gain);
+          gain.connect(this.ctx.destination);
+          spring.start(now);
+          lfo.start(now);
+          spring.stop(now + 0.34);
+          lfo.stop(now + 0.34);
+        } else {
+          // 'happy' / 'estrella': cheerful playful rising synth chirp
+          const chirps = [
+            { start: 0.0, f0: 520, f1: 960, dur: 0.11 },
+            { start: 0.11, f0: 760, f1: 1340, dur: 0.16 }
+          ];
+          chirps.forEach((c) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(c.f0 * jitter, now + c.start);
+            osc.frequency.exponentialRampToValueAtTime(c.f1 * jitter, now + c.start + c.dur);
+
+            gain.gain.setValueAtTime(0.001, now + c.start);
+            gain.gain.linearRampToValueAtTime(0.12 * sfxVol, now + c.start + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + c.start + c.dur);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + c.start);
+            osc.stop(now + c.start + c.dur + 0.015);
+          });
+        }
+      } catch (_) {}
+    }
+
+    /**
+     * Crisp arcade target-hit chime ascending with combo (1..8) + bonus major triad sparkle.
+     */
+    playChallengeHit(combo = 1, isBonus = false) {
+      if (!this._canPlayAudio() || this.volumes.sfx <= 0.01) return;
+      try {
+        const now = this.ctx.currentTime;
+        const sfxVol = this.volumes.sfx;
+        const idx = Math.max(1, Math.min(8, Math.round(Number(combo) || 1))) - 1;
+        const scale = [523.25, 587.33, 659.25, 783.99, 880.0, 987.77, 1046.5, 1174.66];
+        const baseFreq = scale[idx] * this._jitter(0.015);
+
+        // Fundamental chime + crisp octave harmonic
+        this._playTone(baseFreq, now, 0.24, 0.14 * sfxVol, 'triangle', null, 3400);
+        this._playTone(baseFreq * 2, now, 0.18, 0.07 * sfxVol, 'sine', null, 4200);
+
+        if (isBonus) {
+          const triad = [baseFreq, baseFreq * 1.25, baseFreq * 1.5, baseFreq * 2];
+          triad.forEach((f, i) => {
+            this._playTone(f, now + 0.045 + i * 0.032, 0.28, 0.095 * sfxVol, 'sine', null, 4800);
+          });
+        }
+      } catch (_) {}
+    }
+
     _playFanfareCue(audioCue, now, baseVol) {
       if (baseVol <= 0.002) return;
 
@@ -693,8 +1133,14 @@
         }
 
         // Distinct celebration fanfare motif per audioCue
-        const fanfareVol = 0.09 * this.volumes.music;
-        this._playFanfareCue(audioCue || 'stadium', now, fanfareVol);
+        if (audioCue === 'murga') {
+          this.playMurgaRhythm(2.8, { force: true, skipDuck: true });
+        } else if (audioCue === 'carnavalito') {
+          this.playCarnavalitoMotif(2.8, { force: true, skipDuck: true });
+        } else {
+          const fanfareVol = 0.09 * this.volumes.music;
+          this._playFanfareCue(audioCue || 'stadium', now, fanfareVol);
+        }
       } catch (_) {}
     }
   }

@@ -11,6 +11,8 @@ import '../js/physics_engine.js';
 import '../js/tactical_ai.js';
 import '../js/player_renderer.js';
 import '../js/crowd_system.js';
+import '../js/mascot_controller.js';
+import '../js/arcade_challenge.js';
 import '../js/goal_celebration_director.js';
 import '../js/stadium_builder.js';
 import '../js/game_engine.js';
@@ -82,11 +84,15 @@ function safeTrack(eventName, props) {
   });
 
   function launchSelectedMatch() {
-    const diff = document.getElementById('sel-difficulty').value;
+    const rawDiff = document.getElementById('sel-difficulty').value;
+    const isEasy = rawDiff === 'easy';
+    const diff = isEasy ? 'amateur' : rawDiff;
+    if (game.setAssistMode) game.setAssistMode(isEasy ? 'easy' : 'standard');
     const dur = parseInt(document.getElementById('sel-duration').value, 10) || 180;
     const sky = document.getElementById('sel-sky').value;
     const starterNumber = parseInt(selStarter.value, 10) || 9;
-    safeTrack('match_start', { difficulty: diff, skyMode: sky });
+    safeTrack('match_start', { difficulty: rawDiff, skyMode: sky });
+    game.stopChallenge();
     game.startMatch(selectedFixture, {
       difficulty: diff,
       halfDurationRealSec: dur,
@@ -95,7 +101,83 @@ function safeTrack(eventName, props) {
     });
   }
 
-  document.getElementById('btn-play-match').addEventListener('click', launchSelectedMatch);
+  let activeChallengeType = 'targets';
+  const renderMedals = () => {
+    const list = document.getElementById('medals-list');
+    if (!list || !window.ArcadeChallengeManager) return;
+    const medals = window.ArcadeChallengeManager.getMedals();
+    list.innerHTML = medals.map((m) => `
+      <div class="flex items-center justify-between rounded-xl px-3.5 py-2.5 border ${m.unlocked ? 'bg-amber-500/15 border-amber-400/45 text-white' : 'bg-[#0d1626] border-slate-800 text-slate-400'}">
+        <div>
+          <div class="font-bold text-sm">${m.unlocked ? '🏅' : '🔒'} ${m.title}</div>
+          <div class="text-[11px] opacity-85">${m.desc}</div>
+        </div>
+        <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded ${m.unlocked ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'}">${m.unlocked ? 'Lograda' : 'Pendiente'}</span>
+      </div>
+    `).join('');
+  };
+
+  const mobileHintEl = document.getElementById('mobile-onboarding-hint');
+  const mobileHintText = document.getElementById('mobile-onboarding-text');
+  const playerCardEl = document.getElementById('hud-player-card');
+  let mobileHintShown = false;
+
+  const hideMobileHint = () => {
+    mobileHintEl?.classList.add('hidden');
+  };
+
+  const showMobileHintOnce = (isChallenge) => {
+    if (mobileHintShown || !mobileHintEl) return;
+    if (touchControls && touchControls.classList.contains('hidden')) return;
+    mobileHintShown = true;
+    if (mobileHintText) {
+      mobileHintText.innerHTML = isChallenge
+        ? 'Arrastrá el <span class="text-sky-300 font-bold">stick izquierdo</span> para apuntar y mantené <span class="text-rose-400 font-bold">REMATE</span> para pegarle a los blancos.'
+        : 'Arrastrá el <span class="text-sky-300 font-bold">stick izquierdo</span> para moverte. Tocá <span class="text-sky-400 font-bold">PASE</span> para pasar o mantené <span class="text-rose-400 font-bold">REMATE</span> para patear.';
+    }
+    mobileHintEl.classList.remove('hidden');
+    window.setTimeout(hideMobileHint, 8000);
+  };
+
+  document.getElementById('btn-dismiss-mobile-hint')?.addEventListener('click', hideMobileHint);
+
+  document.getElementById('btn-play-match').addEventListener('click', () => {
+    playerCardEl?.classList.remove('hidden', 'sm:block');
+    launchSelectedMatch();
+    showMobileHintOnce(false);
+  });
+  document.getElementById('btn-challenge-mode')?.addEventListener('click', () => {
+    safeTrack('challenge_start', { mode: activeChallengeType });
+    playerCardEl?.classList.add('hidden', 'sm:block');
+    game.startChallenge(selectedFixture, activeChallengeType);
+    showMobileHintOnce(true);
+  });
+  document.getElementById('ch-btn-targets')?.addEventListener('click', () => {
+    activeChallengeType = 'targets';
+    game.startChallenge(selectedFixture, 'targets');
+  });
+  document.getElementById('ch-btn-crossbar')?.addEventListener('click', () => {
+    activeChallengeType = 'crossbar';
+    game.startChallenge(selectedFixture, 'crossbar');
+  });
+  document.getElementById('ch-btn-exit')?.addEventListener('click', () => {
+    hideMobileHint();
+    playerCardEl?.classList.remove('hidden', 'sm:block');
+    game.returnToLobby();
+  });
+  document.getElementById('ch-end-retry')?.addEventListener('click', () => game.startChallenge(selectedFixture, activeChallengeType));
+  document.getElementById('ch-end-lobby')?.addEventListener('click', () => {
+    hideMobileHint();
+    playerCardEl?.classList.remove('hidden', 'sm:block');
+    game.returnToLobby();
+  });
+  document.getElementById('btn-open-medals')?.addEventListener('click', () => {
+    renderMedals();
+    document.getElementById('modal-medals')?.classList.remove('hidden');
+  });
+  document.getElementById('btn-close-medals')?.addEventListener('click', () => {
+    document.getElementById('modal-medals')?.classList.add('hidden');
+  });
   document.getElementById('btn-training-mode').addEventListener('click', () => {
     safeTrack('training_start');
     game.startTraining(selectedFixture);
@@ -149,6 +231,7 @@ function safeTrack(eventName, props) {
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({
         quality: document.getElementById('set-quality').value,
+        mascotFreq: document.getElementById('set-mascot-freq')?.value || 'occasional',
         volCrowd: Number(document.getElementById('set-vol-crowd').value),
         volSfx: Number(document.getElementById('set-vol-sfx').value),
         volMusic: Number(document.getElementById('set-vol-music').value),
@@ -169,6 +252,7 @@ function safeTrack(eventName, props) {
     const osReduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     const s = saved || {
       quality: 'auto',
+      mascotFreq: 'occasional',
       volCrowd: 0.8,
       volSfx: 0.9,
       volMusic: 0.7,
@@ -180,6 +264,11 @@ function safeTrack(eventName, props) {
     if (s.quality) {
       document.getElementById('set-quality').value = s.quality;
       game.applyGraphicsQuality(s.quality);
+    }
+    const mascotSel = document.getElementById('set-mascot-freq');
+    if (mascotSel && s.mascotFreq) {
+      mascotSel.value = s.mascotFreq;
+      if (game.setMascotFrequency) game.setMascotFrequency(s.mascotFreq);
     }
     if (typeof s.volCrowd === 'number') {
       document.getElementById('set-vol-crowd').value = String(s.volCrowd);
@@ -212,6 +301,10 @@ function safeTrack(eventName, props) {
   };
 
   document.getElementById('sel-sky').addEventListener('change', saveSettings);
+  document.getElementById('set-mascot-freq')?.addEventListener('change', (e) => {
+    if (game.setMascotFrequency) game.setMascotFrequency(e.target.value);
+    saveSettings();
+  });
   document.getElementById('set-quality').addEventListener('change', (e) => {
     game.applyGraphicsQuality(e.target.value);
     saveSettings();
@@ -433,6 +526,7 @@ function safeTrack(eventName, props) {
   };
 
   stickBase.addEventListener('pointerdown', (e) => {
+    hideMobileHint();
     stickActive = true;
     try { stickBase.setPointerCapture(e.pointerId); } catch (_) {}
     handleStickMove(e.clientX, e.clientY);
@@ -454,6 +548,7 @@ function safeTrack(eventName, props) {
     const release = () => game.input.setTouchButton(name, false);
     btn.addEventListener('pointerdown', (e) => {
       e.preventDefault();
+      hideMobileHint();
       game.input.setTouchButton(name, true);
     });
     btn.addEventListener('pointerup', release);
