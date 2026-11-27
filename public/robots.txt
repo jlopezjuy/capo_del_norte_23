@@ -4,4 +4,4 @@ Disallow: /odd/
 Disallow: /scripts/
 Disallow: /docs/
 
-Sitemap: /sitemap.xml
+Sitemap: https://capodelnorte23.vercel.app/sitemap.xml

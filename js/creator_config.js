@@ -10,7 +10,8 @@
     email: 'contacto@vendora.ar',
     phoneDisplay: '3884537959',
     whatsappNumber: '543884537959',
-    donationUrl: 'https://mpago.la/1KpZh99'
+    donationUrl: 'https://mpago.la/1KpZh99',
+    paypalUrl: 'https://www.paypal.com/paypalme/jlopezjuy'
   });
 
   const whatsappMessage = 'Hola Juan Manuel, estuve jugando Pasión de Tribuna y me gustaría consultarte por un desarrollo de software.';
@@ -57,6 +58,11 @@
   function bindCreatorLinks(root = document) {
     root.querySelectorAll('[data-creator-link="donation"]').forEach((el) => {
       el.setAttribute('href', creatorInfo.donationUrl);
+      el.setAttribute('target', '_blank');
+      el.setAttribute('rel', 'noopener noreferrer');
+    });
+    root.querySelectorAll('[data-creator-link="paypal"]').forEach((el) => {
+      el.setAttribute('href', creatorInfo.paypalUrl);
       el.setAttribute('target', '_blank');
       el.setAttribute('rel', 'noopener noreferrer');
     });
