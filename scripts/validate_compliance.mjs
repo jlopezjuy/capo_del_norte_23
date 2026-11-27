@@ -4,8 +4,9 @@ import path from 'node:path';
 const ROOT = process.cwd();
 const PUBLIC_FILES = [
   'index.html',
-  'manifest.json',
-  'favicon.svg',
+  'public/manifest.json',
+  'public/favicon.svg',
+  ...fs.readdirSync(path.join(ROOT, 'src')).filter((f) => f.endsWith('.js')).map((f) => path.join('src', f)),
   ...fs.readdirSync(path.join(ROOT, 'js')).map((f) => path.join('js', f))
 ];
 
